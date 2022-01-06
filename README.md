@@ -20,9 +20,3 @@ i thought up a trick to assign each face a unique pixel uv, then encoding the of
 with the offset data i am able to calculate the relative face id, and `gl_VertexID % 4` gives the corner.
 
 ![image](https://user-images.githubusercontent.com/16228717/148311858-3bd76267-f80f-4ad6-84c3-3b5f6760bcf4.png)
-
-### Python
-
-i learned Python just to write this lol
-
-apparantly anything that has to do with js can't keep rgb values correctly when alpha isnt max
