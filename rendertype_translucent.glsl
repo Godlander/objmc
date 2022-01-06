@@ -85,18 +85,25 @@ void main() {
         vec4 datauv = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
         //position
         posoffset = vec3(
-            ((datax.r*255*256)+(datax.g*256)+(datax.b)),
-            ((datay.r*255*256)+(datay.g*256)+(datay.b)),
-            ((dataz.r*255*256)+(dataz.g*256)+(dataz.b))
-        ) - 512;
+            ((datax.r*255*256)+(datax.g*256)+(datax.b))/256,
+            ((datay.r*255*256)+(datay.g*256)+(datay.b))/256,
+            ((dataz.r*255*256)+(dataz.g*256)+(dataz.b))/256
+        ) - 1.5;
+        //normal
+        vec3 norm = normalize(vec3(datax.a, datay.a, dataz.a));
         //uv
         vec2 texuv = vec2(
             ((datauv.r*256) + datauv.g)/atlasSize.x/256*size.x,
             ((datauv.b*256) + datauv.a)/atlasSize.y/256*size.y
         );
 //*/
+        //real uv
         texCoord0 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv;
-        vertexColor = vec4(0.0);
+        //shading from normal
+        normal = vec4(normalize(norm), 0.0);
+        vertexColor = vec4(vec3(max(dot(norm, vec3(0.6)), 0.0)), 1.0);
+        vertexColor *= vertexColor * minecraft_sample_lightmap(Sampler2, UV2);
+
     }
-    gl_Position = ProjMat * ModelViewMat * vec4(Pos + (posoffset/256) + vec3(0.5), 1.0);
+    gl_Position = ProjMat * ModelViewMat * vec4(Pos + posoffset, 1.0);
 }
