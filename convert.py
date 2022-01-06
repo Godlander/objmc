@@ -2,11 +2,8 @@ import math
 import json
 from PIL import Image, ImageOps
 
-#input texture
-tex = Image.open("cat.jpg")
-#input obj
-obj = open("cat.obj", "r")
-#output model
+tex = Image.open("cube.png")
+obj = open("cube.obj", "r")
 model = open("white_stained_glass.json", "w")
 
 x,y = tex.size
@@ -26,7 +23,6 @@ for line in obj:
     normals.append([float(i) for i in line.strip().split(" ")[1:]])
   if line.startswith("f "):
     faces.append([[int(i)-1 for i in vert.split("/")] for vert in line.strip().split(" ")[1:]])
-
 #calculate heights
 nfaces = len(faces)
 nvertices = nfaces*4
@@ -173,5 +169,4 @@ def encodeface(index, face):
 for i in range(0, nfaces):
   encodeface(i, faces[i])
 
-#output texture
 out.save("out.png")

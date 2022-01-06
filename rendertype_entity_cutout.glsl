@@ -13,8 +13,11 @@ uniform sampler2D Sampler2;
 
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
-uniform vec3 ChunkOffset;
+uniform mat3 IViewRotMat;
 uniform float GameTime;
+
+uniform vec3 Light0_Direction;
+uniform vec3 Light1_Direction;
 
 out float vertexDistance;
 out vec4 vertexColor;
@@ -28,9 +31,8 @@ ivec2 getp(ivec2 tl, ivec2 size, int y, int index, int offset) {
 
 void main() {
     //default
-    vec3 Pos = Position + ChunkOffset;
-    gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);
-    vertexDistance = length((ModelViewMat * vec4(Pos, 1.0)).xyz);
+    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+    vertexDistance = length((ModelViewMat * vec4(Position, 1.0)).xyz);
     vertexColor = Color * minecraft_sample_lightmap(Sampler2, UV2);
     normal = ProjMat * ModelViewMat * vec4(Normal, 0.0);
     texCoord0 = UV0;
@@ -50,6 +52,7 @@ void main() {
     vec4 markerpix = texelFetch(Sampler0, topleft, 0);
     //if marker is correct at topleft
     if (floor(markerpix * 255) == vec4(12,34,56,0)) {
+///*
         //grab metadata: marker, size, nvertices, nframes
         //size
         vec4 metasize = texelFetch(Sampler0, topleft + ivec2(1,0), 0) * 255;
@@ -82,20 +85,23 @@ void main() {
             ((datax.r*255*256)+(datax.g*256)+(datax.b))/256,
             ((datay.r*255*256)+(datay.g*256)+(datay.b))/256,
             ((dataz.r*255*256)+(dataz.g*256)+(dataz.b))/256
-        ) - 1.5;
+        ) - vec3(2.36, 1.5, 2.36);
         //normal
-        vec3 norm = normalize(vec3(datax.a, datay.a, dataz.a));
+        vec3 norm = vec3(datax.a, datay.a, dataz.a);
         //uv
         vec2 texuv = vec2(
             ((datauv.r*256) + datauv.g)/atlasSize.x/256*size.x,
             ((datauv.b*256) + datauv.a)/atlasSize.y/256*size.y
         );
+//*/
         //real uv
         texCoord0 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv;
         //shading from normal
         normal = vec4(normalize(norm), 0.0);
-        vertexColor = vec4(vec3(max(dot(norm, vec3(0.0,1.1,0.0)), 0.0)), 1.0);
+        vertexColor = vec4(vec3(max(dot(norm * IViewRotMat, Light0_Direction), 0.0)), 1.0);
+        vertexColor *= vec4(vec3(max(dot(norm * IViewRotMat, Light1_Direction), 0.0)), 1.0);
+        vertexColor += 0.4;
         vertexColor *= minecraft_sample_lightmap(Sampler2, UV2);
     }
-    gl_Position = ProjMat * ModelViewMat * vec4(Pos + posoffset, 1.0);
+    gl_Position = ProjMat * ModelViewMat * (vec4(Position + (inverse(IViewRotMat) * posoffset), 1.0));
 }
