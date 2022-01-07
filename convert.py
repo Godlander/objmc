@@ -40,8 +40,7 @@ print("header:", 1, "uvheight:", uvheight, "texture:", y, "dataheight:", datahei
 out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
 #calculate unique pixel uv per face
-def getuvpos(elementindex, faceoffset):
-  faceid = ((elementindex*6)+faceoffset)
+def getuvpos(faceid):
   posx = faceid%x
   posy = math.floor(faceid/x)+1
   out.putpixel((posx, posy), (int(posx/256)%256, posx%256, int(posy/256)%256, posy%256))
@@ -59,12 +58,7 @@ def newelement(index):
     "from": [0,0,0],
     "to": [0,0,0],
     "faces": {
-      "north" : {"uv": getuvpos(index, 0), "texture": "#1"},
-      "east"  : {"uv": getuvpos(index, 1), "texture": "#1"},
-      "south" : {"uv": getuvpos(index, 2), "texture": "#1"},
-      "west"  : {"uv": getuvpos(index, 3), "texture": "#1"},
-      "up"    : {"uv": getuvpos(index, 4), "texture": "#1"},
-      "down"  : {"uv": getuvpos(index, 5), "texture": "#1"}
+      "north" : {"uv": getuvpos(index), "texture": "#1"}
     }
   }
   js["elements"].append(cube)
@@ -80,10 +74,9 @@ out.putpixel((2,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256,
 out.putpixel((3,0), (0,0,0,math.ceil(y/x)))
 
 #generate elements and uv header
-for i in range(0, math.ceil(nfaces/6)):
+for i in range(0, nfaces):
   newelement(i)
 model.write(json.dumps(js))
-print("elements:", math.ceil(nfaces/6))
 
 #actual texture
 out.paste(ImageOps.flip(tex), (0,1+uvheight))
