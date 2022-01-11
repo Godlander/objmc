@@ -82,7 +82,7 @@ void main() {
             ((datax.r*255*256)+(datax.g*256)+(datax.b))/256,
             ((datay.r*255*256)+(datay.g*256)+(datay.b))/256,
             ((dataz.r*255*256)+(dataz.g*256)+(dataz.b))/256
-        ) - 1.5;
+        ) - 128;
         //normal
         vec3 norm = normalize(vec3(datax.a, datay.a, dataz.a));
         //uv
@@ -96,6 +96,7 @@ void main() {
         normal = vec4(normalize(norm), 0.0);
         vertexColor = vec4(vec3(max(dot(norm, vec3(0.0,1.1,0.0)), 0.0)), 1.0);
         vertexColor *= minecraft_sample_lightmap(Sampler2, UV2);
+
+        gl_Position = ProjMat * ModelViewMat * vec4(Pos + posoffset, 1.0);
     }
-    gl_Position = ProjMat * ModelViewMat * vec4(Pos + posoffset, 1.0);
 }

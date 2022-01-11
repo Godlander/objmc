@@ -2,8 +2,8 @@ import math
 import json
 from PIL import Image, ImageOps
 
-tex = Image.open("cube.png")
-obj = open("cube.obj", "r")
+tex = Image.open("robo.jpg")
+obj = open("robo.obj", "r")
 model = open("white_stained_glass.json", "w")
 
 x,y = tex.size
@@ -34,8 +34,10 @@ uvheight = math.ceil(nfaces/x)
 dataheight = math.ceil(((5*nvertices))/x)+1
 ty = 1 + uvheight + y + dataheight
 
+print("obj data:")
 print("positions:", len(positions)-1, "uvs:", len(uvs)-1, "normals:", len(normals)-1, "faces:", nfaces, "vertices:", nvertices)
-print("header:", 1, "uvheight:", uvheight, "texture:", y, "dataheight:", dataheight, "totalheight:", ty, "powheight:", ty)
+print("image data:")
+print("header:", 1, "uvheight:", uvheight, "texture:", y, "dataheight:", dataheight, "totalheight:", ty)
 #create out image with correct dimensions
 out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
@@ -55,10 +57,10 @@ js = {
 }
 def newelement(index):
   cube = {
-    "from": [0,0,0],
-    "to": [0,0,0],
+    "from": [8,8,8],
+    "to": [8,8,8],
     "faces": {
-      "north" : {"uv": getuvpos(index), "texture": "#1"}
+      "east" : {"uv": getuvpos(index), "texture": "#1"}
     }
   }
   js["elements"].append(cube)
@@ -83,9 +85,9 @@ out.paste(ImageOps.flip(tex), (0,1+uvheight))
 
 #grab data from the list and convert to rgb
 def getposition(index):
-  x = 131071+((positions[index][0])*65536)
-  y = 131071+((positions[index][1])*65536)
-  z = 131071+((positions[index][2])*65536)
+  x = 8388608+((positions[index][0])*65536)
+  y = 8388608+((positions[index][1])*65536)
+  z = 8388608+((positions[index][2])*65536)
   rgb = []
   r = int((x/256/256)%256)
   g = int((x/256)%256)
