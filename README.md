@@ -36,7 +36,7 @@ place the shaders in the correct location in a resourcepack, and any model gener
 
 ### flipped uv
 
-the texture ends up being upside down for some reason. idk why
+the texture ends up being read upside down for some reason. idk why, so i just flip the texture while encoding to compensate
 
 ### vertex id
 
