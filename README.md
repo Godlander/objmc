@@ -2,6 +2,8 @@
 
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
 
+place the shaders in the correct location in a resourcepack, and any model generated with this tool should display properly.
+
 ### script inputs
 
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
