@@ -23,9 +23,6 @@ out vec2 texCoord02;
 out vec4 normal;
 out float transition;
 
-//multiplying is faster than dividing but its easier to write /256
-#define /256 *0.00390625
-
 ivec2 getp(ivec2 topleft, ivec2 size, int yoffset, int index, int offset) {
     int i = (index * 5) + offset;
     return topleft + ivec2(i % size.x, int(i / size.x) + yoffset);
@@ -69,7 +66,7 @@ void main() {
         float duration = float(metaframes.b + 1) * 0.05; // /20ticks
         //time in seconds
         float time = GameTime * 1200;
-        int frame = int(time * duration) % nframes;
+        int frame = int(time * 1/duration) % nframes;
 
         //calculate height offsets
         int headerheight = 1 + int((nvertices*0.25/size.x));
@@ -124,7 +121,7 @@ void main() {
             //);
             //texCoord02 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv2;
 
-            transition = fract(time * duration);
+            transition = fract(time * 1/duration);
             posoffset = mix(posoffset, posoffset2, transition);
             norm = mix(norm, norm2, transition);
         }
