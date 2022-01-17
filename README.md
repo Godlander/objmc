@@ -1,4 +1,22 @@
-### samples:
+## usage:
+
+make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
+
+### script inputs
+
+`objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
+
+`frames`: array of strings of digits defining which index of the obj to use as each frame.
+
+`texs`: array of one single name of the texture file.
+
+`duration`: integer duration of frames in ticks.
+
+### script output
+
+`output`: array of two string file names: the json model, and the texture.
+
+## samples:
 
 ![image](https://user-images.githubusercontent.com/16228717/148311540-503cf422-b6c7-4c95-b4b4-fca1e136dbfe.png)
 
@@ -6,15 +24,17 @@
 
 ![image](https://user-images.githubusercontent.com/16228717/148869708-310e7ec4-7d89-40e8-8fc6-38d2e6116cb7.png)
 
-![image](https://user-images.githubusercontent.com/16228717/148311579-0c09d71e-8358-463f-85ac-297295c02696.png)
+![animate](https://user-images.githubusercontent.com/16228717/149825494-cd51146e-38ed-48a5-a47a-0c2fce678d1a.gif)
 
 ## random notes about the tool
 
 ### general output format:
 
-(animation not supported yet but planned)
-
 ![image](https://user-images.githubusercontent.com/16228717/148311479-0cade68e-dab8-491b-83fb-f7d22c78bd1b.png)
+
+### flipped uv
+
+the texture ends up being upside down for some reason. idk why
 
 ### vertex id
 
@@ -25,3 +45,7 @@ i thought up a trick to assign each face a unique pixel uv, then encoding the of
 with the offset data i am able to calculate the relative face id, and `gl_VertexID % 4` gives the corner.
 
 ![image](https://user-images.githubusercontent.com/16228717/148311858-3bd76267-f80f-4ad6-84c3-3b5f6760bcf4.png)
+
+### preserving rgb
+
+basically anything to do with images in js does alpha premultiplying, which ruins rgb values when alpha is anything less than 255. afaik only way to not suffer this is to directly interact with the raw file instead of as an image. so if you wanted to send an image with alpha to someone over discord or something, don't send it as an image. instead, you can zip it and send the zip to preserve data.
