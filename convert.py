@@ -2,14 +2,18 @@ import math
 import json
 from PIL import Image, ImageOps
 
-objs = ["ring","ring2"]
-frames = ["0","1"]
-duration = 20
+objs = ["robo"]
+frames = ["0"]
+duration = 20 #ticks
 #texture animations not supported yet
-texs = ["white.png"]
+texs = ["robo.jpg"]
+
+#test easing
+# 0 - none, 1 - linear, 2 - inoutcubic
+easing = 1
 
 #json, png
-output = ["white_stained_glass", "out"]
+output = ["black_stained_glass", "roboout"]
 
 #input error checking
 if len(frames) == 0:
@@ -62,7 +66,7 @@ ty = 1 + uvheight + texheight + dataheight
 print("x: ", x, ", y: ", y,sep="")
 print("faces: ", nfaces, ",vertices: ", nvertices,sep="")
 print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ",sep="")
-print("frames: ", nframes, ", duration: ", duration,"ticks", ", total: ", duration*nframes/20, "seconds",sep="")
+print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds",sep="")
 #write to json model
 model = open(output[0]+".json", "w")
 #create out image with correct dimensions
@@ -75,8 +79,8 @@ out.putpixel((0,0), (12,34,56,0))
 out.putpixel((1,0), (int(x/256), x%256, int(y/256), y%256))
 #nvertices
 out.putpixel((2,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, nvertices%256))
-#duration, nframes
-out.putpixel((3,0), (0,0,duration-1,nframes))
+#nframes, ntextures, duration
+out.putpixel((3,0), (nframes,ntextures,duration-1,255))
 
 #actual texture
 for i in range (0,len(texs)):
@@ -135,9 +139,9 @@ def getposition(id, index):
   rgb.append([r,g,b])
   return rgb
 def getnormal(id, index):
-  r = int((objects[id]["normals"][index][0]+1)*255.9/2)
-  g = int((objects[id]["normals"][index][1]+1)*255.9/2)
-  b = int((objects[id]["normals"][index][2]+1)*255.9/2)
+  r = int((objects[id]["normals"][index][0]+1)*255/2)
+  g = int((objects[id]["normals"][index][1]+1)*255/2)
+  b = int((objects[id]["normals"][index][2]+1)*255/2)
   return [r,g,b]
 def getuv(id, index):
   x = (objects[id]["uvs"][index][0])*65535
@@ -148,11 +152,11 @@ def getuv(id, index):
   a = int(y%256)
   return (r,g,b,a)
 def getp(frame, index, offset):
-  i = ((frame-1)*nvertices*5)+(index*5)+offset
+  i = ((frame)*nvertices*5)+(index*5)+offset
   xx = i%x
   yy = int(1+uvheight+y+((i/x)))
   return (xx,yy)
-#meta = rgba: scale, hasnormal, easing, unused
+#meta: textureid, easing, scale?, unused
 #position = rgb, rgb, rgb
 #normal = aaa
 #uv = rg,ba
@@ -160,8 +164,6 @@ def getp(frame, index, offset):
 def encodevert(id, frame, index, face):
   #init meta
   scale = 100
-  hasnormal = 1
-  easing = 0
   #get position and append normal
   rgb = getposition(id[0], face[0])
   if len(face) == 2:
@@ -169,8 +171,8 @@ def encodevert(id, frame, index, face):
     hasnormal = 0
   else:
     norm = getnormal(id[0], face[2])
-  #meta
-  out.putpixel(getp(frame, index, 0), (scale, hasnormal, easing, 255))
+  #meta: textureid, easing, scale?, unused
+  out.putpixel(getp(frame, index, 0), (0, easing, scale, 255))
   #position and normal
   for i in range(0,3):
     rgb[i].append(norm[i])
@@ -188,9 +190,10 @@ def encodeface(id, frame, index):
 
 #encode all the data
 for frame in range(0, nframes):
-  print("encoding frame",frame+1,"of",nframes,"    ", "{:.2f}".format((frame+1)/nframes*100),"%")
-  id = [int(i) for i in frames[frame].split("-")]
+  print("encoding frame",frame+1,"of",nframes,"\t\t","{:.2f}".format((frame)/nframes*100),"%")
+  id = [int(i) for i in frames[frame].split(" ")]
   for i in range(0, nfaces):
-    encodeface(id, frame+1, i)
+    encodeface(id, frame, i)
 
+print("Done\t\t\t\t 100.00 %")
 out.save(output[1]+".png")

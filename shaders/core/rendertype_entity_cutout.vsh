@@ -1,7 +1,6 @@
 #version 440
 
 #moj_import <light.glsl>
-#moj_import <matf.glsl>
 
 in vec3 Position;
 in vec4 Color;
@@ -29,12 +28,6 @@ out vec4 overlayColor;
 out vec2 texCoord0;
 out vec4 normal;
 
-const vec3[6] onormals = vec3[6](
-    vec3(0, 0, 1), vec3(0, 0, -1),
-    vec3(1, 0, 0), vec3(-1, 0, 0),
-    vec3(0, 1, 0), vec3(0, -1, 0)
-);
-
 ivec2 getp(ivec2 tl, ivec2 size, int y, int index, int offset) {
     int i = (index * 5) + offset;
     return tl + ivec2(i % size.x, int(i / size.x) + y);
@@ -42,13 +35,12 @@ ivec2 getp(ivec2 tl, ivec2 size, int y, int index, int offset) {
 
 void main() {
     //default
-    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
-    vertexDistance = length((ModelViewMat * vec4(Position, 1.0)).xyz);
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
     lightMapColor = texelFetch(Sampler2, UV2 / 16, 0);
     overlayColor = texelFetch(Sampler1, UV1, 0);
     normal = ProjMat * vec4(Normal, 0.0);
     texCoord0 = UV0;
+
 
     //some basic data
     int corner = gl_VertexID % 4;
@@ -57,48 +49,53 @@ void main() {
     ivec2 uv = ivec2((UV0 * atlasSize));
     vec3 posoffset = vec3(0.0);
     //read uv offset
-    vec4 metauvoffset = texelFetch(Sampler0, uv, 0) * 255;
-    ivec2 uvoffset = ivec2(int(metauvoffset.r*256) + int(metauvoffset.g),
-                           int(metauvoffset.b*256) + int(metauvoffset.a));
+    ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
+    ivec2 uvoffset = ivec2(metauvoffset.r*256 + metauvoffset.g,
+                           metauvoffset.b*256 + metauvoffset.a);
     //find and read topleft pixel
     ivec2 topleft = uv - uvoffset;
-    vec4 markerpix = texelFetch(Sampler0, topleft, 0);
+    ivec4 markerpix = ivec4(texelFetch(Sampler0, topleft, 0) * 255);
     //if marker is correct at topleft
-    if (floor(markerpix * 255) == vec4(12,34,56,0)) {
+    if (markerpix == ivec4(12,34,56,0)) {
         //grab metadata: marker, size, nvertices, nframes
         //size
-        vec4 metasize = texelFetch(Sampler0, topleft + ivec2(1,0), 0) * 255;
-        ivec2 size = ivec2(int(metasize.r)*256 + int(metasize.g), int(metasize.b)*256 + int(metasize.a));
+        ivec4 metasize = ivec4(texelFetch(Sampler0, topleft + ivec2(1,0), 0) * 255);
+        ivec2 size = ivec2(metasize.r*256 + metasize.g,
+                           metasize.b*256 + metasize.a);
         //nvertices
-        vec4 metanvertices = texelFetch(Sampler0, topleft + ivec2(2,0), 0) * 255;
-        int nvertices = int(metanvertices.r)*16777216 + int(metanvertices.g)*65536 + int(metanvertices.b)*256 + int(metanvertices.a);
+        ivec4 metanvertices = ivec4(texelFetch(Sampler0, topleft + ivec2(2,0), 0) * 255);
+        int nvertices = metanvertices.r*16777216 + metanvertices.g*65536 + metanvertices.b*256 + metanvertices.a;
         //nframes
-        vec4 metanframes = texelFetch(Sampler0, topleft + ivec2(3,0), 0) * 255;
-        int nframes = int(metanframes.a);
+        ivec4 metaframes = ivec4(texelFetch(Sampler0, topleft + ivec2(3,0), 0) * 255);
+        int nframes = max(metaframes.r, 1);
+        int ntextures = max(metaframes.g, 1);
+        float duration = float(metaframes.b + 1) * 0.05; // /20ticks
+        //time in seconds
+        float time = GameTime * 1200;
+        int frame = int(time * 1/duration) % nframes;
 
         //calculate height offsets
-        int headerheight = 1 + int((nvertices/4./size.x)+0.9999);
-        int yoffset = headerheight + (size.y * nframes);
+        int headerheight = 1 + int(ceil(nvertices*0.25/size.x));
+        int yoffset = headerheight + (ntextures * size.y);
         //relative vertex id from unique face uv
-        int faceid = ((uvoffset.y-1) * size.y) + uvoffset.x;
-        int vertexid = faceid * 4 + corner;
-
+        int id = (((uvoffset.y-1) * size.x) + uvoffset.x) * 4 + corner;
+        id += frame * nvertices;
         //read data
-        //meta = rgba: scale, hasnormal, easing, unused
+        //meta = rgba: textureid, easing, scale?, unused
         //position = xyz: rgb, rgb, rgb
         //normal = xyz: aaa of the prev pixels
         //uv = rg,ba
-        vec4 datameta = texelFetch(Sampler0, getp(topleft, size, yoffset, vertexid, 0), 0);
-        vec4 datax = texelFetch(Sampler0, getp(topleft, size, yoffset, vertexid, 1), 0);
-        vec4 datay = texelFetch(Sampler0, getp(topleft, size, yoffset, vertexid, 2), 0);
-        vec4 dataz = texelFetch(Sampler0, getp(topleft, size, yoffset, vertexid, 3), 0);
-        vec4 datauv = texelFetch(Sampler0, getp(topleft, size, yoffset, vertexid, 4), 0);
+        vec4 datameta = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0);
+        vec4 datax = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
+        vec4 datay = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
+        vec4 dataz = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
+        vec4 datauv = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
         //position
         posoffset = vec3(
             ((datax.r*255*256)+(datax.g*256)+(datax.b))/256,
             ((datay.r*255*256)+(datay.g*256)+(datay.b))/256,
             ((dataz.r*255*256)+(dataz.g*256)+(dataz.b))/256
-        ) - vec3(2.36, 1.5, 2.36);
+        ) - 128;
         //normal
         vec3 norm = vec3(datax.a, datay.a, dataz.a);
         //uv
@@ -106,30 +103,56 @@ void main() {
             ((datauv.r*256) + datauv.g)/atlasSize.x/256*size.x,
             ((datauv.b*256) + datauv.a)/atlasSize.y/256*size.y
         );
+
+        int easing = int(datameta.g * 255);
+        if (nframes > 1) {
+            //next frame
+            id = (id + nvertices) % (nframes * nvertices);
+            vec4 datameta2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0);
+            vec4 datax2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
+            vec4 datay2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
+            vec4 dataz2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
+            vec4 datauv2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
+            //position
+            vec3 posoffset2 = vec3(
+                ((datax2.r*255*256)+(datax2.g*256)+(datax2.b))/256,
+                ((datay2.r*255*256)+(datay2.g*256)+(datay2.b))/256,
+                ((dataz2.r*255*256)+(dataz2.g*256)+(dataz2.b))/256
+            ) - 128;
+            //normal
+            vec3 norm2 = vec3(datax2.a, datay2.a, dataz2.a);
+            //uv
+            //vec2 texuv2 = vec2(
+            //    ((datauv.r*256) + datauv.g)/atlasSize.x/256*size.x,
+            //    ((datauv.b*256) + datauv.a)/atlasSize.y/256*size.y
+            //);
+            //texCoord02 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv2;
+
+            transition = fract(time * 1/duration);
+            switch (easing) {
+                case 1: { //linear
+                    posoffset = mix(posoffset, posoffset2, transition);
+                    norm = mix(norm, norm2, transition);
+                    break;}
+                case 2: { //cubic
+                    transition = transition < 0.5 ? 4 * transition * transition * transition : 1 - pow(-2 * transition + 2, 3) * 0.5;
+                    posoffset = mix(posoffset, posoffset2, transition);
+                    norm = mix(norm, norm2, transition);
+                    break;}
+            }
+        }
+
         //real uv
         texCoord0 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv;
-        //shading from normal
-        vertexColor = vec4(vec3(max(dot(norm * IViewRotMat, Light0_Direction), 0.0)), 1.0);
-        vertexColor *= vec4(vec3(max(dot(norm * IViewRotMat, Light1_Direction), 0.0)), 1.0);
-        vertexColor += 0.4;
-        vertexColor *= minecraft_sample_lightmap(Sampler2, UV2);
-
-        //real normals
+        //normal and shading
         normal = vec4(normalize(norm), 0.0);
-
-        //find rotation
-        vec3 localX = normalize(IViewRotMat * Normal);
-        vec3 localZ = normalize(cross(vec3(0, 1, 0), localX));
-        vec3 localY = cross(localX, localZ);
-        mat3 modelMat = mat3(localX, localY, localZ);
-
-#define ACCURACY 5000
-        //float yaw = floor(atan(localZ.x, localZ.z)*ACCURACY)/ACCURACY;
-        //float pitch = floor(atan(localZ.y, length(localZ.xz))*ACCURACY)/ACCURACY;
-        //mat3 pitchrot = Rotate3(pitch, X);
-        //mat3 yawrot = Rotate3(yaw, Y);
-
-        gl_Position = ProjMat * vec4(Position + (inverse(IViewRotMat) * modelMat * posoffset), 1.0);
-        //gl_Position = ProjMat * vec4(Position + (inverse(IViewRotMat) * yawrot * pitchrot * posoffset), 1.0);
+        vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, norm, Color);
     }
+    //debug
+    //else {
+    //    gl_Position = ProjMat * ModelViewMat * vec4(Pos + vec3(gl_VertexID % 4 - 2, gl_VertexID % 4 / 2 * 2, -(gl_VertexID % 4) + 2 * 2), 1.0);
+    //    vertexColor = vec4(1.0,0.0,0.0,1.0);
+    //}
+    gl_Position = ProjMat * vec4(Position + (inverse(IViewRotMat) * posoffset), 1.0);
+    vertexDistance = length((ModelViewMat * vec4(Position + (inverse(IViewRotMat) * posoffset), 1.0)).xyz);
 }
