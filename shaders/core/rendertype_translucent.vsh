@@ -135,8 +135,8 @@ void main() {
 
         gl_Position = ProjMat * ModelViewMat * vec4(Pos + posoffset, 1.0);
     }
-    else {
-        gl_Position = ProjMat * ModelViewMat * vec4(Pos + vec3(gl_VertexID % 4 - 2, gl_VertexID % 4 / 2 * 2, -(gl_VertexID % 4) + 2 * 2), 1.0);
-        vertexColor = vec4(1.0,0.0,0.0,1.0);
-    }
+    //else {
+    //    gl_Position = ProjMat * ModelViewMat * vec4(Pos + vec3(gl_VertexID % 4 - 2, gl_VertexID % 4 / 2 * 2, -(gl_VertexID % 4) + 2 * 2), 1.0);
+    //    vertexColor = vec4(1.0,0.0,0.0,1.0);
+    //}
 }
