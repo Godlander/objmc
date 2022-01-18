@@ -28,6 +28,8 @@ place the shaders in the correct location in a resourcepack, and any model gener
 
 ![animate](https://user-images.githubusercontent.com/16228717/149825494-cd51146e-38ed-48a5-a47a-0c2fce678d1a.gif)
 
+![image](https://user-images.githubusercontent.com/16228717/149994828-d285f81d-b213-4057-bfbf-288c02891011.png)
+
 ## random notes about the tool
 
 ### general output format:
