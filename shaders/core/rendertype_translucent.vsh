@@ -89,7 +89,7 @@ void main() {
             ((dataz.r*255*256)+(dataz.g*256)+(dataz.b))/256
         ) - 128;
         //normal
-        vec3 norm = vec3(datax.a, datay.a, dataz.a);
+        vec3 norm = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
         //uv
         vec2 texuv = vec2(
             ((datauv.r*256) + datauv.g)/atlasSize.x/256*size.x,
@@ -112,7 +112,7 @@ void main() {
                 ((dataz2.r*255*256)+(dataz2.g*256)+(dataz2.b))/256
             ) - 128;
             //normal
-            vec3 norm2 = vec3(datax2.a, datay2.a, dataz2.a);
+            vec3 norm2 = vec3(datax2.a + int(datax2.a == 0), datay2.a + int(datay2.a == 0), dataz2.a + int(dataz2.a == 0));
             //uv
             //vec2 texuv2 = vec2(
             //    ((datauv.r*256) + datauv.g)/atlasSize.x/256*size.x,
@@ -138,7 +138,7 @@ void main() {
         texCoord0 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv;
         //normal and shading
         normal = vec4(normalize(norm), 0.0);
-        vertexColor = vec4(vec3(max(dot(normal.xyz, vec3(0.0,1.1,0.0)), 0.0)), 1.0);
+        vertexColor = vec4(vec3(max(dot(normal.xyz, vec3(0,1,0)), 0.0)) * 0.8 + 0.2, 1.0);
     }
     //debug
     //else {
