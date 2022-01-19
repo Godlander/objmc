@@ -2,18 +2,32 @@ import math
 import json
 from PIL import Image, ImageOps
 
-objs = ["cat"]
-frames = ["0"]
-#texture animations not supported yet
-texs = ["cat.jpg"]
+# CFG PARSER BY BOGDIKON #
+# Load data from config file
+# CFG structure:
+# 1 line - obj (separated by commas)
+# 2 line - frames (separated by commas)
+# 3 line - duration
+# 4 line - textures (separated by commas)
+# 5 line - output (format: block_id, texture_name. separated by commas)
 
-duration = 20 #ticks
+with open("convert.cfg") as f:
+    cfg = f.read()
+    
+    cfg_lines = cfg.split("\n")
+    
+    objs = cfg_lines[0].split(",")
+    frames = cfg_lines[1].split(",")
+    duration = int(cfg_lines[2])
+    texs = cfg_lines[3].split(",")
+    output = cfg_lines[4].split(",")
+
+
+# Load data from config file
+
 #test easing
 # 0: none, 1: linear, 2: inoutcubic
 easing = 1
-
-#json, png
-output = ["yellow_stained_glass", "catout"]
 
 #input error checking
 if len(frames) == 0:
