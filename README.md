@@ -4,6 +4,8 @@ make sure Python and Pillow is installed, and place the script in the same direc
 
 place the shaders in the correct location in a resourcepack, and any model generated with this tool should display properly.
 
+make sure your minecraft version is vanilla 1.18.1. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with core shaders.
+
 ### script inputs
 
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
