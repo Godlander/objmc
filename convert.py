@@ -2,10 +2,10 @@ import math
 import json
 from PIL import Image, ImageOps
 
-objs = ["cat"]
+objs = ["cube"]
 frames = ["0"]
 #texture animations not supported yet
-texs = ["cat.jpg"]
+texs = ["cube.png"]
 
 duration = 20 #ticks
 #test easing
@@ -13,7 +13,7 @@ duration = 20 #ticks
 easing = 1
 
 #json, png
-output = ["yellow_stained_glass", "catout"]
+output = ["pink_stained_glass", "cubeout"]
 
 #input error checking
 if len(frames) == 0:
