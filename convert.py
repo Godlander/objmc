@@ -1,19 +1,32 @@
 import math
 import json
 from PIL import Image, ImageOps
+import argparse
 
-objs = ["cube"]
-frames = ["0"]
+parser = argparse.ArgumentParser(description='python script to convert .OBJ files into Minecraft, rendering them in game with a core shader.\nGithub: https://github.com/Godlander/objmc')
+
+parser.add_argument('--objs', help='Specify a set of object files', required=True, nargs='*')
+parser.add_argument('--texs', help='Specify a set of texture files', required=True, nargs='*')
+parser.add_argument('--frames', help='Specify a frame', nargs='*', default=["0"])
+parser.add_argument('--duration', type=int, help="Spectify a duration", default=20)
+parser.add_argument('--easing', type=int, help="Spectify a easing\n0: none, 1: linear, 2: inoutcubic")
+parser.add_argument("--output_texture",help="Specify the name of the texture file to output",default="catout")
+parser.add_argument("--output_json",help="Specify the name of the json file to output",default="yellow_stained_glass")
+args = parser.parse_args()
+
 #texture animations not supported yet
-texs = ["cube.png"]
+texs = args.texs
+objs = args.objs
 
-duration = 20 #ticks
+frames = args.frames
+
+duration = args.duration #ticks
 #test easing
 # 0: none, 1: linear, 2: inoutcubic
-easing = 1
+easing = args.easing
 
 #json, png
-output = ["pink_stained_glass", "cubeout"]
+output = [args.output_json, args.output_texture]
 
 #input error checking
 if len(frames) == 0:
