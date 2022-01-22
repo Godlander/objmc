@@ -98,6 +98,7 @@ if (markerpix == ivec4(12,34,56,0)) {
                 posoffset = mix(posoffset, posoffset2, transition);
                 norm = mix(norm, norm2, transition);
                 break;}
+            //spline interpolation? extra texture reads for better motion.
         }
     }
 

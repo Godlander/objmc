@@ -4,8 +4,8 @@
         "srcrgb": "srcalpha",
         "dstrgb": "1-srcalpha"
     },
-    "vertex": "rendertype_entity_translucent_cull",
-    "fragment": "rendertype_entity_translucent_cull",
+    "vertex": "render/entity",
+    "fragment": "render/entity",
     "attributes": [
         "Position",
         "Color",
