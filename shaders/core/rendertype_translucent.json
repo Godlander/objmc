@@ -4,8 +4,8 @@
         "srcrgb": "srcalpha",
         "dstrgb": "1-srcalpha"
     },
-    "vertex": "rendertype_translucent",
-    "fragment": "rendertype_translucent",
+    "vertex": "render/block",
+    "fragment": "render/block",
     "attributes": [
         "Position",
         "Color",

@@ -1,8 +1,9 @@
 import math
 import json
 from PIL import Image, ImageOps
+import argparse
 
-objs = ["cube"]
+objs = ["cube.obj"]
 frames = ["0"]
 #texture animations not supported yet
 texs = ["cube.png"]
@@ -13,7 +14,11 @@ duration = 20 #ticks
 easing = 1
 
 #json, png
-output = ["pink_stained_glass", "cubeout"]
+output = ["pink_stained_glass.json", "cubeout.png"]
+
+#file extension optional
+output[0] = output[0].split(".")[0]
+output[1] = output[1].split(".")[0]
 
 #input error checking
 if len(frames) == 0:
@@ -27,7 +32,7 @@ x,y = tex.size
 
 objects = []
 def readobj(name):
-  obj = open(name + ".obj", "r")
+  obj = open(name.split(".")[0]+".obj", "r")
   d = {"positions":[],"uvs":[],"normals":[],"faces":[]}
   for line in obj:
     if line.startswith("v "):

@@ -2,7 +2,7 @@
 
 #moj_import <light.glsl>
 #moj_import <fog.glsl>
-#moj_import <getp.glsl>
+#moj_import <tools.glsl>
 
 in vec3 Position;
 in vec4 Color;
@@ -28,9 +28,9 @@ out float transition;
 void main() {
     //default
     vec3 Pos = Position + ChunkOffset;
+    texCoord0 = UV0;
     vertexColor = Color;
     normal = ProjMat * ModelViewMat * vec4(Normal, 0.0);
-    texCoord0 = UV0;
 
     //objmc
     #moj_import <objmc.glsl>
