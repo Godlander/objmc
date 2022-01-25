@@ -20,6 +20,10 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 `output`: array of two string file names: the json model, and the texture.
 
+### rotation:
+
+for custom entity model rotation to work, the model has to be a Potion item (can use `CustomModelData`). the `CustomPotionColor` R,G,B defines the X,Y,Z rotation of the model.
+
 ## samples:
 
 ![image](https://user-images.githubusercontent.com/16228717/148311540-503cf422-b6c7-4c95-b4b4-fca1e136dbfe.png)
