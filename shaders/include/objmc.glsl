@@ -61,8 +61,8 @@ if (markerpix == ivec4(12,34,56,0)) {
     vec3 norm = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
     //uv
     ivec2 texuv = ivec2(
-        ((datauv.r*256) + datauv.g)/256*size.x,
-        ((datauv.b*256) + datauv.a)/256*size.y
+        ((datauv.r*256) + datauv.g)/256 * (size.x-0.1),
+        ((datauv.b*256) + datauv.a)/256 * (size.y-0.1)
     );
 
     int easing = int(datameta.g * 255);
@@ -105,8 +105,10 @@ if (markerpix == ivec4(12,34,56,0)) {
     }
 
     //real uv
-    texCoord0 = floor((vec2(topleft.x, topleft.y+headerheight) + texuv - vec2(0, float(texuv.y>size.y-1))))
-                    /atlasSize + vec2(onepixel.x * 0.001 * corner, onepixel.y * 0.001 * ((corner + 1) % 4));
+                //align uv to pixel
+    texCoord0 = floor(vec2(topleft.x, topleft.y+headerheight) + texuv)/atlasSize
+                //make sure that faces with same uv beginning/ending renders
+                + vec2(onepixel.x * 0.0001 * corner, onepixel.y * 0.0001 * ((corner + 1) % 4));
 
     //normal and shading
     normal = vec4(normalize(norm), 0.0);
