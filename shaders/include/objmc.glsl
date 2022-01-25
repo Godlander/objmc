@@ -103,7 +103,8 @@ if (markerpix == ivec4(12,34,56,0)) {
     }
 
     //real uv
-    texCoord0 = floor(atlasSize*(vec2(topleft.x, topleft.y+headerheight)/atlasSize + texuv + vec2(onepixel.x * 0.001 * corner, onepixel.y * 0.001 * ((corner + 1) % 4))))/atlasSize;
+    texCoord0 = floor((vec2(topleft.x, topleft.y+headerheight) + texuv - vec2(0, float(texuv.y>size.y-1))))
+                    /atlasSize + vec2(onepixel.x * 0.001 * corner, onepixel.y * 0.001 * ((corner + 1) % 4));
 
     //normal and shading
     normal = vec4(normalize(norm), 0.0);
