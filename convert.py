@@ -14,7 +14,7 @@ duration = 20 #ticks
 easing = 1
 
 #json, png
-output = ["lime_stained_glass.json", "christmasout.png"]
+output = ["potion.json", "christmasout.png"]
 
 #file extension optional
 output[0] = output[0].split(".")[0]
@@ -109,7 +109,7 @@ def getuvpos(faceid):
 #create elements for model
 js = {
   "textures": {
-    "1": output[1]
+    "layer0": output[1]
   },
   "elements": []
 }
@@ -118,7 +118,7 @@ def newelement(index):
     "from": [8,8,8],
     "to": [8,8,8],
     "faces": {
-      "north" : {"uv": getuvpos(index), "texture": "#1"}
+      "north" : {"uv": getuvpos(index), "texture": "#layer0", "tintindex": 0}
     }
   }
   js["elements"].append(cube)
