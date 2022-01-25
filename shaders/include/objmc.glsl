@@ -7,6 +7,7 @@ ivec2 atlasSize = textureSize(Sampler0, 0);
 vec2 onepixel = 1./atlasSize;
 ivec2 uv = ivec2((UV0 * atlasSize));
 vec3 posoffset = vec3(0.0);
+bool isCustom = false;
 //read uv offset
 ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
 ivec2 uvoffset = ivec2(metauvoffset.r*256 + metauvoffset.g,
@@ -16,6 +17,7 @@ ivec2 topleft = uv - uvoffset;
 ivec4 markerpix = ivec4(texelFetch(Sampler0, topleft, 0) * 255);
 //if marker is correct at topleft
 if (markerpix == ivec4(12,34,56,0)) {
+    isCustom = true;
     //grab metadata: marker, size, nvertices, nframes
     //size
     ivec4 metasize = ivec4(texelFetch(Sampler0, topleft + ivec2(1,0), 0) * 255);
@@ -58,10 +60,10 @@ if (markerpix == ivec4(12,34,56,0)) {
     //normal
     vec3 norm = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
     //uv
-    vec2 texuv = vec2(
-        ((datauv.r*256) + datauv.g)/256,
-        ((datauv.b*256) + datauv.a)/256
-    )*size/atlasSize;
+    ivec2 texuv = ivec2(
+        ((datauv.r*256) + datauv.g)/256*size.x,
+        ((datauv.b*256) + datauv.a)/256*size.y
+    );
 
     int easing = int(datameta.g * 255);
     if (nframes > 1) {

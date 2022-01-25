@@ -45,7 +45,7 @@ void main() {
     vertexColor *= vec4(vec3(max(dot(normal.xyz * IViewRotMat, Light1_Direction), 0.0)), 1.0);
     vertexColor += 0.4;
     //maintain gui shading on non objmc models
-    vertexColor = mix(vertexColor, minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color), float(isgui(ProjMat)));
+    vertexColor = mix(minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color), vertexColor, float(isCustom));
     gl_Position = ProjMat * ModelViewMat * (vec4(Position + (inverse(IViewRotMat) * posoffset), 1.0));
     vertexDistance = cylindrical_distance(ModelViewMat, Position + (inverse(IViewRotMat) * posoffset));
 }
