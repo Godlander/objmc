@@ -3,10 +3,10 @@ import json
 from PIL import Image, ImageOps
 import argparse
 
-objs = ["cube.obj"]
+objs = ["christmas.obj"]
 frames = ["0"]
 #texture animations not supported yet
-texs = ["cube.png"]
+texs = ["christmas.png"]
 
 duration = 20 #ticks
 #test easing
@@ -14,7 +14,7 @@ duration = 20 #ticks
 easing = 1
 
 #json, png
-output = ["pink_stained_glass.json", "cubeout.png"]
+output = ["lime_stained_glass.json", "christmasout.png"]
 
 #file extension optional
 output[0] = output[0].split(".")[0]
@@ -29,6 +29,9 @@ if duration < 1 or duration > 256:
 
 tex = Image.open(texs[0])
 x,y = tex.size
+if x < 8:
+  print("Minimum texture size is 8x")
+  quit()
 
 objects = []
 def readobj(name):
