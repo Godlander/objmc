@@ -1,20 +1,42 @@
 import math
 import json
 from PIL import Image, ImageOps
-import argparse
 
-objs = ["christmas.obj"]
-frames = ["0"]
+#--------------------------------
+#INPUT
+#--------------------------------
+
+#objs
+objs = ["ring.obj","ring2.obj"]
 #texture animations not supported yet
-texs = ["christmas.png"]
+texs = ["white.png"]
 
-duration = 20 #ticks
-#test easing
-# 0: none, 1: linear, 2: inoutcubic
-easing = 1
+frames = ["0","1"]
 
 #json, png
-output = ["potion.json", "christmasout.png"]
+output = ["potion.json", "ringout.png"]
+
+#--------------------------------
+#ADVANCED
+#--------------------------------
+
+#duration of each frame in ticks
+duration = 20
+
+#define easing
+# 0: none, 1: linear, 2: inoutcubic
+easing = 2
+
+#define behavior of potion color overlay
+# number of bytes to trade between rotation and animation frames
+# rgb = rotation xyz | animation frames
+# 0: rotation xyz
+# 1: rotation xy  | animation frames 0-255
+# 2: rotation x   | animation frames 0-65535
+# 3: animation frames 0-8388607, numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
+colorbehavior = 3
+
+#--------------------------------
 
 #file extension optional
 output[0] = output[0].split(".")[0]
@@ -72,9 +94,9 @@ dataheight = (nframes * math.ceil(((5*nvertices))/x)) + 1
 ty = 1 + uvheight + texheight + dataheight
 
 print("x: ", x, ", y: ", y,sep="")
-print("faces: ", nfaces, ",vertices: ", nvertices,sep="")
-print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ",sep="")
-print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds",sep="")
+print("faces: ", nfaces, ",vertices: ", nvertices, sep="")
+print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ", sep="")
+print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", sep="")
 #write to json model
 model = open(output[0]+".json", "w")
 #create out image with correct dimensions
@@ -87,8 +109,8 @@ out.putpixel((0,0), (12,34,56,0))
 out.putpixel((1,0), (int(x/256), x%256, int(y/256), y%256))
 #nvertices
 out.putpixel((2,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, nvertices%256))
-#nframes, ntextures, duration
-out.putpixel((3,0), (nframes,ntextures,duration-1,255))
+#nframes, ntextures, duration, colorbehavior
+out.putpixel((3,0), (nframes,ntextures,duration-1,colorbehavior))
 
 #actual texture
 for i in range (0,len(texs)):
