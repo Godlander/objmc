@@ -28,13 +28,14 @@ duration = 20
 easing = 2
 
 #define behavior of potion color overlay
-# number of bytes to trade between rotation and animation frames
-# rgb = rotation xyz | animation frames
-# 0: rotation xyz
-# 1: rotation xy  | animation frames 0-255
-# 2: rotation x   | animation frames 0-65535
-# 3: animation frames 0-8388607, numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
+# number of bytes to trade between rotation and animation frames,
+#    r,g,b =
+# 0: rotation x,y,z
+# 1: rotation x,y , animation frames 0-255
+# 2: rotation x   , animation frames 0-65535
+# 3: animation frames 0-8388607. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
 colorbehavior = 3
+#auto-play color can be calculated by: 8388608 + ((total duration + [time query gametime] - starting frame) % total duration)
 
 #--------------------------------
 
