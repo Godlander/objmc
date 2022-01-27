@@ -20,9 +20,11 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 `output`: array of two string file names: the json model, and the texture.
 
-### rotation:
+### advanced:
 
-for custom entity model rotation to work, the model has to be a Potion item (can use `CustomModelData`). the `CustomPotionColor` R,G,B defines the X,Y,Z rotation of the model.
+for custom entity model rotation and controllable animation to work, the model has to be a Potion item (can use `CustomModelData`).
+
+the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or the animation time, depending on what `colorbehavior` is set to in the Python script as you exported the texture.
 
 ## samples:
 
