@@ -48,7 +48,20 @@ the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or 
 
 ### flipped uv
 
-the texture ends up being read upside down for some reason. idk why, so i just flip the texture while encoding to compensate
+the uv ends up being upside down for some reason when exporting from Blockbench. idk why, so i just flip the texture while encoding to compensate.
+
+this doesnt seem to happen through Blender tho
+
+### gltf animation to obj per frame
+
+Blockbench exports animations to gltf format, which objmc doesn't support
+
+you can import gltf format into blender and then export as waveform .obj, check the animation checkbox when exporting to generate .obj files per frame of the animation.
+
+by default blender outputs a lot more frames than you will likely need, especially since objmc shader does interpolation between the frames. you can change the time stretching and frame range in blender to be lower to potentially decrease file size by a lot
+
+![image](https://user-images.githubusercontent.com/16228717/151484572-927dd40b-bd5d-4046-bb09-2cdf7ae23cf9.png)
+
 
 ### vertex id
 
