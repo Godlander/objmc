@@ -28,13 +28,15 @@ the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or 
 
 ## samples:
 
-![image](https://user-images.githubusercontent.com/16228717/148311540-503cf422-b6c7-4c95-b4b4-fca1e136dbfe.png)
+![teapot](https://user-images.githubusercontent.com/16228717/151483908-2238f6f9-44c7-434b-a411-f9959bf86a3e.gif)
 
-![image](https://user-images.githubusercontent.com/16228717/148442834-78e49a63-c5f8-4668-a822-dcd11d215618.png)
+![cat](https://user-images.githubusercontent.com/16228717/148311540-503cf422-b6c7-4c95-b4b4-fca1e136dbfe.png)
 
-![image](https://user-images.githubusercontent.com/16228717/148869708-310e7ec4-7d89-40e8-8fc6-38d2e6116cb7.png)
+![cube](https://user-images.githubusercontent.com/16228717/148442834-78e49a63-c5f8-4668-a822-dcd11d215618.png)
 
-![animate](https://user-images.githubusercontent.com/16228717/149825494-cd51146e-38ed-48a5-a47a-0c2fce678d1a.gif)
+![robo](https://user-images.githubusercontent.com/16228717/148869708-310e7ec4-7d89-40e8-8fc6-38d2e6116cb7.png)
+
+![ring](https://user-images.githubusercontent.com/16228717/149825494-cd51146e-38ed-48a5-a47a-0c2fce678d1a.gif)
 
 ![image](https://user-images.githubusercontent.com/16228717/149994828-d285f81d-b213-4057-bfbf-288c02891011.png)
 
