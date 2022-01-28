@@ -44,6 +44,8 @@ the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or 
 
 ### general output format:
 
+this is just a reference, actual format may change as i add/change stuff
+
 ![image](https://user-images.githubusercontent.com/16228717/148311479-0cade68e-dab8-491b-83fb-f7d22c78bd1b.png)
 
 ### flipped uv
