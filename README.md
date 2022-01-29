@@ -14,13 +14,15 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 `texs`: array of one single name of the texture file.
 
-`duration`: integer duration of frames in ticks.
-
 ### script output
 
 `output`: array of two string file names: the json model, and the texture.
 
-### advanced:
+### advanced/animation:
+
+`duration`: integer duration of frames in ticks.
+
+`easing`: interpolation method shader uses inbetween frames. 0: none, 1: linear, 2: cubic
 
 for custom entity model rotation and controllable animation to work, the model has to be a Potion item (can use `CustomModelData`).
 
