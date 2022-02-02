@@ -56,6 +56,10 @@ the uv ends up being upside down for some reason when exporting from Blockbench.
 
 this doesnt seem to happen through Blender tho
 
+### versioning
+
+due to me changing stuff, different versions of the objmc shader may only work with the script texture/model outputs of that specific version. if stuff breaks make sure to double check that you have the latest version of both the shader as well as the script output.
+
 ### gltf animation to obj per frame
 
 Blockbench exports animations to gltf format, which objmc doesn't support
