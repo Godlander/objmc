@@ -7,7 +7,6 @@ ivec2 atlasSize = textureSize(Sampler0, 0);
 vec2 onepixel = 1./atlasSize;
 ivec2 uv = ivec2((UV0 * atlasSize));
 vec3 posoffset = vec3(0.0);
-vec3 norm = vec3(0.0);
 bool isCustom = false;
 vec3 rotation = vec3(0.0);
 //read uv offset
@@ -20,7 +19,6 @@ ivec4 markerpix = ivec4(texelFetch(Sampler0, topleft, 0) * 255);
 //if marker is correct at topleft
 if (markerpix == ivec4(12,34,56,0)) {
     isCustom = true;
-    vec3 norm;
     //grab metadata: marker, size, nvertices, frames
     //size
     ivec4 metasize = ivec4(texelFetch(Sampler0, topleft + ivec2(1,0), 0) * 255);
@@ -53,9 +51,9 @@ if (markerpix == ivec4(12,34,56,0)) {
             break;}
         case 3: { //animation frames 0-8388607
             int color = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
-            time = color;
+            if (Color.r < 0.5) {time = color;}
             //interpolation enabled past 8388608, suso's idea to define starting tick with color
-            if (Color.r >= 0.5) {time += mod(GameTime*24000, duration*nframes);}
+            else {time = time + duration*nframes - color;}
             break;}
     }
 #endif
@@ -87,9 +85,9 @@ if (markerpix == ivec4(12,34,56,0)) {
     //normal
     vec3 norm1 = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
     //uv
-    ivec2 texuv1 = ivec2(
-        ((datauv.r*256) + datauv.g)/256 * (size.x-0.1),
-        ((datauv.b*256) + datauv.a)/256 * (size.y-0.1)
+    vec2 texuv1 = vec2(
+        ((datauv.r*256) + datauv.g)/256 * (size.x-0.25),
+        ((datauv.b*256) + datauv.a)/256 * (size.y-0.25)
     );
 
     int easing = int(datameta.g * 255);
@@ -120,25 +118,24 @@ if (markerpix == ivec4(12,34,56,0)) {
         switch (easing) {
             case 1: { //linear
                 posoffset = mix(posoffset1, posoffset2, transition);
-                norm = mix(norm1, norm2, transition);
+                normal = mix(norm1, norm2, transition);
                 break;}
             case 2: { //cubic
                 transition = transition < 0.5 ? 4 * transition * transition * transition : 1 - pow(-2 * transition + 2, 3) * 0.5;
                 posoffset = mix(posoffset1, posoffset2, transition);
-                norm = mix(norm1, norm2, transition);
+                normal = mix(norm1, norm2, transition);
                 break;}
             //spline interpolation? extra texture reads for better motion.
         }
     }
+    //normalize normal
+    normal = normalize(normal);
 
     //real uv
                 //align uv to pixel
-    texCoord0 = floor(vec2(topleft.x, topleft.y+headerheight) + texuv1)/atlasSize
+    texCoord0 = (vec2(topleft.x, topleft.y+headerheight) + texuv1)/atlasSize
                 //make sure that faces with same uv beginning/ending renders
                 + vec2(onepixel.x * 0.0001 * corner, onepixel.y * 0.00001 * ((corner + 1) % 4));
-
-    //normal and shading
-    normal = vec4(normalize(norm), 0.0);
 }
 //debug
 //else {

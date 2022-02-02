@@ -29,11 +29,11 @@ out vec4 lightMapColor;
 out vec4 overlayColor;
 out vec2 texCoord0;
 out vec2 texCoord02;
-out vec4 normal;
+out vec3 normal;
 out float transition;
 
 void main() {
-    normal = ProjMat * ModelViewMat * vec4(Normal, 0.0);
+    normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
     texCoord0 = UV0;
     overlayColor = texelFetch(Sampler1, UV1, 0);
     lightMapColor = texelFetch(Sampler2, UV2 / 16, 0);
@@ -45,9 +45,10 @@ void main() {
     //maintain gui shading on non objmc models
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
     if (isCustom) {
-        vertexColor = vec4(vec3(max(dot(normal.xyz * IViewRotMat, Light0_Direction), 0.0)), 1.0);
-        vertexColor *= vec4(vec3(max(dot(normal.xyz * IViewRotMat, Light1_Direction), 0.0)), 1.0);
-        vertexColor += 0.4;
+        normal = rotateX(rotation.r * 2*PI) * rotateY(rotation.g * 2*PI) * rotateZ(rotation.b * 2*PI) * normal;
+        vertexColor = vec4(vec3(max(dot(normal * IViewRotMat, Light0_Direction), 0.0)), 1.0);
+        vertexColor *= vec4(vec3(max(dot(normal * IViewRotMat, Light1_Direction), 0.0)), 1.0);
+        vertexColor = clamp(vertexColor+0.4, 0,1);
     }
     //rotate if color is rotation
     posoffset = rotateX(rotation.r * 2*PI) * rotateY(rotation.g * 2*PI) * rotateZ(rotation.b * 2*PI) * posoffset;

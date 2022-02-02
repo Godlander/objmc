@@ -22,7 +22,7 @@ out float vertexDistance;
 out vec4 vertexColor;
 out vec2 texCoord0;
 out vec2 texCoord02;
-out vec4 normal;
+out vec3 normal;
 out float transition;
 
 void main() {
@@ -30,12 +30,12 @@ void main() {
     vec3 Pos = Position + ChunkOffset;
     texCoord0 = UV0;
     vertexColor = Color;
-    normal = ProjMat * ModelViewMat * vec4(Normal, 0.0);
+    normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
 
     //objmc
     #moj_import <objmc.glsl>
 
-    vertexColor = vec4(vec3(max(dot(normal.xyz, vec3(0,1,0)), 0.0)) * 0.8 + 0.2, 1.0);
+    vertexColor = vec4(vec3(clamp(dot(normal, vec3(0,2,0)), 0.0, 1.0)) * 0.8 + 0.2, 1.0);
     vertexColor *= minecraft_sample_lightmap(Sampler2, UV2);
     gl_Position = ProjMat * ModelViewMat * vec4(Pos + posoffset, 1.0);
     vertexDistance = cylindrical_distance(ModelViewMat, Pos + posoffset);

@@ -13,7 +13,7 @@ in float vertexDistance;
 in vec4 vertexColor;
 in vec2 texCoord0;
 in vec2 texCoord02;
-in vec4 normal;
+in vec3 normal;
 in float transition;
 
 out vec4 fragColor;
