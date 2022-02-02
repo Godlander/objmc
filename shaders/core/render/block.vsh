@@ -33,6 +33,7 @@ void main() {
     normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
 
     //objmc
+    #define BLOCK
     #moj_import <objmc.glsl>
 
     vertexColor = vec4(vec3(clamp(dot(normal, vec3(0,1,0)), 0.0, 1.0)) * 0.8 + 0.2, 1.0);

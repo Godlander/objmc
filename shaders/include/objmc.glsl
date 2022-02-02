@@ -56,12 +56,12 @@ if (markerpix == ivec4(12,34,56,0)) {
             else {time = time + duration*nframes - color;}
             break;}
     }
-    if (isgui(ProjMat)) {
-        vec3 localZ = inverse(IViewRotMat) * Normal;
+    //if (isgui(ProjMat)) {
+    //    vec3 localZ = inverse(IViewRotMat) * Normal;
 
-        rotation.r = atan(localZ.x, localZ.z);
-        rotation.g = atan(localZ.y, length(localZ.xz));
-    }
+    //    rotation.r = atan(localZ.x, localZ.z);
+    //    rotation.g = atan(localZ.y, length(localZ.xz));
+    //}
 #endif
 
     int frame = int(time/duration) % nframes;
