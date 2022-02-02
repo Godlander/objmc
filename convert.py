@@ -7,14 +7,14 @@ from PIL import Image, ImageOps
 #--------------------------------
 
 #objs
-objs = ["teapotanim_000001.obj","teapotanim_000002.obj","teapotanim_000003.obj","teapotanim_000004.obj","teapotanim_000005.obj","teapotanim_000006.obj","teapotanim_000007.obj","teapotanim_000008.obj","teapotanim_000009.obj","teapotanim_000010.obj","teapotanim_000011.obj","teapotanim_000012.obj","teapotanim_000013.obj","teapotanim_000014.obj","teapotanim_000015.obj","teapotanim_000016.obj","teapotanim_000017.obj","teapotanim_000018.obj","teapotanim_000019.obj","teapotanim_000020.obj","teapotanim_000021.obj","teapotanim_000022.obj","teapotanim_000023.obj","teapotanim_000024.obj","teapotanim_000025.obj","teapotanim_000026.obj","teapotanim_000027.obj","teapotanim_000028.obj","teapotanim_000029.obj","teapotanim_000030.obj","teapotanim_000031.obj","teapotanim_000032.obj","teapotanim_000033.obj","teapotanim_000034.obj","teapotanim_000035.obj","teapotanim_000036.obj","teapotanim_000037.obj","teapotanim_000038.obj","teapotanim_000039.obj","teapotanim_000040.obj","teapotanim_000041.obj","teapotanim_000042.obj","teapotanim_000043.obj","teapotanim_000044.obj","teapotanim_000045.obj","teapotanim_000046.obj","teapotanim_000047.obj","teapotanim_000048.obj","teapotanim_000049.obj","teapotanim_000050.obj"]
+objs = ["cup.obj"]
 #texture animations not supported yet
-texs = ["teapot.png"]
+texs = ["cup.png"]
 
-frames = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49"]
+frames = ["0"]
 
 #json, png
-output = ["light_blue_stained_glass.json", "teapotout.png"]
+output = ["light_gray_stained_glass.json", "cupout.png"]
 
 #--------------------------------
 #ADVANCED

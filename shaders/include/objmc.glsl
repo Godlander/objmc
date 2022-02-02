@@ -56,6 +56,12 @@ if (markerpix == ivec4(12,34,56,0)) {
             else {time = time + duration*nframes - color;}
             break;}
     }
+    if (isgui(ProjMat)) {
+        vec3 localZ = inverse(IViewRotMat) * Normal;
+
+        rotation.r = atan(localZ.x, localZ.z);
+        rotation.g = atan(localZ.y, length(localZ.xz));
+    }
 #endif
 
     int frame = int(time/duration) % nframes;
@@ -77,17 +83,17 @@ if (markerpix == ivec4(12,34,56,0)) {
     vec4 dataz = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
     vec4 datauv = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
     //position
-    vec3 posoffset1 = vec3(
+    posoffset = vec3(
         ((datax.r*65536)+(datax.g*256)+(datax.b))/256,
         ((datay.r*65536)+(datay.g*256)+(datay.b))/256,
         ((dataz.r*65536)+(dataz.g*256)+(dataz.b))/256
     ) - 128.5;
     //normal
-    vec3 norm1 = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
+    normal = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
     //uv
     vec2 texuv1 = vec2(
-        ((datauv.r*256) + datauv.g)/256 * (size.x-0.25),
-        ((datauv.b*256) + datauv.a)/256 * (size.y-0.25)
+        ((datauv.r*256) + datauv.g)/256 * (size.x-(size.x/256.)),
+        ((datauv.b*256) + datauv.a)/256 * (size.y-(size.y/256.))
     );
 
     int easing = int(datameta.g * 255);
@@ -117,13 +123,13 @@ if (markerpix == ivec4(12,34,56,0)) {
         transition = fract(time/duration);
         switch (easing) {
             case 1: { //linear
-                posoffset = mix(posoffset1, posoffset2, transition);
-                normal = mix(norm1, norm2, transition);
+                posoffset = mix(posoffset, posoffset2, transition);
+                normal = mix(normal, norm2, transition);
                 break;}
             case 2: { //cubic
                 transition = transition < 0.5 ? 4 * transition * transition * transition : 1 - pow(-2 * transition + 2, 3) * 0.5;
-                posoffset = mix(posoffset1, posoffset2, transition);
-                normal = mix(norm1, norm2, transition);
+                posoffset = mix(posoffset, posoffset2, transition);
+                normal = mix(normal, norm2, transition);
                 break;}
             //spline interpolation? extra texture reads for better motion.
         }
