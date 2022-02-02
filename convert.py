@@ -1,5 +1,6 @@
 import math
 import json
+import re
 from PIL import Image, ImageOps
 
 #--------------------------------
@@ -7,17 +8,18 @@ from PIL import Image, ImageOps
 #--------------------------------
 
 #objs
-objs = ["cup.obj"]
+objs = ["cat.obj"]
 #texture animations not supported yet
-texs = ["cup.png"]
+texs = ["cat.jpg"]
 
 frames = ["0"]
 
 #json, png
-output = ["light_gray_stained_glass.json", "cupout.png"]
+output = ["yellow_stained_glass.json", "catout.png"]
 
 #--------------------------------
 #ADVANCED
+#(changing these only changes data on texture, no need to replace model)
 #--------------------------------
 
 #duration of each frame in ticks
@@ -38,7 +40,7 @@ colorbehavior = 0
 #auto-play color can be calculated by: 8388608 + ((total duration + [time query gametime] - starting frame) % total duration)
 
 #whether uv is flipped or not. if your textures look backwards ingame toggle this
-flipuv = 0
+flipuv = 1
 
 #--------------------------------
 
@@ -65,13 +67,13 @@ def readobj(name):
   d = {"positions":[],"uvs":[],"normals":[],"faces":[]}
   for line in obj:
     if line.startswith("v "):
-      d["positions"].append([float(i) for i in line.strip().split(" ")[1:]])
+      d["positions"].append([float(i) for i in " ".join(line.split()).split(" ")[1:]])
     if line.startswith("vt "):
-      d["uvs"].append([float(i) for i in line.strip().split(" ")[1:]])
+      d["uvs"].append([float(i) for i in " ".join(line.split()).split(" ")[1:]])
     if line.startswith("vn "):
-      d["normals"].append([float(i) for i in line.strip().split(" ")[1:]])
+      d["normals"].append([float(i) for i in " ".join(line.split()).split(" ")[1:]])
     if line.startswith("f "):
-      d["faces"].append([[int(i)-1 for i in vert.split("/")] for vert in line.strip().split(" ")[1:]])
+      d["faces"].append([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]])
   obj.close()
   return d
 #read obj
