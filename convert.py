@@ -147,7 +147,7 @@ js = {
 def newelement(index):
   cube = {
     "from": [8,8,8],
-    "to": [8,8,8],
+    "to": [8.000001,8.000001,8.000001],
     "faces": {
       "north" : {"uv": getuvpos(index), "texture": "#layer0", "tintindex": 0}
     }

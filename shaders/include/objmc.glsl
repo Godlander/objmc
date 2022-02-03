@@ -82,6 +82,15 @@ if (markerpix == ivec4(12,34,56,0)) {
         ((datay.r*65536)+(datay.g*256)+(datay.b))/256,
         ((dataz.r*65536)+(dataz.g*256)+(dataz.b))/256
     ) - 128.5;
+
+    #ifdef ENTITY // Follow entity rotation
+        mat3 worldMat = getWorldMat(Light0_Direction, Light1_Direction);
+        vec3 n = Normal * worldMat;
+        float   sine = -n.x;
+        float cosine =  n.z;
+        posoffset.xz = vec2(posoffset.x * cosine - posoffset.z * sine,  posoffset.x * sine + posoffset.z * cosine);
+        #endif
+
     //normal
     normal = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
     //uv

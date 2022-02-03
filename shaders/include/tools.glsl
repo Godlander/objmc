@@ -27,3 +27,14 @@ mat3 rotateZ(float angle) {
                 sin(angle),  cos(angle), 0.0,
                    0.0    ,    0.0     , 1.0);
 }
+
+// From Onnowhere's shader utils: https://github.com/onnowhere/core_shaders/blob/master/.shader_utils/vsh_util.glsl
+#define LIGHT0_DIRECTION vec3(0.2, 1.0, -0.7)
+#define LIGHT1_DIRECTION vec3(-0.2, 1.0, 0.7)
+mat3 getWorldMat(vec3 light0, vec3 light1) {
+    if (abs(light0) == abs(light1)) return mat3(10000.0);
+    
+    mat3 V = mat3(normalize(LIGHT0_DIRECTION), normalize(LIGHT1_DIRECTION), normalize(cross(LIGHT0_DIRECTION, LIGHT1_DIRECTION)));
+    mat3 W = mat3(normalize(light0), normalize(light1), normalize(cross(light0, light1)));
+    return W * inverse(V);
+}
