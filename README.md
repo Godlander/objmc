@@ -1,4 +1,4 @@
-## usage:
+# usage:
 
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
 
@@ -28,7 +28,7 @@ for custom entity model rotation and controllable animation to work, the model h
 
 the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or the animation time, depending on what `colorbehavior` is set to in the Python script as you exported the texture.
 
-## samples:
+# samples:
 
 ![teapot](https://user-images.githubusercontent.com/16228717/151483908-2238f6f9-44c7-434b-a411-f9959bf86a3e.gif)
 
@@ -42,7 +42,7 @@ the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or 
 
 ![image](https://user-images.githubusercontent.com/16228717/149994828-d285f81d-b213-4057-bfbf-288c02891011.png)
 
-## random notes about the tool
+# random notes about the tool
 
 ### general output format:
 
@@ -88,3 +88,15 @@ basically anything to do with images in js does alpha premultiplying, which ruin
 ### questions
 
 feel free to contact me on any of the linked social media icons in my github profile readme.
+
+# contributors:
+
+**DartCat25** - Helped me get started
+
+**Dominexus** - Spline math
+
+**Onnowhere** - Help with formatting decisions
+
+**Suso** - Idea for controlled interpolated animation
+
+**The Der Discohund** - Help with matrix operations
