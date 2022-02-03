@@ -2,7 +2,9 @@
 
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
 
-place the shaders in the correct location in a resourcepack, and any model generated with this tool should display properly.
+after editing the script with your inputs, run `python convert.py` in command line to generate the model and texture output to go in a resourcepack.
+
+place the shaders in the correct location in the resourcepack, and any model generated with this tool should display properly.
 
 make sure your minecraft version is vanilla 1.18.1. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with core shaders.
 
