@@ -39,14 +39,14 @@ if (markerpix == ivec4(12,34,56,0)) {
 #ifdef ENTITY
     switch (metaframes.a) {
         case 0: { //rotation xyz
-            rotation = Color.rgb;
+            rotation = Color.rgb * 2*PI;
             break;}
         case 1: { //rotation xy  | animation frames 0-255
-            rotation.rg = Color.rg;
+            rotation.rg = Color.rg * 2*PI;
             time = Color.b*255;
             break;}
         case 2: { //rotation x   | animation frames 0-65535
-            rotation.r = Color.r;
+            rotation.r = Color.r * 2*PI;
             time = Color.g*65280 + Color.b*255;
             break;}
         case 3: { //animation frames 0-8388607
@@ -56,12 +56,6 @@ if (markerpix == ivec4(12,34,56,0)) {
             else {time = time + duration*nframes - color;}
             break;}
     }
-    //if (isgui(ProjMat)) {
-    //    vec3 localZ = inverse(IViewRotMat) * Normal;
-
-    //    rotation.r = atan(localZ.x, localZ.z);
-    //    rotation.g = atan(localZ.y, length(localZ.xz));
-    //}
 #endif
 
     int frame = int(time/duration) % nframes;

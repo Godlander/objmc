@@ -93,7 +93,7 @@ feel free to contact me on any of the linked social media icons in my github pro
 
 **DartCat25** - Helped me get started
 
-**Dominexus** - Spline math
+**Dominexus** - Help with spline math
 
 **Onnowhere** - Help with formatting decisions
 

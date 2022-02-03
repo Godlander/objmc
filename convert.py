@@ -1,6 +1,5 @@
 import math
 import json
-import re
 from PIL import Image, ImageOps
 
 #--------------------------------
@@ -39,8 +38,10 @@ easing = 1
 colorbehavior = 0
 #auto-play color can be calculated by: 8388608 + ((total duration + [time query gametime] - starting frame) % total duration)
 
-#whether uv is flipped or not. if your textures look backwards ingame toggle this
-flipuv = 1
+#whether uv is flipped or not.
+#if your textures look upside down ingame toggle this
+#i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
+flipuv = True
 
 #--------------------------------
 
@@ -125,7 +126,7 @@ for i in range (0,len(texs)):
   if nx != x or ny != y:
     print("mismatched texture sizes!")
     quit()
-  if flipuv == 0:
+  if flipuv:
     out.paste(tex, (0,1+uvheight+(i*y)))
   else:
     out.paste(ImageOps.flip(tex), (0,1+uvheight+(i*y)))

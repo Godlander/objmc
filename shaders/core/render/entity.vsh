@@ -51,7 +51,7 @@ void main() {
         vertexColor = clamp(vertexColor+0.4, 0,1);
     }
     //rotate if color is rotation
-    posoffset = rotateX(rotation.r * 2*PI) * rotateY(rotation.g * 2*PI) * rotateZ(rotation.b * 2*PI) * posoffset;
+    posoffset = rotateX(rotation.r) * rotateY(rotation.g) * rotateZ(rotation.b) * posoffset;
     gl_Position = ProjMat * ModelViewMat * (vec4(Position + inverse(IViewRotMat) * posoffset, 1.0));
     vertexDistance = cylindrical_distance(ModelViewMat, Position + inverse(IViewRotMat) * posoffset);
 }
