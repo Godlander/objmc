@@ -30,7 +30,7 @@ for custom entity model rotation and controllable animation to work, the model h
 
 the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or the animation time, depending on what `colorbehavior` is set to in the Python script as you exported the texture.
 
-`autorotate` can be used to estimate rotation instead of defining it by color. due to inaccuracy this will be jittery and look bad when closeup. but for far away things it looks ok, and allows color to be used for other input like controlling animation.
+`autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. due to inaccuracy this will be jittery and look bad when closeup. but for far away things it looks ok, and allows color to be used for other input like controlling animation.
 
 # samples:
 
