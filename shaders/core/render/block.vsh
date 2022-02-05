@@ -36,7 +36,11 @@ void main() {
     #define BLOCK
     #moj_import <objmc.glsl>
 
-    vertexColor = vec4(vec3(clamp(dot(normal, vec3(0,1,0)), 0.0, 1.0)) * 0.8 + 0.2, 1.0);
+    if (isCustom) { //custom shading
+        vertexColor = vec4(vec3(clamp(dot(normal, vec3(0,1,0)) * 0.8 + 0.2, 0,1)), 1.0);
+    }
+    //non custom color
+    else {vertexColor = Color;}
     vertexColor *= minecraft_sample_lightmap(Sampler2, UV2);
     gl_Position = ProjMat * ModelViewMat * vec4(Pos + posoffset, 1.0);
     vertexDistance = cylindrical_distance(ModelViewMat, Pos + posoffset);

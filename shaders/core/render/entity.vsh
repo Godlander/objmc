@@ -15,6 +15,8 @@ uniform sampler2D Sampler0;
 uniform sampler2D Sampler1;
 uniform sampler2D Sampler2;
 
+uniform float FogStart;
+uniform float FogEnd;
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
 uniform mat3 IViewRotMat;
@@ -41,17 +43,31 @@ void main() {
     //objmc
     #define ENTITY
     #moj_import <objmc.glsl>
+    //estimate rotation from normal
+    if (autorotate) {
+        vec3 localZ = IViewRotMat * Normal;
+        vec3 localX = normalize(cross(vec3(0, 1, 0), localZ));
+        vec3 localY = cross(localZ, localX);
+        mat3 localRot = mat3(localX, localY, localZ);
+        normal = inverse(IViewRotMat) * rotateX(rotation.r * 2*PI) * rotateY(rotation.g * 2*PI) * rotateZ(rotation.b * 2*PI) * localRot * normal;
+        posoffset = inverse(IViewRotMat) * rotateX(rotation.x) * rotateY(rotation.y) * rotateZ(rotation.z) * localRot * posoffset;
+    }
+    //pure color rotation
+    else if (isCustom && !isgui(ProjMat) && !(FogStart*0.000001 > 1)) {
+        normal = inverse(IViewRotMat) * rotateX(rotation.r * 2*PI) * rotateY(rotation.g * 2*PI) * rotateZ(rotation.b * 2*PI) * normal;
+        posoffset = inverse(IViewRotMat) * rotateX(rotation.x) * rotateY(rotation.y) * rotateZ(rotation.z) * posoffset;
+    }
+    //flip shading in gui bcos light goes the other way
+    if (isgui(ProjMat)) {normal.xz = -normal.xz;}
 
-    //maintain gui shading on non objmc models
+    //maintain gui shading
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
-    if (isCustom) {
-        normal = rotateX(rotation.r * 2*PI) * rotateY(rotation.g * 2*PI) * rotateZ(rotation.b * 2*PI) * normal;
-        vertexColor = vec4(vec3(max(dot(normal * IViewRotMat, Light0_Direction), 0.0)), 1.0);
-        vertexColor *= vec4(vec3(max(dot(normal * IViewRotMat, Light1_Direction), 0.0)), 1.0);
+    if (isCustom) { //custom shading
+        vertexColor = vec4(vec3(max(dot(normal, Light0_Direction), 0.0)), 1.0);
+        vertexColor *= vec4(vec3(max(dot(normal, Light1_Direction), 0.0)), 1.0);
         vertexColor = clamp(vertexColor+0.4, 0,1);
     }
-    //rotate if color is rotation
-    posoffset = rotateX(rotation.r) * rotateY(rotation.g) * rotateZ(rotation.b) * posoffset;
-    gl_Position = ProjMat * ModelViewMat * (vec4(Position + inverse(IViewRotMat) * posoffset, 1.0));
-    vertexDistance = cylindrical_distance(ModelViewMat, Position + inverse(IViewRotMat) * posoffset);
+
+    gl_Position = ProjMat * ModelViewMat * (vec4(Position + posoffset, 1.0));
+    vertexDistance = cylindrical_distance(ModelViewMat, Position + posoffset);
 }

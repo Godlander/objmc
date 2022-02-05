@@ -36,7 +36,12 @@ easing = 1
 # 2: rotation x   , animation frames 0-65535
 # 3: animation frames 0-8388607. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
 colorbehavior = 0
-#auto-play color can be calculated by: 8388608 + ((total duration + [time query gametime] - starting frame) % total duration)
+#auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
+
+#Auto rotate
+# attempt to estimate rotation with Normals
+# this is very jittery, best used for far away objects. For display purposes color defined rotation is much better.
+autorotate = False
 
 #whether uv is flipped or not.
 #if your textures look upside down ingame toggle this
@@ -118,6 +123,8 @@ out.putpixel((1,0), (int(x/256), x%256, int(y/256), y%256))
 out.putpixel((2,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, nvertices%256))
 #nframes, ntextures, duration, colorbehavior
 out.putpixel((3,0), (nframes,ntextures,duration-1,colorbehavior))
+#autorotate
+out.putpixel((4,0), (int(autorotate), 0, 0, 255))
 
 #actual texture
 for i in range (0,len(texs)):
@@ -147,7 +154,7 @@ js = {
 def newelement(index):
   cube = {
     "from": [8,8,8],
-    "to": [8,8,8],
+    "to": [8.000001,8.000001,8.000001],
     "faces": {
       "north" : {"uv": getuvpos(index), "texture": "#layer0", "tintindex": 0}
     }
@@ -206,8 +213,7 @@ def encodevert(id, frame, index, face):
   #get position and append normal
   rgb = getposition(id[0], face[0])
   if len(face) == 2:
-    norm = [0,0,0]
-    hasnormal = 0
+    norm = [0,1,0]
   else:
     norm = getnormal(id[0], face[2])
   #meta: textureid, easing, scale?, unused

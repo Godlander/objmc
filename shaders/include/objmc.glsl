@@ -8,6 +8,7 @@ vec2 onepixel = 1./atlasSize;
 ivec2 uv = ivec2((UV0 * atlasSize));
 vec3 posoffset = vec3(0.0);
 bool isCustom = false;
+bool autorotate = false;
 vec3 rotation = vec3(0.0);
 //read uv offset
 ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
@@ -34,6 +35,10 @@ if (markerpix == ivec4(12,34,56,0)) {
     float duration = float(metaframes.b + 1);
     //time in ticks
     float time = GameTime * 24000;
+
+    //rotate
+    ivec4 metarot = ivec4(texelFetch(Sampler0, topleft + ivec2(4,0), 0) * 255);
+    autorotate = (metarot.r > 0);
 
     //colorbehavior
 #ifdef ENTITY
