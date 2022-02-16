@@ -6,7 +6,7 @@ after editing the script with your inputs, run `python convert.py` in command li
 
 place the shaders in the correct location in the resourcepack, and any model generated with this tool should display properly.
 
-make sure your minecraft version is vanilla 1.18.1. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with core shaders.
+make sure your minecraft version is vanilla 1.18.1. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with objmc core shaders.
 
 ### script inputs
 
@@ -14,7 +14,7 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 `frames`: array of strings of digits defining which index of the obj to use as each frame.
 
-`texs`: array of one single name of the texture file.
+`texs`: array of one single name of the texture file. the minimum size is 8x8, but a larger texture is recommended if 
 
 ### script output
 
@@ -22,9 +22,11 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 ### advanced/animation:
 
-`duration`: integer duration of frames in ticks.
+`duration`: integer duration of each frame in ticks.
 
 `easing`: interpolation method shader uses inbetween frames. 0: none, 1: linear, 2: cubic
+
+`flipuv`: if your model renders but doesn't look right, try toggling this. see [#flipped-uv](#flipped-uv).
 
 for custom entity model rotation and controllable animation to work, the model has to be a Potion item (can use `CustomModelData`).
 
@@ -46,23 +48,35 @@ the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or 
 
 ![image](https://user-images.githubusercontent.com/16228717/149994828-d285f81d-b213-4057-bfbf-288c02891011.png)
 
-# random notes about the tool
+# faqs / random notes about the tool
 
-### general output format:
+### general output format
 
 this is just a reference, actual format may change as i add/change stuff
 
 ![image](https://user-images.githubusercontent.com/16228717/148311479-0cade68e-dab8-491b-83fb-f7d22c78bd1b.png)
 
+### model not rendering
+
+most of the time this is due to an error in your resourcepack. make sure the shaders are in the correct place, double check the file paths for model and texture (by default model will point to the root textures folder, not textures/block or textures/items), try using latest version of objmc script and shader if you have an older version.
+
 ### flipped uv
 
 the uv ends up being upside down for some reason when exporting from Blockbench. idk why, so i just flip the texture while encoding to compensate.
 
-this doesnt seem to happen through Blender tho
+this doesnt seem to happen through Blender tho.
 
 ### versioning
 
-due to me changing stuff, different versions of the objmc shader may only work with the script texture/model outputs of that specific version. if stuff breaks make sure to double check that you have the latest version of both the shader as well as the script output.
+due to me changing stuff, different versions of the objmc shader may only work with the script texture/model outputs of that specific version.
+
+but also due to me changing stuff a lot i'm too lazy to try to give this a proper versioning system.
+
+if stuff breaks make sure to double check that you have the latest version of both the shader as well as the script output.
+
+### multiple textures
+
+there is no support for stitching multiple textures. you will have to use another program like blender to bake them onto one texture along with the neccesary uv changes on the model itself.
 
 ### gltf animation to obj per frame
 
@@ -74,20 +88,23 @@ by default blender outputs a lot more frames than you will likely need, especial
 
 ![image](https://user-images.githubusercontent.com/16228717/151484572-927dd40b-bd5d-4046-bb09-2cdf7ae23cf9.png)
 
+in the sample teapot animation, i only exported every 5th frame, and the animation still looks good enough
 
 ### vertex id
 
 Minecraft's `gl_VertexID` isn't per model, so it's difficult to find the relative id of a vertex in a model unless you have a constant number of vertices
 
-i thought up a trick to assign each face a unique pixel uv, then encoding the offset of the pixel from top left (relative 0,0 in the texture, some random place in the atlas)
+i came up with a method to assign each face a unique uv pointing to a pixel in the 'header' of the texture, then encoding the offset of the pixel from top left (relative 0,0 in the texture, some random place in the atlas) as color of the pixel. this also lets vertex know where top left corner of the texture is in the atlas.
 
 with the offset data i am able to calculate the relative face id, and `gl_VertexID % 4` gives the corner.
 
 ![image](https://user-images.githubusercontent.com/16228717/148311858-3bd76267-f80f-4ad6-84c3-3b5f6760bcf4.png)
 
+in the image, the first 6 faces are selected, and their uv is shown highlighted in blockbench uv editor
+
 ### preserving rgb
 
-basically anything to do with images in js does alpha premultiplying, which ruins rgb values when alpha is anything less than 255. afaik only way to not suffer this is to directly interact with the raw file instead of as an image. so if you wanted to send an image with alpha to someone over discord or something, don't send it as an image. instead, you can zip it and send the zip to preserve data, or just change the file extension so discord treats it as some unknown file.
+basically anything to do with images in js does alpha premultiplying, which ruins rgb values when alpha is anything less than 255. afaik only way to not suffer this is to directly interact with the raw file instead of as an image. so if you wanted to send an image with alpha to someone over discord or something, don't send it as an image. instead, you can change the file extension so discord treats it as some unknown file, or zip it and send the zip to preserve data.
 
 ### questions
 
