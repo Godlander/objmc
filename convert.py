@@ -7,14 +7,14 @@ from PIL import Image, ImageOps
 #--------------------------------
 
 #objs
-objs = ["cat.obj"]
+objs = ["teapotanim_000001.obj","teapotanim_000002.obj","teapotanim_000003.obj","teapotanim_000004.obj","teapotanim_000005.obj","teapotanim_000006.obj","teapotanim_000007.obj","teapotanim_000008.obj","teapotanim_000009.obj","teapotanim_000010.obj","teapotanim_000011.obj","teapotanim_000012.obj","teapotanim_000013.obj","teapotanim_000014.obj","teapotanim_000015.obj","teapotanim_000016.obj","teapotanim_000017.obj","teapotanim_000018.obj","teapotanim_000019.obj","teapotanim_000020.obj","teapotanim_000021.obj","teapotanim_000022.obj","teapotanim_000023.obj","teapotanim_000024.obj","teapotanim_000025.obj","teapotanim_000026.obj","teapotanim_000027.obj","teapotanim_000028.obj","teapotanim_000029.obj","teapotanim_000030.obj","teapotanim_000031.obj","teapotanim_000032.obj","teapotanim_000033.obj","teapotanim_000034.obj","teapotanim_000035.obj","teapotanim_000036.obj","teapotanim_000037.obj","teapotanim_000038.obj","teapotanim_000039.obj","teapotanim_000040.obj","teapotanim_000041.obj","teapotanim_000042.obj","teapotanim_000043.obj","teapotanim_000044.obj","teapotanim_000045.obj","teapotanim_000046.obj","teapotanim_000047.obj","teapotanim_000048.obj","teapotanim_000049.obj","teapotanim_000050.obj"]
 #texture animations not supported yet
-texs = ["cat.jpg"]
+texs = ["teapot.png"]
 
-frames = ["0"]
+frames = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49"]
 
 #json, png
-output = ["yellow_stained_glass.json", "catout.png"]
+output = ["light_blue_stained_glass.json", "teapotout.png"]
 
 #--------------------------------
 #ADVANCED
@@ -22,11 +22,14 @@ output = ["yellow_stained_glass.json", "catout.png"]
 #--------------------------------
 
 #duration of each frame in ticks
-duration = 3
+duration = 5
 
 #define easing
-# 0: none, 1: linear, 2: inoutcubic
-easing = 1
+# 0: none
+# 1: linear
+# 2: in-out cubic
+# 3: 4-point bezier
+easing = 3
 
 #define behavior of potion color overlay
 # number of bytes to trade between rotation and animation frames,
@@ -35,16 +38,20 @@ easing = 1
 # 1: rotation x,y , animation frames 0-255
 # 2: rotation x   , animation frames 0-65535
 # 3: animation frames 0-8388607. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
-colorbehavior = 0
-#auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
+#for 3, auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
+colorbehavior = 3
 
 #Auto rotate
-# attempt to estimate rotation with Normals
+# attempt to estimate rotation with Normals, added to colorbehavior rotation.
 # this is very jittery, best used for far away objects. For display purposes color defined rotation is much better.
 autorotate = False
 
-#whether uv is flipped or not.
-#if your textures look upside down ingame toggle this
+#Auto play
+# always interpolate frames, colorbehavior=3 overrides this.
+autoplay = True
+
+#Flip uv
+#if your model renders but textures are not right try toggling this
 #i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
 flipuv = True
 
@@ -124,7 +131,7 @@ out.putpixel((2,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256,
 #nframes, ntextures, duration, colorbehavior
 out.putpixel((3,0), (nframes,ntextures,duration-1,colorbehavior))
 #autorotate
-out.putpixel((4,0), (int(autorotate), 0, 0, 255))
+out.putpixel((4,0), (int(autorotate), int(autoplay), 0, 255))
 
 #actual texture
 for i in range (0,len(texs)):
@@ -210,14 +217,14 @@ def getp(frame, index, offset):
 def encodevert(id, frame, index, face):
   #init meta
   scale = 100
+  #meta: textureid, easing, scale?, unused
+  out.putpixel(getp(frame, index, 0), (0, easing, scale, 255))
   #get position and append normal
   rgb = getposition(id[0], face[0])
   if len(face) == 2:
-    norm = [0,1,0]
+    norm = [0,255,0]
   else:
     norm = getnormal(id[0], face[2])
-  #meta: textureid, easing, scale?, unused
-  out.putpixel(getp(frame, index, 0), (0, easing, scale, 255))
   #position and normal
   for i in range(0,3):
     rgb[i].append(norm[i])

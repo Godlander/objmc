@@ -42,25 +42,27 @@ if (markerpix == ivec4(12,34,56,0)) {
 
     //colorbehavior
 #ifdef ENTITY
+    bool autoplay = (metarot.g > 0);
+    int tcolor = 0;
     switch (metaframes.a) {
-        case 0: { //rotation xyz
+        case 0: //rotation xyz
             rotation = Color.rgb * 2*PI;
-            break;}
-        case 1: { //rotation xy  | animation frames 0-255
+            break;
+        case 1: //rotation xy  | animation frames 0-255
             rotation.rg = Color.rg * 2*PI;
-            time = Color.b*255;
-            break;}
-        case 2: { //rotation x   | animation frames 0-65535
+            tcolor = int(Color.b*255);
+            break;
+        case 2: //rotation x   | animation frames 0-65535
             rotation.r = Color.r * 2*PI;
-            time = Color.g*65280 + Color.b*255;
-            break;}
-        case 3: { //animation frames 0-8388607
-            int color = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
-            if (Color.r < 0.5) {time = color;}
+            tcolor = int(Color.g*65280 + Color.b*255);
+            break;
+        case 3: //animation frames 0-8388607
+            tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
             //interpolation enabled past 8388608, suso's idea to define starting tick with color
-            else {time = time + duration*nframes - color;}
-            break;}
+            autoplay = (Color.r > 0.5);
+            break;
     }
+    time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
 #endif
 
     int frame = int(time/duration) % nframes;
@@ -121,16 +123,44 @@ if (markerpix == ivec4(12,34,56,0)) {
 
         transition = fract(time/duration);
         switch (easing) {
-            case 1: { //linear
+            case 1: //linear
                 posoffset = mix(posoffset, posoffset2, transition);
                 normal = mix(normal, norm2, transition);
-                break;}
-            case 2: { //cubic
+                break;
+            case 2: //in-out cubic
                 transition = transition < 0.5 ? 4 * transition * transition * transition : 1 - pow(-2 * transition + 2, 3) * 0.5;
                 posoffset = mix(posoffset, posoffset2, transition);
                 normal = mix(normal, norm2, transition);
-                break;}
-            //spline interpolation? extra texture reads for better motion.
+                break;
+            case 3: //4-point bezier
+                //third point
+                id = (id + nvertices) % (nframes * nvertices);
+                vec4 datameta3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0);
+                vec4 datax3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
+                vec4 datay3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
+                vec4 dataz3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
+                vec3 posoffset3 = vec3(
+                    ((datax3.r*65536)+(datax3.g*256)+(datax3.b))/256,
+                    ((datay3.r*65536)+(datay3.g*256)+(datay3.b))/256,
+                    ((dataz3.r*65536)+(dataz3.g*256)+(dataz3.b))/256
+                ) - 128.5;
+                vec3 norm3 = vec3(datax3.a + int(datax3.a == 0), datay3.a + int(datay3.a == 0), dataz3.a + int(dataz3.a == 0));
+                //fourth point
+                id = (id + nvertices) % (nframes * nvertices);
+                vec4 datameta4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0);
+                vec4 datax4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
+                vec4 datay4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
+                vec4 dataz4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
+                vec3 posoffset4 = vec3(
+                    ((datax4.r*65536)+(datax4.g*256)+(datax4.b))/256,
+                    ((datay4.r*65536)+(datay4.g*256)+(datay4.b))/256,
+                    ((dataz4.r*65536)+(dataz4.g*256)+(dataz4.b))/256
+                ) - 128.5;
+                vec3 norm4 = vec3(datax4.a + int(datax4.a == 0), datay4.a + int(datay4.a == 0), dataz4.a + int(dataz4.a == 0));
+                //bezier
+                posoffset = bezier(posoffset, posoffset2, posoffset3, posoffset4, transition);
+                normal = bezier(normal, norm2, norm3, norm4, transition);
+                break;
         }
     }
     //normalize normal
