@@ -14,7 +14,7 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 `frames`: array of strings of digits defining which index of the obj to use as each frame.
 
-`texs`: array of one single name of the texture file. the minimum size is 8x8, but a larger texture is recommended if 
+`texs`: array of one single name of the texture file. the minimum size is 8x8, but a larger texture is recommended if model has a lot of vertices or is animated.
 
 ### script output
 
@@ -24,7 +24,7 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 `duration`: integer duration of each frame in ticks.
 
-`easing`: interpolation method shader uses inbetween frames. 0: none, 1: linear, 2: cubic
+`easing`: interpolation method shader uses inbetween frames. 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier
 
 `flipuv`: if your model renders but doesn't look right, try toggling this. see [#flipped-uv](#flipped-uv).
 
