@@ -7,31 +7,36 @@ from PIL import Image, ImageOps
 #--------------------------------
 
 #objs
-objs = ["teapotanim_000001.obj","teapotanim_000002.obj","teapotanim_000003.obj","teapotanim_000004.obj","teapotanim_000005.obj","teapotanim_000006.obj","teapotanim_000007.obj","teapotanim_000008.obj","teapotanim_000009.obj","teapotanim_000010.obj","teapotanim_000011.obj","teapotanim_000012.obj","teapotanim_000013.obj","teapotanim_000014.obj","teapotanim_000015.obj","teapotanim_000016.obj","teapotanim_000017.obj","teapotanim_000018.obj","teapotanim_000019.obj","teapotanim_000020.obj","teapotanim_000021.obj","teapotanim_000022.obj","teapotanim_000023.obj","teapotanim_000024.obj","teapotanim_000025.obj","teapotanim_000026.obj","teapotanim_000027.obj","teapotanim_000028.obj","teapotanim_000029.obj","teapotanim_000030.obj","teapotanim_000031.obj","teapotanim_000032.obj","teapotanim_000033.obj","teapotanim_000034.obj","teapotanim_000035.obj","teapotanim_000036.obj","teapotanim_000037.obj","teapotanim_000038.obj","teapotanim_000039.obj","teapotanim_000040.obj","teapotanim_000041.obj","teapotanim_000042.obj","teapotanim_000043.obj","teapotanim_000044.obj","teapotanim_000045.obj","teapotanim_000046.obj","teapotanim_000047.obj","teapotanim_000048.obj","teapotanim_000049.obj","teapotanim_000050.obj"]
+objs = ["room.obj"]
 #texture animations not supported yet
-texs = ["teapot.png"]
+texs = ["room.jpg"]
 
-frames = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49"]
+frames = ["0"]
 
 #json, png
-output = ["light_blue_stained_glass.json", "teapotout.png"]
+output = ["light_gray_stained_glass.json", "roomout.png"]
 
 #--------------------------------
 #ADVANCED
 #(changing these only changes data on texture, no need to replace model)
 #--------------------------------
 
+#Position/Scaling
+# just adds & multiplies vertex positions before encoding, so you dont have to re export the model
+offset = (0,0,0)
+scale = 1
+
 #duration of each frame in ticks
 duration = 5
 
-#define easing
+#Animation Easing
 # 0: none
 # 1: linear
 # 2: in-out cubic
 # 3: 4-point bezier
 easing = 3
 
-#define behavior of potion color overlay
+#Item Color Overlay Behavior
 # number of bytes to trade between rotation and animation frames,
 #    r,g,b =
 # 0: rotation x,y,z
@@ -39,21 +44,21 @@ easing = 3
 # 2: rotation x   , animation frames 0-65535
 # 3: animation frames 0-8388607. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
 #for 3, auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
-colorbehavior = 3
+colorbehavior = 0
 
-#Auto rotate
+#Auto Rotate
 # attempt to estimate rotation with Normals, added to colorbehavior rotation.
 # this is very jittery, best used for far away objects. For display purposes color defined rotation is much better.
 autorotate = False
 
-#Auto play
+#Auto Play
 # always interpolate frames, colorbehavior=3 overrides this.
 autoplay = True
 
 #Flip uv
 #if your model renders but textures are not right try toggling this
 #i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
-flipuv = True
+flipuv = False
 
 #--------------------------------
 
@@ -171,12 +176,13 @@ def newelement(index):
 for i in range(0, nfaces):
   newelement(i)
 model.write(json.dumps(js))
+model.close()
 
 #grab data from the list and convert to rgb
 def getposition(id, index):
-  x = 8388608+((objects[id]["positions"][index][0])*65536)
-  y = 8388608+((objects[id]["positions"][index][1])*65536)
-  z = 8388608+((objects[id]["positions"][index][2])*65536)
+  x = 8388608+((objects[id]["positions"][index][0])*65536)*scale + offset[0]*65536
+  y = 8388608+((objects[id]["positions"][index][1])*65536)*scale + offset[1]*65536
+  z = 8388608+((objects[id]["positions"][index][2])*65536)*scale + offset[2]*65536
   rgb = []
   r = int((x/256/256)%256)
   g = int((x/256)%256)
@@ -248,4 +254,7 @@ for frame in range(0, nframes):
     encodeface(id, frame, i)
 
 print("Done\t\t\t\t 100.00 %")
+print("Saving...")
 out.save(output[1]+".png")
+out.close()
+quit()
