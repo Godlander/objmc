@@ -22,15 +22,17 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 ### advanced/animation:
 
+`offset` and `scale`: just adds & multiplies vertex positions before encoding, so you dont have to re-export the model.
+
 `duration`: integer duration of each frame in ticks.
 
 `easing`: interpolation method shader uses inbetween frames. 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier
 
 `flipuv`: if your model renders but doesn't look right, try toggling this. see [#flipped-uv](#flipped-uv).
 
-for custom entity model rotation and controllable animation to work, the model has to be a Potion item (can use `CustomModelData`).
+*for custom entity model rotation and controllable animation to work, the model has to be an item with overlay color, like Potion or dyed Leather Armor (can use `CustomModelData`).*
 
-the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or the animation time, depending on what `colorbehavior` is set to in the Python script as you exported the texture.
+`colorbehavior`: the overlay color of the item R,G,B defines the X,Y,Z rotation of the model or the animation time, depending on what this is set to in the Python script as you exported the texture.
 
 `autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. due to inaccuracy this will be jittery and look bad when closeup. but for far away things it looks ok, and allows color to be used for other input like controlling animation.
 
@@ -46,9 +48,7 @@ the `CustomPotionColor` R,G,B values defines the X,Y,Z rotation of the model or 
 
 ![robo](https://user-images.githubusercontent.com/16228717/148869708-310e7ec4-7d89-40e8-8fc6-38d2e6116cb7.png)
 
-![ring](https://user-images.githubusercontent.com/16228717/149825494-cd51146e-38ed-48a5-a47a-0c2fce678d1a.gif)
-
-![image](https://user-images.githubusercontent.com/16228717/149994828-d285f81d-b213-4057-bfbf-288c02891011.png)
+![room](https://user-images.githubusercontent.com/16228717/155235807-250932d3-0ffd-43ca-92c8-3112df12a64e.png)
 
 # faqs / random notes about the tool
 
