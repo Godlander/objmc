@@ -116,10 +116,10 @@ feel free to contact me on any of the linked social media icons in my github pro
 
 **DartCat25** - Helped me get started
 
-**Dominexus** - Help with spline math
+**The Der Discohund** - Help with matrix operations
 
 **Onnowhere** - Help with formatting decisions
 
 **Suso** - Idea for controlled interpolated animation
 
-**The Der Discohund** - Help with matrix operations
+**Dominexus** - Help with spline math
