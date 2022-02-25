@@ -7,14 +7,14 @@ from PIL import Image, ImageOps
 #--------------------------------
 
 #objs
-objs = ["room.obj"]
+objs = ["cube.obj"]
 #texture animations not supported yet
-texs = ["room.jpg"]
+texs = ["cube.png"]
 
 frames = ["0"]
 
 #json, png
-output = ["light_gray_stained_glass.json", "roomout.png"]
+output = ["potion.json", "out.png"]
 
 #--------------------------------
 #ADVANCED

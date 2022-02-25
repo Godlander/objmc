@@ -170,7 +170,7 @@ if (markerpix == ivec4(12,34,56,0)) {
                 //align uv to pixel
     texCoord0 = (vec2(topleft.x, topleft.y+headerheight) + texuv1)/atlasSize
                 //make sure that faces with same uv beginning/ending renders
-                + vec2(onepixel.x * 0.0001 * corner, onepixel.y * 0.00001 * ((corner + 1) % 4));
+                + vec2(onepixel.x * 0.0001 * corner, onepixel.y * 0.0001 * ((corner + 1) % 4));
 }
 //debug
 //else {

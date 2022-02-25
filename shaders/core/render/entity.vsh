@@ -56,13 +56,11 @@ void main() {
             vec3 localX = normalize(cross(vec3(0, 1, 0), localZ));
             vec3 localY = cross(localZ, localX);
             mat3 localRot = mat3(localX, localY, localZ);
-            normal = inverse(IViewRotMat) * rotateX(rotation.r) * rotateY(rotation.g) * rotateZ(rotation.b) * localRot * normal;
-            posoffset = inverse(IViewRotMat) * rotateX(rotation.x) * rotateY(rotation.y) * rotateZ(rotation.z) * localRot * posoffset;
+            posoffset = inverse(IViewRotMat) * rotate(rotation) * localRot * posoffset;
         }
         //pure color rotation
         else if (!isHand) {
-            normal = inverse(IViewRotMat) * rotateX(rotation.r) * rotateY(rotation.g) * rotateZ(rotation.b) * normal;
-            posoffset = inverse(IViewRotMat) * rotateX(rotation.x) * rotateY(rotation.y) * rotateZ(rotation.z) * posoffset;
+            posoffset = inverse(IViewRotMat) * rotate(rotation) * posoffset;
         }
         //custom shading
         normal *= 1.3;

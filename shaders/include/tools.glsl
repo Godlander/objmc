@@ -8,21 +8,17 @@ ivec2 getp(ivec2 topleft, ivec2 size, int yoffset, int index, int offset) {
     return topleft + ivec2(i % size.x, int(i / size.x) + yoffset);
 }
 
-//3d rotation functions from github copilot autocomplete
-mat3 rotateX(float angle) {
-    float c = cos(angle);
-    float s = sin(angle);
-    return mat3(1, 0, 0, 0, c, -s, 0, s, c);
-}
-mat3 rotateY(float angle) {
-    float c = cos(angle);
-    float s = sin(angle);
-    return mat3(c, 0, s, 0, 1, 0, -s, 0, c);
-}
-mat3 rotateZ(float angle) {
-    float c = cos(angle);
-    float s = sin(angle);
-    return mat3(c, -s, 0, s, c, 0, 0, 0, 1);
+//3d rotation matrix from Barf Creations
+mat3 rotate(vec3 angles) {
+    float sx = sin(angles.x);
+    float cx = cos(angles.x);
+    float sy = sin(-angles.y);
+    float cy = cos(-angles.y);
+    float sz = sin(-angles.z);
+    float cz = cos(-angles.z);
+    return mat3(cy*cz,            cy*sz,           -sy,
+                sx*sy*cz - cx*sz, sx*sy*sz + cx*cz, sx*cy,
+                cx*sy*cz + sx*sz, cx*sy*sz - sx*cz, cx*cy);
 }
 
 //gui item model detection from Onnowhere

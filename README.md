@@ -123,3 +123,5 @@ feel free to contact me on any of the linked social media icons in my github pro
 **Suso** - Idea for controlled interpolated animation
 
 **Dominexus** - Help with spline math
+
+**Barf Creations** - Help replicating Minecraft's jank Pose rotation matrix
