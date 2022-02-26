@@ -8,13 +8,16 @@ uniform vec4 ColorModulator;
 uniform float FogStart;
 uniform float FogEnd;
 uniform vec4 FogColor;
+uniform int isItem;
 
 in float vertexDistance;
 in vec4 vertexColor;
 in vec4 lightMapColor;
 in vec4 overlayColor;
 in vec2 texCoord0;
-in vec4 normal;
+in vec2 texCoord02;
+in vec3 normal;
+in float transition;
 
 out vec4 fragColor;
 
@@ -24,7 +27,7 @@ void main() {
         discard;
     }
     color *= vertexColor * ColorModulator;
-    color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
+    if (isItem == 0) {color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);}
     color *= lightMapColor;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
 }
