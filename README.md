@@ -5,7 +5,7 @@ after editing the script with your inputs, run `python convert.py` in command li
 
 place the shaders in the correct location in the resourcepack, and any model generated with this tool should display properly.
 
-make sure your minecraft version is vanilla 1.18.1. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with objmc core shaders.
+make sure your minecraft version is vanilla 1.18.2. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with objmc core shaders.
 
 ### script inputs
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
@@ -28,11 +28,11 @@ make sure your minecraft version is vanilla 1.18.1. the shader will not work wit
 
 *for custom entity model rotation and controllable animation to work, the model has to be an item with overlay color, like Potion or dyed Leather Armor (can use `CustomModelData`).*
 
-`colorbehavior`: the overlay color of the item R,G,B defines the X,Y,Z rotation of the model or the animation time, depending on what this is set to in the Python script as you exported the texture.
+`colorbehavior`: the overlay color of the item r,g,b defines the x,y,z rotation of the model or the animation time, depending on what this is set to in the Python script as you exported the texture.
 
 `autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. due to inaccuracy this will be jittery and look bad when closeup. but for far away things it looks ok, and allows color to be used for other input like controlling animation.
 
-`autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 3` will override this.
+`autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'aaa'` will override this.
 
 # samples:
 ![teapot](https://user-images.githubusercontent.com/16228717/151483908-2238f6f9-44c7-434b-a411-f9959bf86a3e.gif)
