@@ -34,6 +34,12 @@ make sure your minecraft version is vanilla 1.18.2. the shader will not work wit
 
 `autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'aaa'` will override this.
 
+The script can be run with arguments to each of these. Example:
+
+```py
+python convert.py --objs cube.obj --texs cube.png --autorotate --flipuv
+```
+
 # samples:
 ![teapot](https://user-images.githubusercontent.com/16228717/151483908-2238f6f9-44c7-434b-a411-f9959bf86a3e.gif)
 
@@ -133,3 +139,5 @@ feel free to contact me on any of the linked social media icons in my github pro
 **Dominexus** - Help with spline math
 
 **Barf Creations** - Help replicating Minecraft's jank Pose rotation matrix
+
+**kumitatepazuru** - Adding command line arguments for the script
