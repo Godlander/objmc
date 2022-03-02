@@ -66,6 +66,24 @@ the uv ends up being upside down for some reason when exporting from Blockbench.
 
 this doesnt seem to happen through Blender tho.
 
+### model unloading
+
+block models unload when its more than 2 subchunks away behind the player. that means objmc can be used in 3x3x3 subchunks if a map is entirely modeled
+
+entity models stay loaded in front of the player just as well as blocks but unloads instantly if hitbox is not on screen
+
+spawner models also unload 3 away behind but unload 8 subchunks away in front of the player, basically making renderdistance 8 regardless of real setting
+
+### vertex count limits
+
+there appears to be a hard vertex count limit per chunk in Minecraft for blocks, and exceeding that instantly crashes the game, regardless of whether your computer can handle rendering that many faces, with a crash message similar to this:
+```
+java.lang.IllegalArgumentException: newLimit > capacity: (151999848 > 37748736)
+```
+this limit seems dependent on hardware. for me, it is `37748736`. keep in mind that for block models all vertices are located in the one placed block, not where they appear in the rendered model.
+
+however, entity renderer has no such limit, and entity models can go over millions of faces regardless of whether your computer can handle rendering that many.
+
 ### preserving rgb
 basically anything to do with images in js does alpha premultiplying, which ruins rgb values when alpha is anything less than 255. afaik only way to not suffer this is to directly interact with the raw file instead of as an image. so if you wanted to send an image with alpha to someone over discord or something, don't send it as an image. instead, you can change the file extension so discord treats it as some unknown file, or zip it and send the zip to preserve data.
 
@@ -132,7 +150,7 @@ feel free to contact me on any of the linked social media icons in my github pro
 
 **The Der Discohund** - Help with matrix operations
 
-**Onnowhere** - Help with formatting decisions
+**Onnowhere** - Help with formatting decisions and testing
 
 **Suso** - Idea for controlled interpolated animation
 
