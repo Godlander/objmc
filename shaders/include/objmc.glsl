@@ -6,10 +6,10 @@ int corner = gl_VertexID % 4;
 ivec2 atlasSize = textureSize(Sampler0, 0);
 vec2 onepixel = 1./atlasSize;
 ivec2 uv = ivec2((UV0 * atlasSize));
-vec3 posoffset = vec3(0.0);
+vec3 posoffset = vec3(0);
+vec3 rotation = vec3(0);
 bool isCustom = false;
 bool autorotate = false;
-vec3 rotation = vec3(0.0);
 //read uv offset
 ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
 ivec2 uvoffset = ivec2(metauvoffset.r*256 + metauvoffset.g,
@@ -44,23 +44,35 @@ if (markerpix == ivec4(12,34,56,0)) {
 #ifdef ENTITY
     bool autoplay = (metarot.g > 0);
     int tcolor = 0;
-    switch (metaframes.a) {
-        case 0: //rotation xyz
-            rotation = Color.rgb * 2*PI;
-            break;
-        case 1: //rotation xy  | animation frames 0-255
-            rotation.rg = Color.rg * 2*PI;
-            tcolor = int(Color.b*255);
-            break;
-        case 2: //rotation x   | animation frames 0-65535
-            rotation.r = Color.r * 2*PI;
-            tcolor = int(Color.g*65280 + Color.b*255);
-            break;
-        case 3: //animation frames 0-8388607
-            tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
-            //interpolation enabled past 8388608, suso's idea to define starting tick with color
-            autoplay = (Color.r > 0.5);
-            break;
+    if (metaframes.a == 63) { //animation frames 0-8388607
+        tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
+        //interpolation enabled past 8388608, suso's idea to define starting tick with color
+        autoplay = (Color.r > 0.5);
+    } else {
+        //bits from colorbehavior
+        int rb = (metaframes.a/16)%4;
+        int gb = (metaframes.a/4)%4;
+        int bb = metaframes.a%4;
+        vec3 accuracy = vec3(255./256.);
+        switch (rb) {
+            case 0: rotation.x += Color.r*255; accuracy.r *= 256; break;
+            case 1: rotation.y += Color.r*255; accuracy.g *= 256; break;
+            case 2: rotation.z += Color.r*255; accuracy.b *= 256; break;
+            case 3: tcolor = tcolor * 256 + int(Color.r*255); break;
+        }
+        switch (gb) {
+            case 0: rotation.x += Color.g*255; accuracy.r *= 256; break;
+            case 1: rotation.y += Color.g*255; accuracy.g *= 256; break;
+            case 2: rotation.z += Color.g*255; accuracy.b *= 256; break;
+            case 3: tcolor = tcolor * 256 + int(Color.g*255); break;
+        }
+        switch (bb) {
+            case 0: rotation.x += Color.b*255; accuracy.r *= 256; break;
+            case 1: rotation.y += Color.b*255; accuracy.g *= 256; break;
+            case 2: rotation.z += Color.b*255; accuracy.b *= 256; break;
+            case 3: tcolor = tcolor * 256 + int(Color.b*255); break;
+        }
+        rotation = rotation/accuracy * 2*PI;
     }
     time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
 #endif

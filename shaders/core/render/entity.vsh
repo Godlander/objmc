@@ -16,7 +16,7 @@ uniform sampler2D Sampler1;
 uniform sampler2D Sampler2;
 
 uniform float FogStart;
-uniform float FogEnd;
+uniform int FogShape;
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
 uniform mat3 IViewRotMat;
@@ -70,5 +70,5 @@ void main() {
     }
 
     gl_Position = ProjMat * ModelViewMat * (vec4(Position + posoffset, 1.0));
-    vertexDistance = cylindrical_distance(ModelViewMat, Position + posoffset);
+    vertexDistance = fog_distance(ModelViewMat, IViewRotMat * Position + posoffset, FogShape);
 }

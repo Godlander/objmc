@@ -1,3 +1,4 @@
+import argparse
 import math
 import json
 from PIL import Image, ImageOps
@@ -37,14 +38,12 @@ duration = 5
 easing = 3
 
 #Item Color Overlay Behavior
-# number of bytes to trade between rotation and animation frames,
-#    r,g,b =
-# 0: rotation x,y,z
-# 1: rotation x,y , animation frames 0-255
-# 2: rotation x   , animation frames 0-65535
-# 3: animation frames 0-8388607. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
-#for 3, auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
-colorbehavior = 0
+# defines the behavior of 3 bytes of rgb to rotation and animation frames,
+# any combination of 3 of 'x', 'y', 'z', 'a' is valid
+# 'xyz' = rotate, 'a' = animation
+#for 'aaa', animation frames 0-8388607 are not autoplay. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
+#auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
+colorbehavior = 'xyz'
 
 #Auto Rotate
 # attempt to estimate rotation with Normals, added to colorbehavior rotation.
@@ -52,7 +51,7 @@ colorbehavior = 0
 autorotate = False
 
 #Auto Play
-# always interpolate frames, colorbehavior=3 overrides this.
+# always interpolate frames, colorbehavior='aaa' overrides this.
 autoplay = True
 
 #Flip uv
@@ -60,6 +59,32 @@ autoplay = True
 #i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
 flipuv = False
 
+#--------------------------------
+#parsing arguments while respecting defaults set above
+parser = argparse.ArgumentParser(description='python script to convert .OBJ files into Minecraft, rendering them in game with a core shader.\nGithub: https://github.com/Godlander/objmc')
+parser.add_argument('--objs', help='List of object files', nargs='*', default=objs)
+parser.add_argument('--texs', help='Specify a texture file', nargs='*', default=texs)
+parser.add_argument('--frames', help='List of obj indexes as keyframes', nargs='*', default=frames)
+parser.add_argument('--offset', nargs=3, type=float, default=offset, help='Offset of model in xyz')
+parser.add_argument('--scale', type=float, default=scale, help='Scale of model')
+parser.add_argument('--duration', type=int, help="Duration of each frame in ticks", default=duration)
+parser.add_argument('--easing', type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
+parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavior, 'xyz' = rotate, 'a' = animation", default=colorbehavior)
+parser.add_argument('--autorotate', action='store_true', help="Attempt to estimate rotation with Normals")
+parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='aaa' overrides this.")
+parser.add_argument("--flipuv", action='store_true', help="Invert the texture to compensate for flipped UV")
+args = parser.parse_args()
+objs = args.objs
+texs = args.texs
+frames = args.frames
+offset = args.offset
+scale = args.scale
+duration = args.duration
+easing = args.easing
+colorbehavior = args.colorbehavior
+autorotate = args.autorotate or autorotate
+autoplay = args.autoplay or autoplay
+flipuv = args.flipuv != flipuv
 #--------------------------------
 
 #file extension optional
@@ -119,23 +144,38 @@ ty = 1 + uvheight + texheight + dataheight
 
 print("x: ", x, ", y: ", y,sep="")
 print("faces: ", nfaces, ",vertices: ", nvertices, sep="")
-print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ", sep="")
-print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", sep="")
+print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ", ty, sep="")
+if nframes > 1:
+  print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", autoplay: ", autoplay, sep="")
+print("colorbehavior: ", colorbehavior, ", autorotate: ", autorotate, ", flipuv: ", flipuv, sep="")
 #write to json model
 model = open(output[0]+".json", "w")
 #create out image with correct dimensions
 out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
+#parse color behavior
+cb = 0
+for i in range(3):
+  cb*=4
+  if colorbehavior[i] == 'x':
+    cb += 0
+  if colorbehavior[i] == 'y':
+    cb += 1
+  if colorbehavior[i] == 'z':
+    cb += 2
+  if colorbehavior[i] == 'a':
+    cb += 3
+
 #header:
-#marker pix
+#0: marker pix
 out.putpixel((0,0), (12,34,56,0))
-#texture size
+#1: texture size
 out.putpixel((1,0), (int(x/256), x%256, int(y/256), y%256))
-#nvertices
+#2: nvertices
 out.putpixel((2,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, nvertices%256))
-#nframes, ntextures, duration, colorbehavior
-out.putpixel((3,0), (nframes,ntextures,duration-1,colorbehavior))
-#autorotate
+#3: nframes, ntextures, duration, colorbehavior
+out.putpixel((3,0), (nframes,ntextures,duration-1,cb))
+#4: autorotate
 out.putpixel((4,0), (int(autorotate), int(autoplay), 0, 255))
 
 #actual texture
@@ -159,7 +199,7 @@ def getuvpos(faceid):
 #create elements for model
 js = {
   "textures": {
-    "layer0": output[1]
+    "0": output[1]
   },
   "elements": []
 }
@@ -168,7 +208,7 @@ def newelement(index):
     "from": [8,8,8],
     "to": [8.000001,8.000001,8.000001],
     "faces": {
-      "north" : {"uv": getuvpos(index), "texture": "#layer0", "tintindex": 0}
+      "north" : {"uv": getuvpos(index), "texture": "#0", "tintindex": 0}
     }
   }
   js["elements"].append(cube)
