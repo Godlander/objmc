@@ -41,8 +41,9 @@ easing = 3
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
 # any combination of 3 of 'x', 'y', 'z', 'a' is valid
 # 'xyz' = rotate, 'a' = animation
-#for 'aaa', animation frames 0-8388607 are not autoplay. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
-#auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
+# multiple rotation bytes increase accuracy on that axis
+# for 'aaa', animation frames 0-8388607 are not autoplay. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
+# auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
 colorbehavior = 'xyz'
 
 #Auto Rotate
@@ -60,7 +61,8 @@ autoplay = True
 flipuv = False
 
 #--------------------------------
-#parsing arguments while respecting defaults set above
+#argument parsing by kumitatepazuru
+#respects above settings as default
 parser = argparse.ArgumentParser(description='python script to convert .OBJ files into Minecraft, rendering them in game with a core shader.\nGithub: https://github.com/Godlander/objmc')
 parser.add_argument('--objs', help='List of object files', nargs='*', default=objs)
 parser.add_argument('--texs', help='Specify a texture file', nargs='*', default=texs)
@@ -142,12 +144,11 @@ dataheight = (nframes * math.ceil(((5*nvertices))/x)) + 1
 
 ty = 1 + uvheight + texheight + dataheight
 
-print("x: ", x, ", y: ", y,sep="")
-print("faces: ", nfaces, ",vertices: ", nvertices, sep="")
+print("faces: ", nfaces, ", vertices: ", nvertices, sep="")
 print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ", ty, sep="")
+print("colorbehavior: ", colorbehavior, ", autorotate: ", autorotate, ", flipuv: ", flipuv, sep="")
 if nframes > 1:
   print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", autoplay: ", autoplay, sep="")
-print("colorbehavior: ", colorbehavior, ", autorotate: ", autorotate, ", flipuv: ", flipuv, sep="")
 #write to json model
 model = open(output[0]+".json", "w")
 #create out image with correct dimensions
