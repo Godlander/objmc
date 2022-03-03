@@ -39,7 +39,7 @@ easing = 3
 
 #Item Color Overlay Behavior
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
-# any combination of 3 of 'x', 'y', 'z', 'a' is valid
+# any 3 chars of 'x', 'y', 'z', 'a' is valid
 # 'xyz' = rotate, 'a' = animation
 # multiple rotation bytes increase accuracy on that axis
 # for 'aaa', animation frames 0-8388607 are not autoplay. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
