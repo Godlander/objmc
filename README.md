@@ -72,7 +72,7 @@ block models unload when its more than 2 subchunks away behind the player. that 
 
 entity models stay loaded in front of the player just as well as blocks but unloads instantly if hitbox is not on screen
 
-spawner models also unload 3 away behind but unload 8 subchunks away in front of the player, basically making renderdistance 8 regardless of real setting
+spawner models also unload 2 away behind but unload 8 subchunks away in front of the player, basically making renderdistance 8 regardless of real setting
 
 ### vertex count limits
 
