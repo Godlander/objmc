@@ -4,7 +4,7 @@
         "srcrgb": "srcalpha",
         "dstrgb": "1-srcalpha"
     },
-    "vertex": "render/entity",
+    "vertex": "render/entity_overlay",
     "fragment": "render/entity",
     "attributes": [
         "Position",

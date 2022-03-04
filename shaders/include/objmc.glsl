@@ -40,7 +40,7 @@ if (markerpix == ivec4(12,34,56,0)) {
     ivec4 metarot = ivec4(texelFetch(Sampler0, topleft + ivec2(4,0), 0) * 255);
     autorotate = (metarot.r > 0);
 
-    //colorbehavior
+//colorbehavior
 #ifdef ENTITY
     bool autoplay = (metarot.g > 0);
     int tcolor = 0;
@@ -77,13 +77,14 @@ if (markerpix == ivec4(12,34,56,0)) {
     time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
 #endif
 
-    int frame = int(time/duration) % nframes;
 
     //calculate height offsets
     int headerheight = 1 + int(ceil(nvertices*0.25/size.x));
     int yoffset = headerheight + (ntextures * size.y);
     //relative vertex id from unique face uv
     int id = (((uvoffset.y-1) * size.x) + uvoffset.x) * 4 + corner;
+    //frame offset
+    int frame = int(time/duration) % nframes;
     id += frame * nvertices;
     //read data
     //meta = rgba: textureid, easing, scale?, unused
@@ -177,6 +178,29 @@ if (markerpix == ivec4(12,34,56,0)) {
     }
     //normalize normal
     normal = normalize(normal);
+
+//entity rotation/lighting rendering
+#ifdef ENTITY
+    bool isGUI = isgui(ProjMat);
+    bool isHand = ishand(FogStart);
+    //flip shading in gui bcos light goes the other way
+    if (isGUI) {normal.xz = -normal.xz;}
+    //normal estimated rotation matrix calculation from The Der Discohund
+    else if (autorotate) {
+        vec3 localZ = IViewRotMat * Normal;
+        vec3 localX = normalize(cross(vec3(0, 1, 0), localZ));
+        vec3 localY = cross(localZ, localX);
+        mat3 localRot = mat3(localX, localY, localZ);
+        posoffset = inverse(IViewRotMat) * rotate(rotation) * localRot * posoffset;
+    }
+    //pure color rotation
+    else if (!isHand) {
+        posoffset = inverse(IViewRotMat) * rotate(rotation) * posoffset;
+    }
+    //custom shading
+    normal = inverse(IViewRotMat) * normal;
+    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, normal, vec4(1));
+#endif
 
     //real uv
                 //align uv to pixel
