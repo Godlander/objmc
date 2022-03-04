@@ -63,10 +63,8 @@ void main() {
             posoffset = inverse(IViewRotMat) * rotate(rotation) * posoffset;
         }
         //custom shading
-        normal *= 1.3;
-        vertexColor = vec4(vec3(max(dot(normal, Light0_Direction), 0.0)), 1.0);
-        vertexColor = mix(vertexColor, vec4(vec3(max(dot(normal, Light1_Direction), 0.0)), 1.0), 0.5);
-        vertexColor = clamp(vertexColor+0.1, 0,1);
+        normal = inverse(IViewRotMat) * normal;
+        vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, normal, vec4(1));
     }
 
     gl_Position = ProjMat * ModelViewMat * (vec4(Position + posoffset, 1.0));
