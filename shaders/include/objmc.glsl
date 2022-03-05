@@ -187,6 +187,7 @@ if (markerpix == ivec4(12,34,56,0)) {
     if (isGUI) {normal.xz = -normal.xz;}
     //normal estimated rotation matrix calculation from The Der Discohund
     else if (autorotate) {
+        normal = inverse(IViewRotMat) * normal;
         vec3 localZ = IViewRotMat * Normal;
         vec3 localX = normalize(cross(vec3(0, 1, 0), localZ));
         vec3 localY = cross(localZ, localX);
@@ -195,10 +196,10 @@ if (markerpix == ivec4(12,34,56,0)) {
     }
     //pure color rotation
     else if (!isHand) {
+        normal = inverse(IViewRotMat) * normal;
         posoffset = inverse(IViewRotMat) * rotate(rotation) * posoffset;
     }
     //custom shading
-    normal = inverse(IViewRotMat) * normal;
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, normal, vec4(1));
 #endif
 

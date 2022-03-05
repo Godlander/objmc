@@ -67,7 +67,7 @@ parser = argparse.ArgumentParser(description='python script to convert .OBJ file
 parser.add_argument('--objs', help='List of object files', nargs='*', default=objs)
 parser.add_argument('--texs', help='Specify a texture file', nargs='*', default=texs)
 parser.add_argument('--frames', help='List of obj indexes as keyframes', nargs='*', default=frames)
-parser.add_argument('--out', type=str, help='List of obj indexes as keyframes', nargs=2, default=output)
+parser.add_argument('--out', type=str, help='Output json and png', nargs=2, default=output)
 parser.add_argument('--offset', nargs=3, type=float, default=offset, help='Offset of model in xyz')
 parser.add_argument('--scale', type=float, default=scale, help='Scale of model')
 parser.add_argument('--duration', type=int, help="Duration of each frame in ticks", default=duration)
