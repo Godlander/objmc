@@ -28,7 +28,7 @@ offset = (0,0,0)
 scale = 1
 
 #duration of each frame in ticks
-duration = 5
+duration = 3
 
 #Animation Easing
 # 0: none
@@ -208,17 +208,17 @@ js = {
 }
 def newelement(index):
   cube = {
-    "from": [8,8,8],
-    "to": [8.000001,8.000001,8.000001],
-    "faces": {
-      "north" : {"uv": getuvpos(index), "texture": "#0", "tintindex": 0}
+    "from":[8,0,8],
+    "to":[8.000001,0.000001,8.000001],
+    "faces":{
+      "north":{"uv":getuvpos(index),"texture":"#0","tintindex":0}
     }
   }
   js["elements"].append(cube)
 #generate elements and uv header
 for i in range(0, nfaces):
   newelement(i)
-model.write(json.dumps(js))
+model.write(json.dumps(js,separators=(',', ':')))
 model.close()
 
 #grab data from the list and convert to rgb
