@@ -13,23 +13,24 @@ bool autorotate = false;
 //read uv offset
 ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
 ivec2 uvoffset = ivec2(metauvoffset.r*256 + metauvoffset.g,
-                       metauvoffset.b*256 + metauvoffset.a);
+                       metauvoffset.b+1); //no alpha due to optifine, number of faces greatly limited (but still a lot)
 //find and read topleft pixel
 ivec2 topleft = uv - uvoffset;
 ivec4 markerpix = ivec4(texelFetch(Sampler0, topleft, 0) * 255);
 //if marker is correct at topleft
-if (markerpix == ivec4(12,34,56,0)) {
+if (markerpix == ivec4(12,34,56,255)) {
     isCustom = true;
     //grab metadata: marker, size, nvertices, frames
     //size
     ivec4 metasize = ivec4(texelFetch(Sampler0, topleft + ivec2(1,0), 0) * 255);
+    ivec4 metasize2 = ivec4(texelFetch(Sampler0, topleft + ivec2(2,0), 0) * 255);
     ivec2 size = ivec2(metasize.r*256 + metasize.g,
-                       metasize.b*256 + metasize.a);
+                       metasize.b*256 + metasize2.r);
     //nvertices
-    ivec4 metanvertices = ivec4(texelFetch(Sampler0, topleft + ivec2(2,0), 0) * 255);
-    int nvertices = metanvertices.r*16777216 + metanvertices.g*65536 + metanvertices.b*256 + metanvertices.a;
+    ivec4 metanvertices = ivec4(texelFetch(Sampler0, topleft + ivec2(3,0), 0) * 255);
+    int nvertices = metanvertices.r*65536 + metanvertices.g*256 + metanvertices.b;
     //frames
-    ivec4 metaframes = ivec4(texelFetch(Sampler0, topleft + ivec2(3,0), 0) * 255);
+    ivec4 metaframes = ivec4(texelFetch(Sampler0, topleft + ivec2(4,0), 0) * 255);
     int nframes = max(metaframes.r, 1);
     int ntextures = max(metaframes.g, 1);
     float duration = float(metaframes.b + 1);
@@ -37,22 +38,22 @@ if (markerpix == ivec4(12,34,56,0)) {
     float time = GameTime * 24000;
 
     //rotate
-    ivec4 metarot = ivec4(texelFetch(Sampler0, topleft + ivec2(4,0), 0) * 255);
-    autorotate = (metarot.r > 0);
+    ivec4 metabehavior = ivec4(texelFetch(Sampler0, topleft + ivec2(5,0), 0) * 255);
+    autorotate = (metabehavior.r > 0);
 
 //colorbehavior
 #ifdef ENTITY
-    bool autoplay = (metarot.g > 0);
+    bool autoplay = (metabehavior.g > 0);
     int tcolor = 0;
-    if (metaframes.a == 63) { //animation frames 0-8388607
+    if (metabehavior.b == 63) { //animation frames 0-8388607
         tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
         //interpolation enabled past 8388608, suso's idea to define starting tick with color
         autoplay = (Color.r > 0.5);
     } else {
         //bits from colorbehavior
-        int rb = (metaframes.a/16)%4;
-        int gb = (metaframes.a/4)%4;
-        int bb = metaframes.a%4;
+        int rb = (metabehavior.b/16)%4;
+        int gb = (metabehavior.b/4)%4;
+        int bb = metabehavior.b%4;
         vec3 accuracy = vec3(255./256.);
         switch (rb) {
             case 0: rotation.x += Color.r*255; accuracy.r *= 256; break;
@@ -77,7 +78,6 @@ if (markerpix == ivec4(12,34,56,0)) {
     time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
 #endif
 
-
     //calculate height offsets
     int headerheight = 1 + int(ceil(nvertices*0.25/size.x));
     int yoffset = headerheight + (ntextures * size.y);
@@ -88,14 +88,16 @@ if (markerpix == ivec4(12,34,56,0)) {
     id += frame * nvertices;
     //read data
     //meta = rgba: textureid, easing, scale?, unused
-    //position = xyz: rgb, rgb, rgb
-    //normal = xyz: aaa of the prev pixels
-    //uv = rg,ba
+    //position = xyz: rgb, rgb, rgb 3 pixels
+    //normal = xyz: rgb next pixel
+    //uv = rg,br of next two pixels
     vec4 datameta = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0);
     vec4 datax = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
     vec4 datay = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
     vec4 dataz = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
-    vec4 datauv = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
+    vec4 datan = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
+    vec4 datau = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 5), 0);
+    vec4 datav = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 6), 0);
     //position
     posoffset = vec3(
         ((datax.r*65536)+(datax.g*256)+(datax.b))/256,
@@ -103,11 +105,11 @@ if (markerpix == ivec4(12,34,56,0)) {
         ((dataz.r*65536)+(dataz.g*256)+(dataz.b))/256
     ) - 128.5;
     //normal
-    normal = vec3(datax.a + int(datax.a == 0), datay.a + int(datay.a == 0), dataz.a + int(dataz.a == 0));
+    normal = datan.rgb;
     //uv
     vec2 texuv1 = vec2(
-        ((datauv.r*256) + datauv.g)/256 * (size.x-(size.x/256.)),
-        ((datauv.b*256) + datauv.a)/256 * (size.y-(size.y/256.))
+        ((datau.r*256) + datau.g)/256 * (size.x-(size.x/256.)),
+        ((datau.b*256) + datav.r)/256 * (size.y-(size.y/256.))
     );
 
     int easing = int(datameta.g * 255);
@@ -118,7 +120,9 @@ if (markerpix == ivec4(12,34,56,0)) {
         vec4 datax2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
         vec4 datay2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
         vec4 dataz2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
-        vec4 datauv2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
+        vec4 datan2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
+        vec4 datau2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 5), 0);
+        vec4 datav2 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 6), 0);
         //position
         vec3 posoffset2 = vec3(
             ((datax2.r*65536)+(datax2.g*256)+(datax2.b))/256,
@@ -126,7 +130,7 @@ if (markerpix == ivec4(12,34,56,0)) {
             ((dataz2.r*65536)+(dataz2.g*256)+(dataz2.b))/256
         ) - 128.5;
         //normal
-        vec3 norm2 = vec3(datax2.a + int(datax2.a == 0), datay2.a + int(datay2.a == 0), dataz2.a + int(dataz2.a == 0));
+        vec3 norm2 = datan2.rgb;
         //uv
         //vec2 texuv2 = vec2(
         //    ((datauv.r*256) + datauv.g)/atlasSize.x/256*size.x,
@@ -152,24 +156,26 @@ if (markerpix == ivec4(12,34,56,0)) {
                 vec4 datax3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
                 vec4 datay3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
                 vec4 dataz3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
+                vec4 datan3 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
                 vec3 posoffset3 = vec3(
                     ((datax3.r*65536)+(datax3.g*256)+(datax3.b))/256,
                     ((datay3.r*65536)+(datay3.g*256)+(datay3.b))/256,
                     ((dataz3.r*65536)+(dataz3.g*256)+(dataz3.b))/256
                 ) - 128.5;
-                vec3 norm3 = vec3(datax3.a + int(datax3.a == 0), datay3.a + int(datay3.a == 0), dataz3.a + int(dataz3.a == 0));
+                vec3 norm3 = datan3.rgb;
                 //fourth point
                 id = (id + nvertices) % (nframes * nvertices);
                 vec4 datameta4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0);
                 vec4 datax4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0);
                 vec4 datay4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0);
                 vec4 dataz4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0);
+                vec4 datan4 = texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0);
                 vec3 posoffset4 = vec3(
                     ((datax4.r*65536)+(datax4.g*256)+(datax4.b))/256,
                     ((datay4.r*65536)+(datay4.g*256)+(datay4.b))/256,
                     ((dataz4.r*65536)+(dataz4.g*256)+(dataz4.b))/256
                 ) - 128.5;
-                vec3 norm4 = vec3(datax4.a + int(datax4.a == 0), datay4.a + int(datay4.a == 0), dataz4.a + int(dataz4.a == 0));
+                vec3 norm4 = datan4.rgb;
                 //bezier
                 posoffset = bezier(posoffset, posoffset2, posoffset3, posoffset4, transition);
                 normal = bezier(normal, norm2, norm3, norm4, transition);

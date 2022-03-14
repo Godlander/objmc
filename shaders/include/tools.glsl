@@ -3,8 +3,9 @@
 
 #define PI 3.1415926535897932
 
+#define NP 7 //per vertex pixel data
 ivec2 getp(ivec2 topleft, ivec2 size, int yoffset, int index, int offset) {
-    int i = (index * 5) + offset;
+    int i = (index * NP) + offset;
     return topleft + ivec2(i % size.x, int(i / size.x) + yoffset);
 }
 
