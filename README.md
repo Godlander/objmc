@@ -1,4 +1,6 @@
-# optifine compatibility
+# modded compatibility
+
+also works for sodium.
 
 for some reason optifine just sets alpha below 20 to 0, and forces mipmapping regardless of texture resolution
 
