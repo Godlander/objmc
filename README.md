@@ -5,3 +5,5 @@ for some reason optifine just sets alpha below 20 to 0, and forces mipmapping re
 this version of objmc does not use alpha at the cost of needing more texture data space and more shader texture reads
 
 block models do not work, only item models.
+
+this version of script and shader are NOT compatible with main version.
