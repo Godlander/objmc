@@ -7,6 +7,8 @@ place the shaders in the correct location in the resourcepack, and any model gen
 
 make sure your minecraft version is vanilla 1.18.2. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with objmc core shaders.
 
+[testing optifine compatible version](https://github.com/Godlander/objmc/tree/optifine-compat). this version of script and shader are NOT compatible with main version.
+
 ### script inputs
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
 
