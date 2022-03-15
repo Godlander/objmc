@@ -91,7 +91,7 @@ autoplay = args.autoplay or autoplay
 flipuv = args.flipuv != flipuv
 #--------------------------------
 
-NP = 7
+NP = 5
 
 #file extension optional
 output[0] = output[0].split(".")[0]
@@ -177,19 +177,16 @@ for i in range(3):
 
 #header:
 #0: marker pix
-out.putpixel((0,0), (12,34,56,255))
-#1-2: texture size
-out.putpixel((1,0), (int(x/256), x%256, int(y/256), 255))
-out.putpixel((2,0), (y%256,0,0,255))
+out.putpixel((0,0), (12,34,56,78))
+#1: autorotate, autoplay, colorbehavior, alpha bits for texsize and nvertices
+alpha = 128 + (int(y%256>127)<<6) + (int(nvertices%256>127)<<5)
+out.putpixel((1,0), (int(autorotate), int(autoplay), cb, alpha))
+#2: texture size
+out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
 #3: nvertices
-if nvertices/256/256/256 > 1:
-  print('too many vertices, use non optifine compat version')
-  quit()
-out.putpixel((3,0), (int(nvertices/256/256)%256, int(nvertices/256)%256, nvertices%256, 255))
-#4: nframes, ntextures, duration, negative colorbehavior due to optifine alpha
+out.putpixel((3,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, 128+nvertices%128))
+#4: nframes, ntextures, duration
 out.putpixel((4,0), (nframes,ntextures,duration-1, 255))
-#5: autorotate colorbehavior
-out.putpixel((5,0), (int(autorotate), int(autoplay), cb, 255))
 
 #actual texture
 for i in range (0,len(texs)):
@@ -240,21 +237,21 @@ def getposition(id, index):
   r = int((x/256/256)%256)
   g = int((x/256)%256)
   b = int(x%256)
-  rgb.append((r,g,b,255))
+  rgb.append([r,g,b])
   r = int((y/256/256)%256)
   g = int((y/256)%256)
   b = int(y%256)
-  rgb.append((r,g,b,255))
+  rgb.append([r,g,b])
   r = int((z/256/256)%256)
   g = int((z/256)%256)
   b = int(z%256)
-  rgb.append((r,g,b,255))
+  rgb.append([r,g,b])
   return rgb
 def getnormal(id, index):
   r = int((objects[id]["normals"][index][0]+1)*255/2)
   g = int((objects[id]["normals"][index][1]+1)*255/2)
   b = int((objects[id]["normals"][index][2]+1)*255/2)
-  return (r,g,b,255)
+  return [r,g,b]
 def getuv(id, index):
   x = (objects[id]["uvs"][index][0])*65535
   y = (objects[id]["uvs"][index][1])*65535
@@ -262,35 +259,37 @@ def getuv(id, index):
   g = int(x%256)
   b = int(y/256)%256
   a = int(y%256)
-  return [(r,g,b,255),(a,0,0,255)]
+  return [r,g,b,a]
 def getp(frame, index, offset):
   i = ((frame)*nvertices*NP)+(index*NP)+offset
   xx = i%x
   yy = int(1+uvheight+y+((i/x)))
   return (xx,yy)
-#meta: textureid, easing, scale?, unused
+#meta: textureid, easing, scale?, alpha bits
 #position = rgb, rgb, rgb
 #normal = aaa
 #uv = rg,ba
-#face:[pos,uv,norm]
 def encodevert(id, frame, index, face):
+  #face:[pos,uv,norm]
   #init meta
   scale = 100
-  #meta: textureid, easing, scale?, unused
-  out.putpixel(getp(frame, index, 0), (0, easing, scale, 255))
-  #position
+  alpha = 128
+  #position and normal
   pos = getposition(id[0], face[0])
-  for i in range(0,3):
-    out.putpixel(getp(frame, index, i+1), pos[i])
-  #normal
-  norm = getnormal(id[0], face[2])
   if len(face) == 2:
     norm = (0,255,0,255)
-  out.putpixel(getp(frame, index, 4), norm)
+  else:
+    norm = getnormal(id[0], face[2])
+  for i in range(0,3):
+    alpha += int(norm[i]%256>127)<<(3-i) #move first bit of alpha
+    na = 128+norm[i]%128
+    out.putpixel(getp(frame, index, i+1), (pos[i][0],pos[i][1],pos[i][2],na))
   #uv
   uv = getuv(id[0], face[1])
-  out.putpixel(getp(frame, index, 5), uv[0])
-  out.putpixel(getp(frame, index, 6), uv[1])
+  alpha += int(uv[3]%256>127) #move first bit of alpha
+  out.putpixel(getp(frame, index, 4), (uv[0],uv[1],uv[2],128+uv[3]%128))
+  #meta: textureid, easing, scale?, alpha
+  out.putpixel(getp(frame, index, 0), (0, easing, scale, alpha))
 
 def encodeface(id, frame, index):
   for i in range(0,3):
