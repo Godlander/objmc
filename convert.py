@@ -53,7 +53,7 @@ autorotate = False
 
 #Auto Play
 # always interpolate frames, colorbehavior='aaa' overrides this.
-autoplay = True
+autoplay = False
 
 #Flip uv
 #if your model renders but textures are not right try toggling this
@@ -86,8 +86,8 @@ scale = args.scale
 duration = args.duration
 easing = args.easing
 colorbehavior = args.colorbehavior
-autorotate = args.autorotate or autorotate
-autoplay = args.autoplay or autoplay
+autorotate = args.autorotate != autorotate
+autoplay = args.autoplay != autoplay
 flipuv = args.flipuv != flipuv
 #--------------------------------
 
@@ -211,7 +211,15 @@ js = {
   "textures": {
     "0": output[1]
   },
-  "elements": []
+  "elements": [],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [85, 0, 0]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [85, 0, 0]
+    }
+  }
 }
 def newelement(index):
   cube = {
@@ -225,6 +233,7 @@ def newelement(index):
 #generate elements and uv header
 for i in range(0, nfaces):
   newelement(i)
+
 model.write(json.dumps(js,separators=(',', ':')))
 model.close()
 

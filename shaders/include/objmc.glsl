@@ -99,7 +99,7 @@ if (markerpix == ivec4(12,34,56,78)) {
         ((datax.r*65536)+(datax.g*256)+(datax.b))/256./255.,
         ((datay.r*65536)+(datay.g*256)+(datay.b))/256./255.,
         ((dataz.r*65536)+(dataz.g*256)+(dataz.b))/256./255.
-    ) - 128.5;
+    ) - vec3(128.5, 128.0, 128.5);
     //normal
     normal = vec3(
         (datax.a-128+(((datameta.a>>3)&1)<<7))/255.,
@@ -126,7 +126,7 @@ if (markerpix == ivec4(12,34,56,78)) {
             ((datax2.r*65536)+(datax2.g*256)+(datax2.b))/256./255.,
             ((datay2.r*65536)+(datay2.g*256)+(datay2.b))/256./255.,
             ((dataz2.r*65536)+(dataz2.g*256)+(dataz2.b))/256./255.
-        ) - 128.5;
+        ) - vec3(128.5, 128.0, 128.5);
         //normal
         vec3 norm2 = vec3(
             (datax2.a-128+(((datameta2.a>>3)&1)<<7))/255.,
@@ -163,7 +163,7 @@ if (markerpix == ivec4(12,34,56,78)) {
                     ((datax3.r*65536)+(datax3.g*256)+(datax3.b))/256./255.,
                     ((datay3.r*65536)+(datay3.g*256)+(datay3.b))/256./255.,
                     ((dataz3.r*65536)+(dataz3.g*256)+(dataz3.b))/256./255.
-                ) - 128.5;
+                ) - vec3(128.5, 128.0, 128.5);
                 //normal
                 vec3 norm3 = vec3(
                     (datax3.a-128+(((datameta3.a>>3)&1)<<7))/255.,
@@ -180,7 +180,7 @@ if (markerpix == ivec4(12,34,56,78)) {
                     ((datax4.r*65536)+(datax4.g*256)+(datax4.b))/256./255.,
                     ((datay4.r*65536)+(datay4.g*256)+(datay4.b))/256./255.,
                     ((dataz4.r*65536)+(dataz4.g*256)+(dataz4.b))/256./255.
-                ) - 128.5;
+                ) - vec3(128.5, 128.0, 128.5);
                 vec3 norm4 = vec3(
                     (datax4.a-128+(((datameta4.a>>3)&1)<<7))/255.,
                     (datay4.a-128+(((datameta4.a>>2)&1)<<7))/255.,
