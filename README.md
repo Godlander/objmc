@@ -5,7 +5,7 @@ either edit the script with your inputs, or run `python convert.py` with correct
 
 place the shaders in the correct location in the resourcepack, and any model generated with this tool should display properly.
 
-make sure your minecraft version is 1.18+ , lower versions will not work.
+make sure your minecraft version is 1.18.1+ as the shader will not work with lower versions.
 
 there is some optifine/sodium support for item/entity models.
 
