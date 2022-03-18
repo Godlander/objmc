@@ -87,8 +87,8 @@ if (markerpix == ivec4(12,34,56,78)) {
     //read data
     //meta = rgba: textureid, easing, scale?, unused
     //position = xyz: rgb, rgb, rgb 3 pixels
-    //normal = xyz: rgb next pixel
-    //uv = rg,br of next two pixels
+    //normal = xyz: aaa of prev 3 pixels, with first bit in meta pixel
+    //uv = rg,ba of next two pixels, with first bit of alpha in meta pixel
     ivec4 datameta = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
     ivec4 datax = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
     ivec4 datay = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
@@ -112,7 +112,6 @@ if (markerpix == ivec4(12,34,56,78)) {
         ((datauv.b*256) + (datauv.a-128+((datameta.a&1)<<7)))/255. * (size.y-(size.y/256.))/256.
     );
 
-    int easing = int(datameta.g * 255);
     if (nframes > 1) {
         //next frame
         id = (id + nvertices) % (nframes * nvertices);
@@ -141,7 +140,7 @@ if (markerpix == ivec4(12,34,56,78)) {
         //texCoord02 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv2;
 
         transition = fract(time/duration);
-        switch (easing) {
+        switch (datameta.g) { //easing
             case 1: //linear
                 posoffset = mix(posoffset, posoffset2, transition);
                 normal = mix(normal, norm2, transition);

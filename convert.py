@@ -154,9 +154,9 @@ ty = ty2
 
 print("faces: ", nfaces, ", vertices: ", nvertices, sep="")
 print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ", ty, sep="")
-print("colorbehavior: ", colorbehavior, ", autorotate: ", autorotate, ", flipuv: ", flipuv, sep="")
+print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, ", autoplay: ", autoplay, sep="")
 if nframes > 1:
-  print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", autoplay: ", autoplay, sep="")
+  print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", easing: ", easing, sep="")
 #write to json model
 model = open(output[0]+".json", "w")
 #create out image with correct dimensions
