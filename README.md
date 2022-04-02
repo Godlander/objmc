@@ -9,8 +9,6 @@ make sure your minecraft version is 1.18.1+ as the shader will not work with low
 
 there is some optifine/sodium support for item/entity models.
 
-[testing optifine compatible version](https://github.com/Godlander/objmc/tree/optifine-compat). this version of script and shader are NOT compatible with main version.
-
 ### script inputs
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
 
@@ -67,7 +65,15 @@ this is just a reference, actual format may change as i add/change stuff
 ### modded compatibility
 item/entity models mostly work with both optifine and sodium.
 
-placed block models do not work, neither does `autorotate`. color defined rotation must be used.
+the main difference is that pixels in texture with alpha < 0.1 (25.6) are simply discarded and become rgba(0,0,0,0)
+
+to circumvent this i shift the first bit of all alpha values onto some other pixel. if the first bit is always 1 then alpha is guaranteed to be >= 0.5 (128)
+
+placed block models may not work, entity models will render fine.
+
+sodium users might expect incompatibility in the future:
+
+![image](https://user-images.githubusercontent.com/16228717/161360296-c5883d7c-c33f-4aa0-bc25-e1360f2f2eca.png)
 
 ### model not rendering
 most of the time this is due to an error in your resourcepack. make sure the shaders are in the correct place, double check the file paths for model and texture (by default model will point to the root textures folder, not textures/block or textures/items), try using latest version of objmc script and shader if you have an older version.
