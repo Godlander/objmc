@@ -1,11 +1,13 @@
 # usage:
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
 
-after editing the script with your inputs, run `python convert.py` in command line to generate the model and texture output to go in a resourcepack.
+either edit the script with your inputs, or run `python convert.py` with correct arguments in command line to generate the model and texture outputs that go in a resourcepack.
 
 place the shaders in the correct location in the resourcepack, and any model generated with this tool should display properly.
 
-make sure your minecraft version is vanilla 1.18.2. the shader will not work with older versions, and any mods that change rendering (Optifine, Sodium, etc) will likely be incompatible with objmc core shaders.
+make sure your minecraft version is 1.18.1+ as the shader will not work with lower versions.
+
+there is some optifine/sodium support for item/entity models.
 
 [testing optifine compatible version](https://github.com/Godlander/objmc/tree/optifine-compat). this version of script and shader are NOT compatible with main version.
 
@@ -32,7 +34,9 @@ make sure your minecraft version is vanilla 1.18.2. the shader will not work wit
 
 `colorbehavior`: the overlay color of the item r,g,b defines the x,y,z rotation of the model or the animation time, depending on what this is set to in the Python script as you exported the texture.
 
-`autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. due to inaccuracy this will be jittery and look bad when closeup. but for far away things it looks ok, and allows color to be used for other input like controlling animation.
+*example: `yaa` defines 1 byte of y rotation as red color, and 2 bytes or 65535 frames of animation as green and blue, green being the upper bits and blue lower.*
+
+`autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. but due to byte inaccuracy this will be jittery and look bad closeup. but for far away things it looks ok, and allows color to be used for other input like controlling animation.
 
 `autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'aaa'` will override this.
 
@@ -60,13 +64,24 @@ this is just a reference, actual format may change as i add/change stuff
 
 ![image](https://user-images.githubusercontent.com/16228717/148311479-0cade68e-dab8-491b-83fb-f7d22c78bd1b.png)
 
+### modded compatibility
+item/entity models mostly work with both optifine and sodium.
+
+placed block models do not work, neither does `autorotate`. color defined rotation must be used.
+
 ### model not rendering
 most of the time this is due to an error in your resourcepack. make sure the shaders are in the correct place, double check the file paths for model and texture (by default model will point to the root textures folder, not textures/block or textures/items), try using latest version of objmc script and shader if you have an older version.
 
 ### flipped uv
-the uv ends up being upside down for some reason when exporting from Blockbench. idk why, so i just flip the texture while encoding to compensate.
+the uv ends up being upside down sometimes for some reason when exporting from Blockbench. idk why, so i just flip the texture while encoding to compensate.
 
 this doesnt seem to happen through Blender tho.
+
+### spawner models
+you use spawners as a block that uses the entity renderer but isn't an entity. they are considerably laggier than normal blocks, but still better than entities, and don't suffer unloading nearly as much.
+```mcfunction
+setblock ~ ~ ~ minecraft:spawner{MaxNearbyEntities:0,RequiredPlayerRange:0,SpawnData:{entity:{id:"minecraft:armor_stand",ShowArms:0b,Small:1b,Invisible:1b,Pose:{Head:[30f,0f,0f]},ArmorItems:[{},{},{},{id:"minecraft:potion",Count:1b,tag:{CustomModelData:1,CustomPotionColor:0}}]}}}
+```
 
 ### model unloading
 

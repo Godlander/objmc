@@ -53,7 +53,7 @@ autorotate = False
 
 #Auto Play
 # always interpolate frames, colorbehavior='aaa' overrides this.
-autoplay = True
+autoplay = False
 
 #Flip uv
 #if your model renders but textures are not right try toggling this
@@ -86,10 +86,12 @@ scale = args.scale
 duration = args.duration
 easing = args.easing
 colorbehavior = args.colorbehavior
-autorotate = args.autorotate or autorotate
-autoplay = args.autoplay or autoplay
+autorotate = args.autorotate != autorotate
+autoplay = args.autoplay != autoplay
 flipuv = args.flipuv != flipuv
 #--------------------------------
+
+NP = 5
 
 #file extension optional
 output[0] = output[0].split(".")[0]
@@ -108,7 +110,6 @@ if x < 8:
   print("Minimum texture size is 8x")
   quit()
 
-objects = []
 def readobj(name):
   obj = open(name.split(".")[0]+".obj", "r")
   d = {"positions":[],"uvs":[],"normals":[],"faces":[]}
@@ -122,19 +123,17 @@ def readobj(name):
     if line.startswith("f "):
       d["faces"].append([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]])
   obj.close()
+  if 'nfaces' in globals() and len(d["faces"]) != nfaces:
+    print("\nerror: mismatched obj face count")
+    quit()
   return d
 #read obj
-objects.append(readobj(objs[0]))
-for i in range(1,len(objs)):
-  objects.append(readobj(objs[i]))
-  if len(objects[i]["faces"]) != len(objects[0]["faces"]):
-    print("mismatched obj face count")
-    quit()
+o = readobj(objs[0])
 
 #calculate heights
 ntextures = len(texs)
 nframes = len(frames)
-nfaces = len(objects[0]["faces"])
+nfaces = len(o["faces"])
 nvertices = nfaces*4
 texheight = ntextures * y
 uvheight = math.ceil(nfaces/x)
@@ -142,15 +141,23 @@ uvheight = math.ceil(nfaces/x)
 #position = rgb, rgb, rgb
 #normal = aaa
 #uv = rg,ba
-dataheight = (nframes * math.ceil(((5*nvertices))/x)) + 1
+dataheight = (nframes * math.ceil(((NP*nvertices))/x)) + 1
 
+#make height power of 2
 ty = 1 + uvheight + texheight + dataheight
+ty2 = 2
+while ty2 < ty:
+  ty2 *= 2
+ty = ty2
 
+#initial info
+print("\nobjmc start-------------------")
 print("faces: ", nfaces, ", vertices: ", nvertices, sep="")
 print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", dataheight, ", totalheight: ", ty, sep="")
-print("colorbehavior: ", colorbehavior, ", autorotate: ", autorotate, ", flipuv: ", flipuv, sep="")
+print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, ", autoplay: ", autoplay, sep="")
 if nframes > 1:
-  print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", autoplay: ", autoplay, sep="")
+  print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", easing: ", easing, sep="")
+
 #write to json model
 model = open(output[0]+".json", "w")
 #create out image with correct dimensions
@@ -171,15 +178,16 @@ for i in range(3):
 
 #header:
 #0: marker pix
-out.putpixel((0,0), (12,34,56,0))
-#1: texture size
-out.putpixel((1,0), (int(x/256), x%256, int(y/256), y%256))
-#2: nvertices
-out.putpixel((2,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, nvertices%256))
-#3: nframes, ntextures, duration, colorbehavior
-out.putpixel((3,0), (nframes,ntextures,duration-1,cb))
-#4: autorotate
-out.putpixel((4,0), (int(autorotate), int(autoplay), 0, 255))
+out.putpixel((0,0), (12,34,56,78))
+#1: autorotate, autoplay, colorbehavior, alpha bits for texsize and nvertices
+alpha = 128 + (int(y%256>127)<<6) + (int(nvertices%256>127)<<5)
+out.putpixel((1,0), (int(autorotate), int(autoplay), cb, alpha))
+#2: texture size
+out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
+#3: nvertices
+out.putpixel((3,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, 128+nvertices%128))
+#4: nframes, ntextures, duration
+out.putpixel((4,0), (nframes,ntextures,duration-1, 255))
 
 #actual texture
 for i in range (0,len(texs)):
@@ -197,14 +205,22 @@ for i in range (0,len(texs)):
 def getuvpos(faceid):
   posx = faceid%x
   posy = math.floor(faceid/x)+1
-  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, int(posy/256)%256, posy%256))
+  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, (posy-1)%256, 255))
   return [(posx+0.1)*16/x, (posy+0.1)*16/ty, (posx+0.9)*16/x, (posy+0.9)*16/ty]
 #create elements for model
 js = {
   "textures": {
     "0": output[1]
   },
-  "elements": []
+  "elements": [],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [85, 0, 0]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [85, 0, 0]
+    }
+  }
 }
 def newelement(index):
   cube = {
@@ -218,14 +234,16 @@ def newelement(index):
 #generate elements and uv header
 for i in range(0, nfaces):
   newelement(i)
+
+print("\rwriting json model", end='...')
 model.write(json.dumps(js,separators=(',', ':')))
 model.close()
 
 #grab data from the list and convert to rgb
-def getposition(id, index):
-  x = 8388608+((objects[id]["positions"][index][0])*65536)*scale + offset[0]*65536
-  y = 8388608+((objects[id]["positions"][index][1])*65536)*scale + offset[1]*65536
-  z = 8388608+((objects[id]["positions"][index][2])*65536)*scale + offset[2]*65536
+def getposition(obj, index):
+  x = 8388608+((obj["positions"][index][0])*65536)*scale + offset[0]*65536
+  y = 8388608+((obj["positions"][index][1])*65536)*scale + offset[1]*65536
+  z = 8388608+((obj["positions"][index][2])*65536)*scale + offset[2]*65536
   rgb = []
   r = int((x/256/256)%256)
   g = int((x/256)%256)
@@ -240,63 +258,71 @@ def getposition(id, index):
   b = int(z%256)
   rgb.append([r,g,b])
   return rgb
-def getnormal(id, index):
-  r = int((objects[id]["normals"][index][0]+1)*255/2)
-  g = int((objects[id]["normals"][index][1]+1)*255/2)
-  b = int((objects[id]["normals"][index][2]+1)*255/2)
+def getnormal(obj, index):
+  r = int((obj["normals"][index][0]+1)*255/2)
+  g = int((obj["normals"][index][1]+1)*255/2)
+  b = int((obj["normals"][index][2]+1)*255/2)
   return [r,g,b]
-def getuv(id, index):
-  x = (objects[id]["uvs"][index][0])*65535
-  y = (objects[id]["uvs"][index][1])*65535
+def getuv(obj, index):
+  x = (obj["uvs"][index][0])*65535
+  y = (obj["uvs"][index][1])*65535
   r = int(x/256)%256
   g = int(x%256)
   b = int(y/256)%256
   a = int(y%256)
-  return (r,g,b,a)
+  return [r,g,b,a]
 def getp(frame, index, offset):
-  i = ((frame)*nvertices*5)+(index*5)+offset
+  i = ((frame)*nvertices*NP)+(index*NP)+offset
   xx = i%x
   yy = int(1+uvheight+y+((i/x)))
   return (xx,yy)
-#meta: textureid, easing, scale?, unused
+#meta: textureid, easing, scale?, alpha bits
 #position = rgb, rgb, rgb
 #normal = aaa
 #uv = rg,ba
-#face:[pos,uv,norm]
-def encodevert(id, frame, index, face):
+def encodevert(obj, frame, index, face):
+  #face:[pos,uv,norm]
   #init meta
   scale = 100
-  #meta: textureid, easing, scale?, unused
-  out.putpixel(getp(frame, index, 0), (0, easing, scale, 255))
-  #get position and append normal
-  rgb = getposition(id[0], face[0])
-  if len(face) == 2:
-    norm = [0,255,0]
-  else:
-    norm = getnormal(id[0], face[2])
+  alpha = 128
   #position and normal
-  for i in range(0,3):
-    rgb[i].append(norm[i])
-    out.putpixel(getp(frame, index, i+1), tuple(rgb[i]))
-  #uv
-  out.putpixel(getp(frame, index, 4), getuv(id[0], face[1]))
-
-def encodeface(id, frame, index):
-  for i in range(0,3):
-    encodevert(id, frame, (index*4)+i, objects[id[0]]["faces"][index][i])
-  if len(objects[id[0]]["faces"][index]) == 4:
-    encodevert(id, frame, (index*4)+3, objects[id[0]]["faces"][index][3])
+  pos = getposition(obj, face[0])
+  if len(face) == 2:
+    norm = (0,255,0,255)
   else:
-    encodevert(id, frame, (index*4)+3, objects[id[0]]["faces"][index][1])
+    norm = getnormal(obj, face[2])
+  for i in range(0,3):
+    alpha += int(norm[i]%256>127)<<(3-i) #move first bit of alpha
+    na = 128+norm[i]%128
+    out.putpixel(getp(frame, index, i+1), (pos[i][0],pos[i][1],pos[i][2],na))
+  #uv
+  uv = getuv(obj, face[1])
+  alpha += int(uv[3]%256>127) #move first bit of alpha
+  out.putpixel(getp(frame, index, 4), (uv[0],uv[1],uv[2],128+uv[3]%128))
+  #meta: textureid, easing, scale?, alpha
+  out.putpixel(getp(frame, index, 0), (0, easing, scale, alpha))
+
+def encodeface(obj, frame, index):
+  for i in range(0,3):
+    encodevert(obj, frame, (index*4)+i, obj["faces"][index][i])
+  if len(obj["faces"][index]) == 4:
+    encodevert(obj, frame, (index*4)+3, obj["faces"][index][3])
+  else:
+    encodevert(obj, frame, (index*4)+3, obj["faces"][index][1])
 
 #encode all the data
 for frame in range(0, nframes):
-  print("encoding frame",frame+1,"of",nframes,"\t\t","{:.2f}".format((frame)/nframes*100),"%")
-  id = [int(i) for i in frames[frame].split(" ")]
+  if frame % int(math.ceil(nframes/10)) == 0:
+    print("\rencoding frame",frame+1,"of",nframes, end='...')
+    print("\r\t\t\t\t\t","{:.2f}".format((frame+1)/nframes*100),"%", end='')
+  obj = readobj(objs[int(frames[frame])])
+  if len(obj["faces"]) != nfaces:
+    print("mismatched obj face count")
+    quit()
   for i in range(0, nfaces):
-    encodeface(id, frame, i)
+    encodeface(obj, frame, i)
 
-print("Done\t\t\t\t 100.00 %")
+print("\rDone                                     100.00 %")
 print("Saving...")
 out.save(output[1]+".png")
 out.close()
