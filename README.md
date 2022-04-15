@@ -75,6 +75,15 @@ sodium users might expect incompatibility in the future:
 
 ![image](https://user-images.githubusercontent.com/16228717/161360296-c5883d7c-c33f-4aa0-bc25-e1360f2f2eca.png)
 
+### performance
+objmc models do not run much extra calculation. mostly a few extra texture fetches, but there should not be a noticeable performance difference to default minecraft.
+
+if you make a model with 6 faces, you can expect it to perform similarly to a normal cube model.
+
+thus, performance optimization is largely on the user to optimize the face count of the input model.
+
+a zombie has a model with 6 elements each with 6 faces. a objmc entity model with 20k faces should expect similar performance to rendering 556 noAi zombies on the screen. similarly, a objmc block model with 20k faces should expect similar performance to rendering 3333 blocks on screen, *without any culling*
+
 ### model not rendering
 most of the time this is due to an error in your resourcepack. make sure the shaders are in the correct place, double check the file paths for model and texture (by default model will point to the root textures folder, not textures/block or textures/items), try using latest version of objmc script and shader if you have an older version.
 
@@ -106,6 +115,11 @@ java.lang.IllegalArgumentException: newLimit > capacity: (151999848 > 37748736)
 this limit seems dependent on hardware. for me, it is `37748736`. keep in mind that for block models all vertices are located in the one placed block, not where they appear in the rendered model.
 
 however, entity renderer has no such limit, and entity models can go over millions of faces regardless of whether your computer can handle rendering that many.
+
+### animation deformation
+with linear interpolation, vertices travel in a straight line from one point to the next. if a rectangle with 4 vertices is to rotate about its center, the area of the rectangle would not be preserved, and the shape would deform to look smaller in the middle between keyframes.
+
+one solution is to simply add more frames, but that can increase texture size by a lot. instead, bezier interpolation can approximate curved motion better with less keyframes.
 
 ### preserving rgb
 basically anything to do with images in js does alpha premultiplying, which ruins rgb values when alpha is anything less than 255. afaik only way to not suffer this is to directly interact with the raw file instead of as an image. so if you wanted to send an image with alpha to someone over discord or something, don't send it as an image. instead, you can change the file extension so discord treats it as some unknown file, or zip it and send the zip to preserve data.
@@ -166,7 +180,7 @@ execute store result entity @s ArmorItems[3].tag.CustomPotionColor int 1 run sco
 ```
 
 ### questions
-feel free to contact me on any of the linked social media icons in my github profile readme.
+Feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9SvZd
 
 # contributors:
 **DartCat25** - Helped me get started
