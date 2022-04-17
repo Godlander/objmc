@@ -7,15 +7,57 @@ from PIL import Image, ImageOps
 #INPUT
 #--------------------------------
 
-#objs
-objs = ["cube.obj"]
-#texture animations not supported yet
-texs = ["cube.png"]
+import os, time
+from tkinter import Tk
+from tkinter.filedialog import askdirectory
+from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilenames
 
-frames = ["0"]
+Tk().withdraw()
+
+path = os.getcwd()
+
+
+#objs
+objs = ["input/frame01.obj", "input/frame02.obj"]
+objs = askopenfilenames(initialdir=path, filetypes=[('.obj','.obj')], title='Please select all .obj frames')
+if len(objs) == 0:
+  print("Canceled")
+  time.sleep(1)
+  exit()
+
+
+#texture animations not supported yet
+texs = ["input/texture.png"]
+texs = askopenfilenames(initialdir=path, filetypes=[('.png','.png')], title='Please select all needed textures')
+if len(texs) == 0:
+  print("Canceled")
+  time.sleep(1)
+  exit()
+
+
+#Manual display for frames
+frames = ["0", "1"]
+#Generated display for frames
+frames = []
+for i in range(0,len(objs)):
+  frames.append(str(i))
+
 
 #json, png
-output = ["potion.json", "out.png"]
+output = ["output/output.json", "output/output.png"]
+
+def output_folder(name,export):
+  dirpath = askdirectory(initialdir=path, title='Please select a directory for export the '+export)
+  if not os.path.isdir(dirpath):
+    print("Canceled")
+    time.sleep(1)
+    exit()
+  else:
+    return dirpath+"/"+name
+
+name = input('Output name : ')
+output = [output_folder(name+".json","models"), output_folder(name+".png","textures")]
 
 #--------------------------------
 #ADVANCED
@@ -94,8 +136,8 @@ flipuv = args.flipuv != flipuv
 NP = 5
 
 #file extension optional
-output[0] = output[0].split(".")[0]
-output[1] = output[1].split(".")[0]
+output[0] = output[0].replace("."+output[0].split(".")[-1],"")
+output[1] = output[1].replace("."+output[1].split(".")[-1],"")
 
 #input error checking
 if len(frames) == 0:
@@ -210,7 +252,7 @@ def getuvpos(faceid):
 #create elements for model
 js = {
   "textures": {
-    "0": output[1]
+    "0": output[1].split("textures/")[-1]
   },
   "elements": [],
   "display": {
