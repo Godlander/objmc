@@ -34,7 +34,7 @@ offset = (0,0,0)
 scale = 1
 
 #duration of each frame in ticks
-duration = 3
+duration = 20
 
 #Animation Easing
 # 0: none
@@ -126,7 +126,7 @@ def start():
 class Number(tk.Entry):
   def __init__(self, master=None, **kwargs):
     self.var = kwargs.pop('textvariable', None)
-    self.var.set(kwargs.pop('text', ''))
+    self.var.set(str(duration))
     tk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
     self.old_value = ''
     self.var.trace('w', self.check)
@@ -141,6 +141,7 @@ if not len(sys.argv) > 1:
   window = tk.Tk()
   window.title("objmc")
   window.geometry("400x300")
+  window.minsize(400,300)
   window.rowconfigure(0,pad=7)
   window.rowconfigure(1,weight=1)
   window.rowconfigure(2,pad=7)
@@ -159,8 +160,13 @@ if not len(sys.argv) > 1:
   flipuv = tk.BooleanVar()
   tk.Checkbutton(window, text="Flip UV", variable=flipuv).grid(column=1, row=1, sticky='NE')
   #start quit buttons
+  qq = tk.BooleanVar()
+  qq.set(True)
+  def start():
+    qq.set(False)
+    window.destroy()
   buttonquit = tk.Button(window, text="Cancel", command=quit).grid(column=0, row=2, padx=5)
-  buttonstart = tk.Button(window, text="Start", command=window.destroy).grid(column=1, row=2, padx=5)
+  buttonstart = tk.Button(window, text="Start", command=start).grid(column=1, row=2, padx=5)
   ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=2, sticky='NSE')
   #advanced
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=27)
@@ -171,12 +177,13 @@ if not len(sys.argv) > 1:
   advanced.columnconfigure(1, weight=1)
   advanced.grid(column=1, row=1, sticky='NESW', pady=(60,0))
   #duration
-  tk.Label(advanced, text="Duration:").grid(column=0, row=0, sticky='E')
-  duration = tk.StringVar()
-  Number(advanced, textvariable=duration, width=10).grid(column=1, row=0, sticky='W')
+  tk.Label(advanced, text="Frame Duration:").grid(column=0, row=0, sticky='W')
+  dur = tk.StringVar()
+  Number(advanced, textvariable=dur, width=5).grid(column=1, row=0, sticky='EW', padx=(0,30))
+  tk.Label(advanced, text="ticks").grid(column=1, row=0, sticky='E', padx=(0,25))
   #easing
   earr = ["None","Linear","Cubic","Bezier"]
-  tk.Label(advanced, text="Easing:").grid(column=0, row=1, sticky='E')
+  tk.Label(advanced, text="Easing Method:").grid(column=0, row=1, sticky='W')
   easing = tk.StringVar()
   easing.set("Linear")
   ttk.Combobox(advanced, values=earr, textvariable=easing, state='readonly', width=7).grid(column=1, row=1, sticky='W')
@@ -186,16 +193,16 @@ if not len(sys.argv) > 1:
   autoplay = tk.BooleanVar()
   tk.Checkbutton(advanced, text="Auto Play", variable=autoplay).grid(column=1, row=2)
   #color behavior
+  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=3, sticky='W')
   cbarr = ["x", "y", "z", "a"]
   cb = [tk.StringVar() for i in range(3)]
   for i in range(3):
     cb[i].set(cbarr[i])
-  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=3, sticky='NEW')
   cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(0,0))
   cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(28,0))
   cb3menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(56,0))
   #output
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=4, columnspan=2, sticky='EW', pady=5)
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=4, columnspan=2, sticky='EW', pady=(7,0))
   tk.Label(advanced, text="Output:").grid(column=0, row=5, columnspan=2)
   outjson = tk.StringVar()
   outpng = tk.StringVar()
@@ -207,8 +214,10 @@ if not len(sys.argv) > 1:
   tk.Label(advanced, text=".png").grid(column=1, row=7, sticky='NE')
 
   window.mainloop()
-  if duration.get().isdigit():
-    duration = max(int(duration.get()), 1)
+  if qq.get():
+    quit()
+  if dur.get().isdigit():
+    duration = max(int(dur.get()), 1)
   else:
     duration = 1
   easing = earr.index(easing.get())
