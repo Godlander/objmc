@@ -3,7 +3,7 @@ make sure Python and Pillow is installed, and place the script in the same direc
 
 either edit the script with your inputs, or run `python convert.py` with correct arguments in command line to generate the model and texture outputs that go in a resourcepack.
 
-running the script without any arguments will open a GUI with slightly more limited options.
+running the script without any arguments will open a gui with slightly more limited options.
 
 ![image](https://user-images.githubusercontent.com/16228717/163738212-69f9a31a-0f09-439b-8f99-4b021e356cbd.png)
 
@@ -184,7 +184,7 @@ execute store result entity @s ArmorItems[3].tag.CustomPotionColor int 1 run sco
 ```
 
 ### questions
-Feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9SvZd
+feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9SvZd
 
 # contributors:
 **DartCat25** - Helped me get started
@@ -200,3 +200,5 @@ Feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9S
 **Barf Creations** - Help replicating Minecraft's jank Pose rotation matrix
 
 **kumitatepazuru** - Adding command line arguments for the script
+
+**Daminator** - Showing me tkinter (this is so painful why)
