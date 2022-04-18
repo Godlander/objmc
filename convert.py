@@ -1,6 +1,12 @@
 import argparse
 import math
 import json
+import sys
+import os
+import tkinter as tk
+from tkinter import ttk
+import tkinter.scrolledtext as tkst
+import tkinter.filedialog as tkfd
 from PIL import Image, ImageOps
 
 #--------------------------------
@@ -90,6 +96,128 @@ autorotate = args.autorotate != autorotate
 autoplay = args.autoplay != autoplay
 flipuv = args.flipuv != flipuv
 #--------------------------------
+#gui if no args
+path = os.getcwd()
+def settext(box,text):
+  box.configure(state='normal')
+  box.delete('1.0',tk.END)
+  box.insert('1.0',text)
+  box.configure(state='disabled')
+def opentex():
+  f = tkfd.askopenfilename(initialdir=path,title='Select Texture File',filetypes=[("Image File", ".png .jpg .jpeg .bmp")])
+  global texs
+  texs = [f.replace("\\","\\\\")]
+  settext(texlist, os.path.basename(f))
+def openobjs():
+  f = tkfd.askopenfilenames(initialdir=path,title='Select Obj Files',filetypes=[("Obj Files", ".obj")])
+  global objs, frames
+  objs = list(f)
+  frames = []
+  for i in range(len(f)):
+    frames.append(str(i))
+  f = [os.path.basename(f) for f in f]
+  settext(objlist, "\n".join(f))
+def isnumber(s):
+  return (s.isdigit() or s == "")
+def start():
+  if len(objs) == 0 or len(texs) == 0:
+    print("No files selected")
+    return
+class Number(tk.Entry):
+  def __init__(self, master=None, **kwargs):
+    self.var = kwargs.pop('textvariable', None)
+    self.var.set(kwargs.pop('text', ''))
+    tk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
+    self.old_value = ''
+    self.var.trace('w', self.check)
+    self.get, self.set = self.var.get, self.var.set
+  def check(self, *args):
+    if self.get().isdigit() or self.get() == '':
+      self.old_value = self.get()
+    else:
+      self.set(self.old_value)
+if not len(sys.argv) > 1:
+  print("No arguments given, starting gui")
+  window = tk.Tk()
+  window.title("objmc")
+  window.geometry("400x300")
+  window.rowconfigure(0,pad=7)
+  window.rowconfigure(1,weight=1)
+  window.rowconfigure(2,pad=7)
+  window.columnconfigure(0,weight=1)
+  window.columnconfigure(1,weight=1)
+  #obj list
+  tk.Button(window, text='Select Objs', command=openobjs).grid(column=0, row=0, sticky='NEW')
+  objlist = tkst.ScrolledText(window, height=500)
+  objlist.grid(column=0, row=1, sticky='NEW', padx=5)
+  settext(objlist, "\n".join(objs))
+  #tex list
+  tk.Button(window, text='Select Texture', command=opentex).grid(column=1, row=0, sticky='NEW')
+  texlist = tk.Text(window, height=1)
+  texlist.grid(column=1, row=1, sticky='NEW', padx=5)
+  settext(texlist, texs[0])
+  flipuv = tk.BooleanVar()
+  tk.Checkbutton(window, text="Flip UV", variable=flipuv).grid(column=1, row=1, sticky='NE')
+  #start quit buttons
+  buttonquit = tk.Button(window, text="Cancel", command=quit).grid(column=0, row=2, padx=5)
+  buttonstart = tk.Button(window, text="Start", command=window.destroy).grid(column=1, row=2, padx=5)
+  ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=2, sticky='NSE')
+  #advanced
+  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=27)
+  tk.Label(window, text="Advanced").grid(column=1, row=1, sticky='NEW', pady=30)
+  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=53)
+  advanced = tk.Frame(window)
+  advanced.columnconfigure(0, weight=1)
+  advanced.columnconfigure(1, weight=1)
+  advanced.grid(column=1, row=1, sticky='NESW', pady=(60,0))
+  #duration
+  tk.Label(advanced, text="Duration:").grid(column=0, row=0, sticky='E')
+  duration = tk.StringVar()
+  Number(advanced, textvariable=duration, width=10).grid(column=1, row=0, sticky='W')
+  #easing
+  earr = ["None","Linear","Cubic","Bezier"]
+  tk.Label(advanced, text="Easing:").grid(column=0, row=1, sticky='E')
+  easing = tk.StringVar()
+  easing.set("Linear")
+  ttk.Combobox(advanced, values=earr, textvariable=easing, state='readonly', width=7).grid(column=1, row=1, sticky='W')
+  #autorotate
+  autorotate = tk.BooleanVar()
+  tk.Checkbutton(advanced, text="Auto Rotate", variable=autorotate).grid(column=0, row=2)
+  autoplay = tk.BooleanVar()
+  tk.Checkbutton(advanced, text="Auto Play", variable=autoplay).grid(column=1, row=2)
+  #color behavior
+  cbarr = ["x", "y", "z", "a"]
+  cb = [tk.StringVar() for i in range(3)]
+  for i in range(3):
+    cb[i].set(cbarr[i])
+  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=3, sticky='NEW')
+  cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(0,0))
+  cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(28,0))
+  cb3menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(56,0))
+  #output
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=4, columnspan=2, sticky='EW', pady=5)
+  tk.Label(advanced, text="Output:").grid(column=0, row=5, columnspan=2)
+  outjson = tk.StringVar()
+  outpng = tk.StringVar()
+  outjson.set(output[0].replace(".json", ""))
+  outpng.set(output[1].replace(".png", ""))
+  tk.Entry(advanced, textvariable=outjson, width=10).grid(column=0, row=6, columnspan=2, sticky='NEW', padx=(5,10))
+  tk.Label(advanced, text=".json").grid(column=1, row=6, sticky='NE')
+  tk.Entry(advanced, textvariable=outpng, width=10).grid(column=0, row=7, columnspan=2, sticky='NEW', padx=5)
+  tk.Label(advanced, text=".png").grid(column=1, row=7, sticky='NE')
+
+  window.mainloop()
+  if duration.get().isdigit():
+    duration = max(int(duration.get()), 1)
+  else:
+    duration = 1
+  easing = earr.index(easing.get())
+  flipuv = flipuv.get()
+  autorotate = autorotate.get()
+  autoplay = autoplay.get()
+  colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
+  output = [outjson.get(), outpng.get()]
+#--------------------------------
 
 NP = 5
 
@@ -111,7 +239,7 @@ if x < 8:
   quit()
 
 def readobj(name):
-  obj = open(name.split(".")[0]+".obj", "r")
+  obj = open(name, "r")
   d = {"positions":[],"uvs":[],"normals":[],"faces":[]}
   for line in obj:
     if line.startswith("v "):
@@ -124,7 +252,7 @@ def readobj(name):
       d["faces"].append([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]])
   obj.close()
   if 'nfaces' in globals() and len(d["faces"]) != nfaces:
-    print("\nerror: mismatched obj face count")
+    print("\nerror: mismatched obj face count, exiting...")
     quit()
   return d
 #read obj
@@ -313,7 +441,7 @@ def encodeface(obj, frame, index):
 #encode all the data
 for frame in range(0, nframes):
   if frame % int(math.ceil(nframes/10)) == 0:
-    print("\rencoding frame",frame+1,"of",nframes, end='...')
+    print("\rEncoding frame",frame+1,"of",nframes, end='...')
     print("\r\t\t\t\t\t","{:.2f}".format((frame+1)/nframes*100),"%", end='')
   obj = readobj(objs[int(frames[frame])])
   if len(obj["faces"]) != nfaces:
@@ -322,8 +450,8 @@ for frame in range(0, nframes):
   for i in range(0, nfaces):
     encodeface(obj, frame, i)
 
-print("\rDone                                     100.00 %")
-print("Saving...")
+print("\rSaving files...                          100.00 %")
 out.save(output[1]+".png")
 out.close()
+print("Complete")
 quit()
