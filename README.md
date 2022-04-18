@@ -5,7 +5,7 @@ either edit the script with your inputs, or run `python convert.py` with correct
 
 running the script without any arguments will open a gui with slightly more limited options.
 
-![image](https://user-images.githubusercontent.com/16228717/163738212-69f9a31a-0f09-439b-8f99-4b021e356cbd.png)
+![image](https://user-images.githubusercontent.com/16228717/163741178-b582e9e0-aaf7-4a8d-958d-03fd923dd9bd.png)
 
 place the model and texture output generated with this tool in the correct location in the resourcepack along with the shaders folder, and should display properly.
 
