@@ -3,7 +3,11 @@ make sure Python and Pillow is installed, and place the script in the same direc
 
 either edit the script with your inputs, or run `python convert.py` with correct arguments in command line to generate the model and texture outputs that go in a resourcepack.
 
-place the shaders in the correct location in the resourcepack, and any model generated with this tool should display properly.
+running the script without any arguments will open a GUI with slightly more limited options.
+
+![image](https://user-images.githubusercontent.com/16228717/163738212-69f9a31a-0f09-439b-8f99-4b021e356cbd.png)
+
+place the model and texture output generated with this tool in the correct location in the resourcepack along with the shaders folder, and should display properly.
 
 make sure your minecraft version is 1.18.1+ as the shader will not work with lower versions.
 
