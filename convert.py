@@ -136,22 +136,42 @@ class Number(tk.Entry):
       self.old_value = self.get()
     else:
       self.set(self.old_value)
+def isFloat(string):
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+class Floatbox(tk.Entry):
+  def __init__(self, master=None, **kwargs):
+    self.var = kwargs.pop('textvariable', None)
+    self.var.set("0.0")
+    tk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
+    self.old_value = ''
+    self.var.trace('w', self.check)
+    self.get, self.set = self.var.get, self.var.set
+  def check(self, *args):
+    if isFloat(self.get()) or self.get() == '':
+      self.old_value = self.get()
+    else:
+      self.set(self.old_value)
 if not len(sys.argv) > 1:
   print("No arguments given, starting gui")
   window = tk.Tk()
   window.title("objmc")
-  window.geometry("400x300")
-  window.minsize(400,300)
+  window.geometry("1x1")
+  window.minsize(450,350)
   window.rowconfigure(0,pad=7)
   window.rowconfigure(1,weight=1)
   window.rowconfigure(2,pad=7)
-  window.columnconfigure(0,weight=1)
-  window.columnconfigure(1,weight=1)
+  window.columnconfigure(0,weight=8)
+  window.columnconfigure(1,weight=9)
   #obj list
   tk.Button(window, text='Select Objs', command=openobjs).grid(column=0, row=0, sticky='NEW')
   objlist = tkst.ScrolledText(window, height=500)
-  objlist.grid(column=0, row=1, sticky='NEW', padx=5)
+  objlist.grid(column=0, row=1, rowspan=3, sticky='NEW', padx=5)
   settext(objlist, "\n".join(objs))
+  ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=4, sticky='NSE')
   #tex list
   tk.Button(window, text='Select Texture', command=opentex).grid(column=1, row=0, sticky='NEW')
   texlist = tk.Text(window, height=1)
@@ -165,53 +185,65 @@ if not len(sys.argv) > 1:
   def start():
     qq.set(False)
     window.destroy()
-  buttonquit = tk.Button(window, text="Cancel", command=quit).grid(column=0, row=2, padx=5)
-  buttonstart = tk.Button(window, text="Start", command=start).grid(column=1, row=2, padx=5)
-  ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=2, sticky='NSE')
+  buttonquit = tk.Button(window, text="Cancel", command=quit).grid(column=0, row=4, padx=5, pady=5)
+  buttonstart = tk.Button(window, text="Start", command=start).grid(column=1, row=4, padx=5, pady=5)
+  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
+  #scale and offset
+  of = [tk.StringVar() for i in range(3)]
+  offsetlable = tk.Label(window, text="Offset:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(32,0))
+  offset1 = Floatbox(window, width=5, textvariable=of[0]).grid(column=1, row=1, sticky='N', padx=(0,30), pady=(32,0))
+  offset2 = Floatbox(window, width=5, textvariable=of[1]).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(32,0))
+  offset3 = Floatbox(window, width=5, textvariable=of[2]).grid(column=1, row=1, sticky='N', padx=(110,0), pady=(32,0))
+  scalelable = tk.Label(window, text="Scale:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(55,0))
+  scale = tk.StringVar()
+  scalebox = Floatbox(window, width=16, textvariable=scale).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(57,0))
+  scale.set("1.0")
   #advanced
-  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=27)
-  tk.Label(window, text="Advanced").grid(column=1, row=1, sticky='NEW', pady=30)
-  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=53)
+  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=0, sticky='NEW')
   advanced = tk.Frame(window)
   advanced.columnconfigure(0, weight=1)
   advanced.columnconfigure(1, weight=1)
-  advanced.grid(column=1, row=1, sticky='NESW', pady=(60,0))
+  advanced.grid(column=1, row=3, sticky='NESW')
+  tk.Label(advanced, text="Advanced").grid(column=0, row=0, columnspan=2, sticky='EW', pady=(0,5))
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW')
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW', pady=(25,5))
   #duration
-  tk.Label(advanced, text="Frame Duration:").grid(column=0, row=0, sticky='W')
+  tk.Label(advanced, text="Frame Duration:").grid(column=0, row=1, sticky='W', padx=(5,0))
   dur = tk.StringVar()
-  Number(advanced, textvariable=dur, width=5).grid(column=1, row=0, sticky='EW', padx=(0,30))
-  tk.Label(advanced, text="ticks").grid(column=1, row=0, sticky='E', padx=(0,25))
+  Number(advanced, textvariable=dur, width=5).grid(column=1, row=1, sticky='EW', padx=(0,30))
+  tk.Label(advanced, text="ticks").grid(column=1, row=1, sticky='E', padx=(0,25))
   #easing
   earr = ["None","Linear","Cubic","Bezier"]
-  tk.Label(advanced, text="Easing Method:").grid(column=0, row=1, sticky='W')
+  tk.Label(advanced, text="Easing Method:").grid(column=0, row=2, sticky='W', padx=(5,0))
   easing = tk.StringVar()
   easing.set("Linear")
-  ttk.Combobox(advanced, values=earr, textvariable=easing, state='readonly', width=7).grid(column=1, row=1, sticky='W')
+  ttk.Combobox(advanced, values=earr, textvariable=easing, state='readonly', width=7).grid(column=1, row=2, sticky='W')
   #autorotate
   autorotate = tk.BooleanVar()
-  tk.Checkbutton(advanced, text="Auto Rotate", variable=autorotate).grid(column=0, row=2)
+  tk.Checkbutton(advanced, text="Auto Rotate", variable=autorotate).grid(column=0, row=3, sticky='E')
   autoplay = tk.BooleanVar()
-  tk.Checkbutton(advanced, text="Auto Play", variable=autoplay).grid(column=1, row=2)
+  tk.Checkbutton(advanced, text="Auto Play", variable=autoplay).grid(column=1, row=3, sticky='W')
   #color behavior
-  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=3, sticky='W')
+  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=4, sticky='W', padx=(5,0))
   cbarr = ["x", "y", "z", "a"]
   cb = [tk.StringVar() for i in range(3)]
   for i in range(3):
     cb[i].set(cbarr[i])
-  cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(0,0))
-  cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(28,0))
-  cb3menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=3, sticky='W', padx=(56,0))
+  cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=4, sticky='W', padx=(0,0))
+  cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=4, sticky='W', padx=(28,0))
+  cb3menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=4, sticky='W', padx=(56,0))
   #output
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=4, columnspan=2, sticky='EW', pady=(7,0))
-  tk.Label(advanced, text="Output:").grid(column=0, row=5, columnspan=2)
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=5, columnspan=2, sticky='EW', pady=(7,0))
+  tk.Label(advanced, text="Output:").grid(column=0, row=6, columnspan=2)
   outjson = tk.StringVar()
   outpng = tk.StringVar()
   outjson.set(output[0].replace(".json", ""))
   outpng.set(output[1].replace(".png", ""))
-  tk.Entry(advanced, textvariable=outjson, width=10).grid(column=0, row=6, columnspan=2, sticky='NEW', padx=(5,10))
-  tk.Label(advanced, text=".json").grid(column=1, row=6, sticky='NE')
-  tk.Entry(advanced, textvariable=outpng, width=10).grid(column=0, row=7, columnspan=2, sticky='NEW', padx=5)
-  tk.Label(advanced, text=".png").grid(column=1, row=7, sticky='NE')
+  tk.Entry(advanced, textvariable=outjson, width=10).grid(column=0, row=7, columnspan=2, sticky='NEW', padx=(5,10))
+  tk.Label(advanced, text=".json").grid(column=1, row=7, sticky='NE')
+  tk.Entry(advanced, textvariable=outpng, width=10).grid(column=0, row=8, columnspan=2, sticky='NEW', padx=5)
+  tk.Label(advanced, text=".png").grid(column=1, row=8, sticky='NE')
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=9, columnspan=2, sticky='NEW', pady=(5,0))
 
   window.mainloop()
   if qq.get():
@@ -220,6 +252,8 @@ if not len(sys.argv) > 1:
     duration = max(int(dur.get()), 1)
   else:
     duration = 1
+  offset = [float(of[0].get()), float(of[1].get()), float(of[2].get())]
+  scale = float(scale.get())
   easing = earr.index(easing.get())
   flipuv = flipuv.get()
   autorotate = autorotate.get()
@@ -294,6 +328,7 @@ print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", data
 print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, ", autoplay: ", autoplay, sep="")
 if nframes > 1:
   print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", easing: ", easing, sep="")
+print("offset: ", offset, ", scale: ", scale, sep="")
 
 #write to json model
 model = open(output[0]+".json", "w")
