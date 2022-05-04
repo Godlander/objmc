@@ -2,7 +2,7 @@
 
 #moj_import <light.glsl>
 #moj_import <fog.glsl>
-#moj_import <tools.glsl>
+#moj_import <objmc.tools>
 
 in vec3 Position;
 in vec4 Color;
@@ -27,24 +27,29 @@ uniform vec3 Light1_Direction;
 
 out float vertexDistance;
 out vec4 vertexColor;
-out vec4 lightMapColor;
+out vec4 lightColor;
 out vec4 overlayColor;
 out vec2 texCoord0;
 out vec2 texCoord02;
-out vec3 normal;
+out vec3 Pos;
 out float transition;
 
+flat out int isCustom;
+flat out int isGUI;
+flat out int isHand;
+
 void main() {
-    normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
+    Pos = Position;
+    vec3 normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
     texCoord0 = UV0;
     overlayColor = texelFetch(Sampler1, UV1, 0);
-    lightMapColor = texelFetch(Sampler2, UV2 / 16, 0);
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
+    lightColor = minecraft_sample_lightmap(Sampler2, UV2);
 
     //objmc
     #define ENTITY
-    #moj_import <objmc.glsl>
+    #moj_import <objmc.main>
 
-    gl_Position = ProjMat * ModelViewMat * (vec4(Position + posoffset, 1.0));
-    vertexDistance = fog_distance(ModelViewMat, IViewRotMat * Position + posoffset, FogShape);
+    gl_Position = ProjMat * ModelViewMat * (vec4(Pos, 1.0));
+    vertexDistance = fog_distance(ModelViewMat, IViewRotMat * Pos, FogShape);
 }
