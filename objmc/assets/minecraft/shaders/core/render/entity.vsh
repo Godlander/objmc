@@ -27,19 +27,20 @@ out float vertexDistance;
 out vec4 vertexColor;
 out vec4 lightColor;
 out vec4 overlayColor;
-out vec2 texCoord0;
-out vec2 texCoord02;
+out vec2 texCoord;
+out vec2 texCoord2;
 out vec3 Pos;
 out float transition;
 
 flat out int isCustom;
 flat out int isGUI;
 flat out int isHand;
+flat out int noShadow;
 
 void main() {
     Pos = Position;
     vec3 normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
-    texCoord0 = UV0;
+    texCoord = UV0;
     overlayColor = vec4(1);
     lightColor = minecraft_sample_lightmap(Sampler2, UV2);
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);

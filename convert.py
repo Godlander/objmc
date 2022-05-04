@@ -66,6 +66,12 @@ autoplay = False
 #i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
 flipuv = False
 
+#No Shadow
+#disable face normal shading
+#can be used for models with lighting baked into the texture
+#lightmap color still applies
+noshadow = False
+
 #--------------------------------
 #argument parsing by kumitatepazuru
 #respects above settings as default
@@ -82,6 +88,7 @@ parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavi
 parser.add_argument('--autorotate', action='store_true', help="Attempt to estimate rotation with Normals")
 parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='aaa' overrides this.")
 parser.add_argument("--flipuv", action='store_true', help="Invert the texture to compensate for flipped UV")
+parser.add_argument("--noshadow", action='store_true', help="Disable shadows from face normals")
 args = parser.parse_args()
 objs = args.objs
 texs = args.texs
@@ -95,6 +102,7 @@ colorbehavior = args.colorbehavior
 autorotate = args.autorotate != autorotate
 autoplay = args.autoplay != autoplay
 flipuv = args.flipuv != flipuv
+noshadow = args.noshadow != noshadow
 #--------------------------------
 #gui if no args
 path = os.getcwd()
@@ -160,7 +168,7 @@ if not len(sys.argv) > 1:
   window = tk.Tk()
   window.title("objmc")
   window.geometry("1x1")
-  window.minsize(450,350)
+  window.minsize(500,370)
   window.rowconfigure(0,pad=7)
   window.rowconfigure(1,weight=1)
   window.rowconfigure(2,pad=7)
@@ -196,8 +204,11 @@ if not len(sys.argv) > 1:
   offset3 = Floatbox(window, width=5, textvariable=of[2]).grid(column=1, row=1, sticky='N', padx=(110,0), pady=(32,0))
   scalelable = tk.Label(window, text="Scale:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(55,0))
   scale = tk.StringVar()
-  scalebox = Floatbox(window, width=16, textvariable=scale).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(57,0))
+  scalebox = Floatbox(window, width=17, textvariable=scale).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(55,0))
   scale.set("1.0")
+  #noshadow
+  noshadow = tk.BooleanVar()
+  tk.Checkbutton(window, text="No Shadow", variable=noshadow).grid(column=1, row=1, sticky='N', padx=(0,80), pady=(77,0))
   #advanced
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=0, sticky='NEW')
   advanced = tk.Frame(window)
@@ -256,13 +267,14 @@ if not len(sys.argv) > 1:
   scale = float(scale.get())
   easing = earr.index(easing.get())
   flipuv = flipuv.get()
+  noshadow = noshadow.get()
   autorotate = autorotate.get()
   autoplay = autoplay.get()
   colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
   output = [outjson.get(), outpng.get()]
 #--------------------------------
 
-NP = 5
+NP = 4
 
 #file extension optional
 output[0] = output[0].split(".")[0]
@@ -283,14 +295,12 @@ if x < 8:
 
 def readobj(name):
   obj = open(name, "r")
-  d = {"positions":[],"uvs":[],"normals":[],"faces":[]}
+  d = {"positions":[],"uvs":[],"faces":[]}
   for line in obj:
     if line.startswith("v "):
       d["positions"].append([float(i) for i in " ".join(line.split()).split(" ")[1:]])
     if line.startswith("vt "):
       d["uvs"].append([float(i) for i in " ".join(line.split()).split(" ")[1:]])
-    if line.startswith("vn "):
-      d["normals"].append([float(i) for i in " ".join(line.split()).split(" ")[1:]])
     if line.startswith("f "):
       d["faces"].append([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]])
   obj.close()
@@ -308,10 +318,9 @@ nfaces = len(o["faces"])
 nvertices = nfaces*4
 texheight = ntextures * y
 uvheight = math.ceil(nfaces/x)
-#meta = rgba: scale, hasnormal, easing, unused
-#position = rgb, rgb, rgb
-#normal = aaa
-#uv = rg,ba
+#position: x,y,z = rgb, rgb, rgb
+#meta: a,a,a = textureid, easing, uv alpha bit
+#uv: x,y = rg,ba
 dataheight = (nframes * math.ceil(((NP*nvertices))/x)) + 1
 
 #make height power of 2
@@ -328,7 +337,7 @@ print("uvheight: ", uvheight, ", texheight: ", texheight, ", dataheight: ", data
 print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, ", autoplay: ", autoplay, sep="")
 if nframes > 1:
   print("frames: ", nframes, ", duration: ", duration," ticks", ", total: ", duration*nframes/20, " seconds", ", easing: ", easing, sep="")
-print("offset: ", offset, ", scale: ", scale, sep="")
+print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
 
 #write to json model
 model = open(output[0]+".json", "w")
@@ -352,14 +361,14 @@ for i in range(3):
 #0: marker pix
 out.putpixel((0,0), (12,34,56,78))
 #1: autorotate, autoplay, colorbehavior, alpha bits for texsize and nvertices
-alpha = 128 + (int(y%256>127)<<6) + (int(nvertices%256>127)<<5)
+alpha = 128 + (int(y&128)<<6) + (int(nvertices&128)<<5)
 out.putpixel((1,0), (int(autorotate), int(autoplay), cb, alpha))
 #2: texture size
 out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
 #3: nvertices
 out.putpixel((3,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, 128+nvertices%128))
-#4: nframes, ntextures, duration
-out.putpixel((4,0), (nframes,ntextures,duration-1, 255))
+#4: nframes, ntextures, duration, noshadow
+out.putpixel((4,0), (nframes,ntextures,duration-1, 128+int(noshadow)))
 
 #actual texture
 for i in range (0,len(texs)):
@@ -430,11 +439,6 @@ def getposition(obj, index):
   b = int(z%256)
   rgb.append([r,g,b])
   return rgb
-def getnormal(obj, index):
-  r = int((obj["normals"][index][0]+1)*255/2)
-  g = int((obj["normals"][index][1]+1)*255/2)
-  b = int((obj["normals"][index][2]+1)*255/2)
-  return [r,g,b]
 def getuv(obj, index):
   x = (obj["uvs"][index][0])*65535
   y = (obj["uvs"][index][1])*65535
@@ -445,34 +449,25 @@ def getuv(obj, index):
   return [r,g,b,a]
 def getp(frame, index, offset):
   i = ((frame)*nvertices*NP)+(index*NP)+offset
-  xx = i%x
-  yy = int(1+uvheight+y+((i/x)))
-  return (xx,yy)
-#meta: textureid, easing, scale?, alpha bits
-#position = rgb, rgb, rgb
-#normal = aaa
-#uv = rg,ba
+  px = i%x
+  py = int(1+uvheight+y+((i/x)))
+  return (px,py)
+#position: x,y,z = rgb, rgb, rgb
+#meta: a,a,a = textureid, easing, uv alpha bit
+#uv: x,y = rg,ba
 def encodevert(obj, frame, index, face):
-  #face:[pos,uv,norm]
+  #face:[pos,uv,norm(unused)]
   #init meta
   scale = 100
-  alpha = 128
-  #position and normal
+  #position and uv
   pos = getposition(obj, face[0])
-  if len(face) == 2:
-    norm = (0,255,0,255)
-  else:
-    norm = getnormal(obj, face[2])
-  for i in range(0,3):
-    alpha += int(norm[i]%256>127)<<(3-i) #move first bit of alpha
-    na = 128+norm[i]%128
-    out.putpixel(getp(frame, index, i+1), (pos[i][0],pos[i][1],pos[i][2],na))
-  #uv
   uv = getuv(obj, face[1])
-  alpha += int(uv[3]%256>127) #move first bit of alpha
-  out.putpixel(getp(frame, index, 4), (uv[0],uv[1],uv[2],128+uv[3]%128))
-  #meta: textureid, easing, scale?, alpha
-  out.putpixel(getp(frame, index, 0), (0, easing, scale, alpha))
+  #meta: textureid, easing, uv alpha bit
+  meta = [0,scale,int(uv[3]&128)]
+  #draw data pixels
+  for i in range(0,3):
+    out.putpixel(getp(frame, index, i), (pos[i][0],pos[i][1],pos[i][2],128+meta[i]%128))
+  out.putpixel(getp(frame, index, 3), (uv[0],uv[1],uv[2],128+uv[3]%128))
 
 def encodeface(obj, frame, index):
   for i in range(0,3):

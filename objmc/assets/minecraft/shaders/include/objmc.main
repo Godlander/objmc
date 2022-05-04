@@ -20,7 +20,7 @@ ivec4 markerpix = ivec4(texelFetch(Sampler0, topleft, 0) * 255);
 //if marker is correct at topleft
 if (markerpix == ivec4(12,34,56,78)) {
     isCustom = 1;
-    //grab metadata: marker, behavior&alpha, size, nvertices, frames
+    //grab metadata: marker, behavior&alpha, size, nvertices, frames&noshadow
     //behavior and alpha
     ivec4 metaba = ivec4(texelFetch(Sampler0, topleft + ivec2(1,0), 0) * 255);
     //size
@@ -35,6 +35,7 @@ if (markerpix == ivec4(12,34,56,78)) {
     int nframes = max(metaframes.r, 1);
     int ntextures = max(metaframes.g, 1);
     float duration = float(metaframes.b + 1);
+    noShadow = metaframes.a&1;
     //time in ticks
     float time = GameTime * 24000;
 
@@ -85,14 +86,13 @@ if (markerpix == ivec4(12,34,56,78)) {
     int frame = int(time/duration) % nframes;
     id += frame * nvertices;
     //read data
-    //meta = rgba: textureid, easing, scale?, unused
     //position = xyz: rgb, rgb, rgb 3 pixels
-    //uv = rg,ba of next two pixels, with first bit of alpha in meta pixel
-    ivec4 datameta = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
-    ivec4 datax = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
-    ivec4 datay = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
-    ivec4 dataz = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0) * 255);
-    ivec4 datauv = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0) * 255);
+    //meta = aaa of position pixels, first bit to 1: textureid, easing, uv alpha
+    //uv = rg,ba of next two pixels, with first bit of alpha in z.a
+    ivec4 datax = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
+    ivec4 datay = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
+    ivec4 dataz = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
+    ivec4 datauv = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0) * 255);
     //position
     posoffset = vec3(
         ((datax.r*65536)+(datax.g*256)+(datax.b))/256./255.,
@@ -102,17 +102,16 @@ if (markerpix == ivec4(12,34,56,78)) {
     //uv
     vec2 texuv1 = vec2(
         ((datauv.r*256) + datauv.g)/255. * (size.x-(size.x/256.))/256.,
-        ((datauv.b*256) + (datauv.a-128+((datameta.a&1)<<7)))/255. * (size.y-(size.y/256.))/256.
+        ((datauv.b*256) + (datauv.a-128+((dataz.a&1)<<7)))/255. * (size.y-(size.y/256.))/256.
     );
 
     if (nframes > 1) {
         //next frame
         id = (id + nvertices) % (nframes * nvertices);
-        ivec4 datameta2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
-        ivec4 datax2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
-        ivec4 datay2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
-        ivec4 dataz2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0) * 255);
-        ivec4 datauv2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 4), 0) * 255);
+        ivec4 datax2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
+        ivec4 datay2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
+        ivec4 dataz2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
+        ivec4 datauv2 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0) * 255);
         vec3 posoffset2 = vec3(
             ((datax2.r*65536)+(datax2.g*256)+(datax2.b))/256./255.,
             ((datay2.r*65536)+(datay2.g*256)+(datay2.b))/256./255.,
@@ -126,7 +125,7 @@ if (markerpix == ivec4(12,34,56,78)) {
         //texCoord02 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv2;
 
         transition = fract(time/duration);
-        switch (datameta.g) { //easing
+        switch (datay.a%128) { //easing
             case 1: //linear
                 posoffset = mix(posoffset, posoffset2, transition);
                 break;
@@ -137,10 +136,9 @@ if (markerpix == ivec4(12,34,56,78)) {
             case 3: //4-point bezier
                 //third point
                 id = (id + nvertices) % (nframes * nvertices);
-                ivec4 datameta3 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
-                ivec4 datax3 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
-                ivec4 datay3 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
-                ivec4 dataz3 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0) * 255);
+                ivec4 datax3 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
+                ivec4 datay3 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
+                ivec4 dataz3 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
                 vec3 posoffset3 = vec3(
                     ((datax3.r*65536)+(datax3.g*256)+(datax3.b))/256./255.,
                     ((datay3.r*65536)+(datay3.g*256)+(datay3.b))/256./255.,
@@ -148,10 +146,9 @@ if (markerpix == ivec4(12,34,56,78)) {
                 ) - vec3(128.5, 128.0, 128.5);
                 //fourth point
                 id = (id + nvertices) % (nframes * nvertices);
-                ivec4 datameta4 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
-                ivec4 datax4 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
-                ivec4 datay4 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
-                ivec4 dataz4 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 3), 0) * 255);
+                ivec4 datax4 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 0), 0) * 255);
+                ivec4 datay4 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 1), 0) * 255);
+                ivec4 dataz4 = ivec4(texelFetch(Sampler0, getp(topleft, size, yoffset, id, 2), 0) * 255);
                 vec3 posoffset4 = vec3(
                     ((datax4.r*65536)+(datax4.g*256)+(datax4.b))/256./255.,
                     ((datay4.r*65536)+(datay4.g*256)+(datay4.b))/256./255.,
@@ -184,7 +181,7 @@ if (markerpix == ivec4(12,34,56,78)) {
     Pos += posoffset;
     //real uv
                 //align uv to pixel
-    texCoord0 = (vec2(topleft.x, topleft.y+headerheight) + texuv1)/atlasSize
+    texCoord = (vec2(topleft.x, topleft.y+headerheight) + texuv1)/atlasSize
                 //make sure that faces with same uv beginning/ending renders
                 + vec2(onepixel.x * 0.0001 * corner, onepixel.y * 0.0001 * ((corner + 1) % 4));
 }

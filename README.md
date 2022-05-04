@@ -28,6 +28,8 @@ there is some optifine/sodium support for item/entity models.
 
 `duration`: integer duration of each frame in ticks.
 
+`noshadow`: disable shading the model based on face normals.
+
 `easing`: interpolation method shader uses inbetween frames. 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier
 
 `flipuv`: if your model renders but doesn't look right, try toggling this. see [#flipped-uv](#flipped-uv).
@@ -104,11 +106,13 @@ setblock ~ ~ ~ minecraft:spawner{MaxNearbyEntities:0,RequiredPlayerRange:0,Spawn
 
 ### model unloading
 
-block models unload when its more than 2 subchunks away behind the player. that means objmc can be used in 3x3x3 subchunks if a map is entirely modeled
+block models unload when its more than 1 subchunk away directly behind the player. that means objmc can be used in 16x16x16 block sized subchunks if a map is entirely modeled
 
-entity models stay loaded in front of the player just as well as blocks but unloads instantly if hitbox is not on screen
+entity models stay loaded in front of the player just as well as blocks but unloads instantly if their hitbox is not on screen
 
-spawner models also unload 2 away behind but unload 8 subchunks away in front of the player, basically making renderdistance 8 regardless of real setting
+*leashed entities become linked, and unrender when both of their hitboxes are no longer on screen*
+
+spawner models also unload 1 subchunk away behind but unload 8 subchunks away in front of the player, basically making render distance 8 regardless of real setting
 
 ### vertex count limits
 
