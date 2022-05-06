@@ -361,7 +361,8 @@ for i in range(3):
 #0: marker pix
 out.putpixel((0,0), (12,34,56,78))
 #1: autorotate, autoplay, colorbehavior, alpha bits for texsize and nvertices
-alpha = 128 + (int(y&128)<<6) + (int(nvertices&128)<<5)
+alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5)
+print(alpha)
 out.putpixel((1,0), (int(autorotate), int(autoplay), cb, alpha))
 #2: texture size
 out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
@@ -463,7 +464,7 @@ def encodevert(obj, frame, index, face):
   pos = getposition(obj, face[0])
   uv = getuv(obj, face[1])
   #meta: textureid, easing, uv alpha bit
-  meta = [0,scale,int(uv[3]&128)]
+  meta = [scale,easing,int(uv[3]%256/128)]
   #draw data pixels
   for i in range(0,3):
     out.putpixel(getp(frame, index, i), (pos[i][0],pos[i][1],pos[i][2],128+meta[i]%128))
