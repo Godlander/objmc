@@ -175,13 +175,13 @@ if not len(sys.argv) > 1:
   window.columnconfigure(0,weight=8)
   window.columnconfigure(1,weight=9)
   #obj list
-  tk.Button(window, text='Select Objs', command=openobjs).grid(column=0, row=0, sticky='NEW')
+  tk.Button(window, text='Select Objs', command=openobjs, borderwidth=5).grid(column=0, row=0, sticky='NEW')
   objlist = tkst.ScrolledText(window, height=500)
   objlist.grid(column=0, row=1, rowspan=3, sticky='NEW', padx=5)
   settext(objlist, "\n".join(objs))
   ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=4, sticky='NSE')
   #tex list
-  tk.Button(window, text='Select Texture', command=opentex).grid(column=1, row=0, sticky='NEW')
+  tk.Button(window, text='Select Texture', command=opentex, borderwidth=5).grid(column=1, row=0, sticky='NEW')
   texlist = tk.Text(window, height=1)
   texlist.grid(column=1, row=1, sticky='NEW', padx=5)
   settext(texlist, texs[0])
