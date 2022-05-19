@@ -294,7 +294,7 @@ if x < 8:
   quit()
 
 def readobj(name):
-  obj = open(name, "r")
+  obj = open(name, "r", encoding="utf-8")
   d = {"positions":[],"uvs":[],"faces":[]}
   for line in obj:
     if line.startswith("v "):
