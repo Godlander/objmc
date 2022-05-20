@@ -98,6 +98,16 @@ the uv ends up being upside down sometimes for some reason when exporting from B
 
 this doesnt seem to happen through Blender tho.
 
+### controlling animation
+
+any bits declared as `a` in `colorbehavior` will act as a time offset in ticks from 0 if `autoplay` is off, or from the current tick if `autoplay` is on.
+
+to calculate the offset for a frame while using `autoplay`, you can use this formula:
+
+```
+((total duration + ([/time query gametime] % 24000) - starting frame) % total duration)
+```
+
 ### spawner models
 you use spawners as a block that uses the entity renderer but isn't an entity. they are considerably laggier than normal blocks, but still better than entities, and don't suffer unloading nearly as much.
 ```mcfunction
