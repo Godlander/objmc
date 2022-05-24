@@ -362,7 +362,6 @@ for i in range(3):
 out.putpixel((0,0), (12,34,56,78))
 #1: autorotate, autoplay, colorbehavior, alpha bits for texsize and nvertices
 alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5)
-print(alpha)
 out.putpixel((1,0), (int(autorotate), int(autoplay), cb, alpha))
 #2: texture size
 out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
