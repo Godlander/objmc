@@ -181,11 +181,8 @@ execute store result score r temp run data get entity @s Pose.Head[0] 0.70833333
 execute store result score g temp run data get entity @s Pose.Head[1] 0.708333333
 execute store result score b temp run data get entity @s Pose.Head[2] 0.708333333
 
-scoreboard players add r temp 256
 scoreboard players operation r temp %= 256 const
-scoreboard players add g temp 256
 scoreboard players operation g temp %= 256 const
-scoreboard players add b temp 256
 scoreboard players operation b temp %= 256 const
 
 scoreboard players operation rgb temp = r temp
