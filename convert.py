@@ -145,6 +145,8 @@ class Number(tk.Entry):
     else:
       self.set(self.old_value)
 def isFloat(string):
+    if string == '' or string == '-':
+        return True
     try:
         float(string)
         return True
