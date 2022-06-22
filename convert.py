@@ -48,8 +48,8 @@ easing = 3
 # any 3 chars of 'x', 'y', 'z', 'a' is valid
 # 'xyz' = rotate, 'a' = animation
 # multiple rotation bytes increase accuracy on that axis
-# for 'aaa', animation frames 0-8388607 are not autoplay. numbers past 8388608 defines starting frame to auto-play from with smooth interpolation (suso's idea)
-# auto-play color can be calculated by: 8388608 + ((total duration + ([time query gametime] % 24000) - starting frame) % total duration)
+# for 'aaa', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
+# auto-play color can be calculated by: ((([time query gametime] % 24000) - starting frame) % total duration)
 colorbehavior = 'xyz'
 
 #Auto Rotate

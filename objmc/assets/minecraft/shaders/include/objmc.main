@@ -46,8 +46,8 @@ if (markerpix == ivec4(12,34,56,78)) {
     int tcolor = 0;
     if (metaba.b == 63) { //animation frames 0-8388607
         tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
-        //interpolation enabled past 8388608, suso's idea to define starting tick with color
-        autoplay = (Color.r > 0.5);
+        //interpolation disabled past 8388608, suso's idea to define starting tick with color
+        autoplay = (Color.r <= 0.5);
     } else {
         //bits from colorbehavior
         int rb = (metaba.b/16)%4;
