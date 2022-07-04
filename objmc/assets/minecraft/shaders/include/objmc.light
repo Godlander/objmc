@@ -4,7 +4,7 @@
 //default lighting
 if (isCustom == 0) {color *= vertexColor;}
 //custom lighting
-else if (noShadow == 0) {
+else if (noshadow == 0) {
     //normal from position derivatives
     vec3 normal = normalize(cross(dFdx(Pos), dFdy(Pos)));
 

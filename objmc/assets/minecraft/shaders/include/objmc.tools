@@ -3,10 +3,39 @@
 
 #define PI 3.1415926535897932
 
-#define NP 4 //per vertex pixel data
-ivec2 getp(ivec2 topleft, ivec2 size, int yoffset, int index, int offset) {
-    int i = (index * NP) + offset;
-    return topleft + ivec2(i % size.x, int(i / size.x) + yoffset);
+ivec4 getmeta(ivec2 topleft, int offset) {
+    return ivec4(texelFetch(Sampler0, topleft + ivec2(offset,0), 0) * 255);
+}
+vec3 getpos(ivec2 topleft, int w, int h, int index) {
+    int i = index*3;
+    vec4 x = texelFetch(Sampler0, topleft + ivec2((i+0)%w,h+((i+0)/w)), 0);
+    vec4 y = texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0);
+    vec4 z = texelFetch(Sampler0, topleft + ivec2((i+2)%w,h+((i+2)/w)), 0);
+    return vec3(
+        ((x.r*256)+(x.g)+(x.b/256)),
+        ((y.r*256)+(y.g)+(y.b/256)),
+        ((z.r*256)+(z.g)+(z.b/256))
+    ) - vec3(128.5, 128.0, 128.5);
+}
+vec2 getuv(ivec2 topleft, int w, int h, int index) {
+    int i = index*2;
+    vec4 x = texelFetch(Sampler0, topleft + ivec2((i+0)%w,h+((i+0)/w)), 0);
+    vec4 y = texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0);
+    return vec2(
+        ((x.g*255*256)+(x.b*255))/65535,
+        ((y.g*255*256)+(y.b*255))/65535
+    );
+}
+ivec2 getvert(ivec2 topleft, int w, int h, int i) {
+    ivec4 p = ivec4(texelFetch(Sampler0, topleft + ivec2(i%w,h+(i/w)), 0)*255);
+    return ivec2(p.r*256+p.g, p.b*128+p.a-128);
+}
+
+int getb(int i, int b) {
+    return (i>>b)&1;
+}
+int geta(int i, int b) {
+    return getb(i,b)<<7;
 }
 
 //3d rotation matrix from Barf Creations

@@ -2,7 +2,6 @@
 
 #moj_import <light.glsl>
 #moj_import <fog.glsl>
-#moj_import <objmc.tools>
 
 in vec3 Position;
 in vec4 Color;
@@ -28,7 +27,9 @@ out vec3 Pos;
 out float transition;
 
 flat out int isCustom;
-flat out int noShadow;
+flat out int noshadow;
+
+#moj_import <objmc.tools>
 
 void main() {
     //default

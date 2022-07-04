@@ -25,7 +25,7 @@ in float transition;
 flat in int isCustom;
 flat in int isGUI;
 flat in int isHand;
-flat in int noShadow;
+flat in int noshadow;
 
 out vec4 fragColor;
 

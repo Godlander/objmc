@@ -47,7 +47,7 @@ there is some optifine/sodium support for item/entity models.
 The script can be run with arguments to each of these. Example:
 
 ```py
-python convert.py --objs cube.obj --texs cube.png --autorotate --flipuv
+python convert.py --objs cube.obj --texs cube.png --autorotate --flipuv --out potion.json texture.png
 ```
 
 # samples:

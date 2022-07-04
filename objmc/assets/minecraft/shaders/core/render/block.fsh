@@ -19,7 +19,7 @@ in vec3 Pos;
 in float transition;
 
 flat in int isCustom;
-flat in int noShadow;
+flat in int noshadow;
 
 out vec4 fragColor;
 
