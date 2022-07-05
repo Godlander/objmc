@@ -36,13 +36,13 @@ void main() {
     Pos = Position + ChunkOffset;
     texCoord = UV0;
     vertexColor = Color;
+    lightColor = minecraft_sample_lightmap(Sampler2, UV2);
     vec3 normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
 
     //objmc
     #define BLOCK
     #moj_import <objmc.main>
 
-    lightColor = minecraft_sample_lightmap(Sampler2, UV2);
     gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);
     vertexDistance = fog_distance(ModelViewMat, Pos, FogShape);
 }

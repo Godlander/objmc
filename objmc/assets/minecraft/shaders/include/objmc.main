@@ -1,7 +1,6 @@
 //objmc
 //https://github.com/Godlander/objmc
 
-//some basic data
 isCustom = 0;
 int corner = gl_VertexID % 4;
 ivec2 atlasSize = textureSize(Sampler0, 0);
@@ -12,12 +11,11 @@ vec3 rotation = vec3(0);
 //read uv offset
 ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
 ivec2 uvoffset = ivec2(metauvoffset.r*256 + metauvoffset.g,
-                       metauvoffset.b+1); //no alpha due to optifine, number of faces greatly limited (but still probably a couple million more than needed)
+                       metauvoffset.b+1); //no alpha due to optifine, max number of faces greatly limited (probably still a couple million more than needed)
 //find and read topleft pixel
 ivec2 topleft = uv - uvoffset;
-vec4 markerpixel = ivec4(texelFetch(Sampler0, topleft, 0)*255);
-//if marker is correct at topleft
-if (markerpixel == ivec4(12,34,56,78)) {
+//if topleft marker is correct
+if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     isCustom = 1;
     //grab meta
     ivec4 meta = getmeta(topleft, 1);
@@ -43,11 +41,10 @@ if (markerpixel == ivec4(12,34,56,78)) {
     int vth = metaheight.b*256 + metaheight.a-128+geta(meta.a,4);
     //time in ticks
     float time = GameTime * 24000;
-
+    int tcolor = 0;
 //colorbehavior
 #ifdef ENTITY
     int colorbehavior = meta.b;
-    int tcolor = 0;
     if (colorbehavior == 63) { //animation frames 0-8388607
         tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
         //interpolation disabled past 8388608, suso's idea to define starting tick with color
@@ -58,19 +55,19 @@ if (markerpixel == ivec4(12,34,56,78)) {
         int gb = (colorbehavior/4)%4;
         int bb = colorbehavior%4;
         vec3 accuracy = vec3(255./256.);
-        switch (rb) {
+        switch (rb) { //first byte
             case 0: rotation.x += Color.r*255; accuracy.r *= 256; break;
             case 1: rotation.y += Color.r*255; accuracy.g *= 256; break;
             case 2: rotation.z += Color.r*255; accuracy.b *= 256; break;
             case 3: tcolor = tcolor * 256 + int(Color.r*255); break;
         }
-        switch (gb) {
+        switch (gb) { //second byte
             case 0: rotation.x += Color.g*255; accuracy.r *= 256; break;
             case 1: rotation.y += Color.g*255; accuracy.g *= 256; break;
             case 2: rotation.z += Color.g*255; accuracy.b *= 256; break;
             case 3: tcolor = tcolor * 256 + int(Color.g*255); break;
         }
-        switch (bb) {
+        switch (bb) { //third byte
             case 0: rotation.x += Color.b*255; accuracy.r *= 256; break;
             case 1: rotation.y += Color.b*255; accuracy.g *= 256; break;
             case 2: rotation.z += Color.b*255; accuracy.b *= 256; break;
@@ -78,39 +75,26 @@ if (markerpixel == ivec4(12,34,56,78)) {
         }
         rotation = rotation/accuracy * 2*PI;
     }
-    time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
 #endif
-
-    //calculate height offsets
-    int headerheight = 1 + int(ceil(nvertices*0.25/size.x));
-    int height = headerheight + (ntextures * size.y);
+    time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
+    int frame = int(time/duration) % nframes;
     //relative vertex id from unique face uv
     int id = (((uvoffset.y-1) * size.x) + uvoffset.x) * 4 + corner;
-    //frame offset
-    int frame = int(time/duration) % nframes;
     id += frame * nvertices;
+    //calculate height offsets
+    int headerheight = 1 + int(ceil(nvertices*0.25/size.x));
+    int height = headerheight + (size.y);
     //read data
     ivec2 index = getvert(topleft, size.x, height+vph+vth, id);
     posoffset = getpos(topleft, size.x, height, index.x);
-    vec2 texuv = getuv(topleft, size.x, height+vph, index.y) * size;
-    //uv
-    //vec2 texuv2 = vec2(
-    //    ((datauv.r*256) + datauv.g)/256 * (size.x-(size.x/256.)),
-    //    ((datauv.b*256) + datauv.a & ((datameta.a&1)<<7))/256 * (size.y-(size.y/256.))
-    //);
-    //texCoord02 = (vec2(topleft.x, topleft.y+headerheight)/atlasSize) + texuv2;
-    if (vth == 0) {
-        posoffset = vec3(gl_VertexID % 4 - 2, gl_VertexID % 4 / 2 * 2, -(gl_VertexID % 4) + 2 * 2);
-        Pos += posoffset;
-        vertexColor = vec4(1.0,0.0,0.0,1.0);
-    }
-
-    if (nframes > 1) {
+    texCoord = getuv(topleft, size.x, height+vph, index.y) * size;
+    if (nframes > 1 && easing > 0) {
+        int nids = (nframes * nvertices);
         //next frame
-        id = (id + nvertices) % (nframes * nvertices);
+        id = (id+nvertices) % nids;
         index = getvert(topleft, size.x, height+vph+vth, id);
         vec3 posoffset2 = getpos(topleft, size.x, height, index.x);
-
+        //interpolate
         transition = fract(time/duration);
         switch (easing) { //easing
             case 1: //linear
@@ -122,11 +106,11 @@ if (markerpixel == ivec4(12,34,56,78)) {
                 break;
             case 3: //4-point bezier
                 //third point
-                id = (id + nvertices) % (nframes * nvertices);
+                id = (id+nvertices) % nids;
                 index = getvert(topleft, size.x, height+vph+vth, id);
                 vec3 posoffset3 = getpos(topleft, size.x, height, index.x);
                 //fourth point
-                id = (id + nvertices) % (nframes * nvertices);
+                id = (id+nvertices) % nids;
                 index = getvert(topleft, size.x, height+vph+vth, id);
                 vec3 posoffset4 = getpos(topleft, size.x, height, index.x);
                 //bezier
@@ -134,7 +118,6 @@ if (markerpixel == ivec4(12,34,56,78)) {
                 break;
         }
     }
-
 //custom entity rotation
 #ifdef ENTITY
     isGUI = int(isgui(ProjMat));
@@ -152,11 +135,9 @@ if (markerpixel == ivec4(12,34,56,78)) {
         posoffset = rotate(rotation) * posoffset * IViewRotMat;
     }
 #endif
-
+    //final pos and uv
     Pos += posoffset;
-    //real uv
-                //align uv to pixel
-    texCoord = (vec2(topleft.x, topleft.y+headerheight) + texuv)/atlasSize
+    texCoord = (vec2(topleft.x, topleft.y+headerheight) + texCoord)/atlasSize
                 //make sure that faces with same uv beginning/ending renders
                 + vec2(onepixel.x * 0.0001 * corner, onepixel.y * 0.0001 * ((corner + 1) % 4));
 }

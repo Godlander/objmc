@@ -115,6 +115,7 @@ nopow = args.nopow != nopow
 if not frames:
   for i in range(len(objs)):
     frames.append(i)
+
 #--------------------------------
 #gui if no args
 path = os.getcwd()
@@ -287,22 +288,29 @@ if not len(sys.argv) > 1:
   colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
   output = [outjson.get(), outpng.get()]
 #--------------------------------
-
-NP = 4
-
+class col:
+    head = '\033[95m'
+    blue = '\033[94m'
+    cyan = '\033[96m'
+    green = '\033[92m'
+    warn = '\033[93mWarning: '
+    err = '\033[91mError: '
+    end = '\033[0m'
+    bold = '\033[1m'
+    underline = '\033[4m'
 #file extension optional
 output[0] = output[0].split(".")[0]
 output[1] = output[1].split(".")[0]
 
 #input error checking
 if duration < 1 or duration > 256:
-  print("Duration must be between 1 and 256")
+  print(col.err+"duration must be between 1 and 256"+col.end)
   quit()
 
 tex = Image.open(texs[0])
 x,y = tex.size
 if x < 8:
-  print("Minimum texture size is 8x")
+  print(col.err+"minimum texture size is 8x"+col.end)
   quit()
 
 def readobj(name):
@@ -317,7 +325,7 @@ def readobj(name):
       d["faces"].append(tuple([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]]))
   obj.close()
   if 'nfaces' in globals() and len(d["faces"]) != nfaces:
-    print("\nerror: mismatched obj face count, exiting...")
+    print(col.err+"mismatched obj face count"+col.end)
     quit()
   return d
 
@@ -350,33 +358,29 @@ def indexvert(o, vert):
     count[1] += 1
   data["vertices"].append(v)
 #index obj
-def indexobj(o, f):
+def indexobj(o, frame):
   global nframes
   global nfaces
   for face in range(0, len(o["faces"])):
     if face % 1000 == 0:
-      print("\rIndexing vertices... ","{:.2f}".format((f*nfaces+face*100)/(nframes*nfaces)), "%", sep="", end="\033[K")
+      print("\Reading obj ", frame+1, " of ", nframes, "...", "{:>15.2f}".format((frame*nfaces+face)*100/(nframes*nfaces)), "%\033[K", sep="", end="\r")
     face = o["faces"][face]
     for vert in face:
       indexvert(o, vert)
     if len(face) == 3:
       indexvert(o, face[1])
 
-
-#read obj
-print("\nobjmc start ------------------")
-print("\rReading obj...", end="\033[K")
-o = readobj(objs[0])
-
-#calculate heights
 ntextures = len(texs)
 nframes = len(frames)
-nfaces = len(o["faces"])
 
+print("\n"+col.cyan+"objmc start ------------------"+col.end)
+#read obj
+print("Reading obj 1 of ", nframes, "...", "{:>15.2f}".format(0), "%\033[K", sep="", end="\r")
+o = readobj(objs[0])
+nfaces = len(o["faces"])
 indexobj(o, 0)
 if nframes > 1:
   for frame in range(1, nframes):
-    print("\rReading obj ", frame, " of ", nframes, "...", sep="", end="\033[K")
     o = readobj(objs[frames[frame]])
     indexobj(o, frame)
 
@@ -385,21 +389,25 @@ texheight = ntextures * y
 uvheight = math.ceil(nfaces/x)
 vpheight = math.ceil(len(data["positions"])*3/x)
 vtheight = math.ceil(len(data["uvs"])*2/x)
-vheight = math.ceil(len(data["vertices"])/x)
+vheight = math.ceil(len(data["vertices"])*2/x)
 #make height power of 2
 ty = 1 + uvheight + texheight + vpheight + vtheight + vheight
 if not nopow:
  ty = 1<<(ty - 1).bit_length()
+if (ty > 4096 and x < 4096) or (ty > 8*x):
+  print(col.warn+"output height may be too high, consider increasing width of input texture or reducing number of frames to bring the output texture closer to a square."+col.end)
 
 #initial info
-print("\rfaces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
+print("%\033[K", end="\r")
+print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
 if nframes > 1:
   print("frames: ", nframes, ", duration: ", duration,"t", ", time: ", duration*nframes/20, "s", ", easing: ", easing, ", autoplay: ", autoplay,  sep="")
 print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
 print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
 print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
 
-print("Creating Files...", end="")
+print("pos: ", len(data["positions"]), ", uvs: ", len(data["uvs"]), ", verts: ", len(data["vertices"]), sep="")
+print("Creating Files...", end="\r")
 #write to json model
 model = open(output[0]+".json", "w")
 #create out image with correct dimensions
@@ -428,7 +436,7 @@ out.putpixel((1,0), ((int(autorotate)<<7) + (int(noshadow)<<6), 0, cb, alpha))
 #2: texture size
 out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
 #3: nvertices
-out.putpixel((3,0), (int(nvertices/256/256/256)%256, int(nvertices/256/256)%256, int(nvertices/256)%256, 128+nvertices%128))
+out.putpixel((3,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, 128+nvertices%128))
 #4: nframes, ntextures, duration, autoplay, easing
 out.putpixel((4,0), (nframes,ntextures,duration-1, 128+(int(autoplay)<<6)+easing))
 #5: data heights
@@ -439,7 +447,7 @@ for i in range (0,len(texs)):
   tex = Image.open(texs[i])
   nx,ny = tex.size
   if nx != x or ny != y:
-    print("mismatched texture sizes!")
+    print(col.err+"mismatched texture sizes"+col.end)
     quit()
   if flipuv:
     out.paste(tex, (0,1+uvheight+(i*y)))
@@ -480,7 +488,7 @@ def newelement(index):
 for i in range(0, nfaces):
   newelement(i)
 
-print("\rWriting json model...", end="\033[K")
+print("Writing json model...\033[K", end="\r")
 model.write(json.dumps(js,separators=(',',':')))
 model.close()
 
@@ -490,41 +498,49 @@ def getposition(i):
   y = 8388608+((data["positions"][i][1])*65536)*scale + offset[1]*65536
   z = 8388608+((data["positions"][i][2])*65536)*scale + offset[2]*65536
   rgb = []
-  rgb.append((int((x/256/256)%256), int((x/256)%256), int(x%256), 255))
-  rgb.append((int((y/256/256)%256), int((y/256)%256), int(y%256), 255))
-  rgb.append((int((z/256/256)%256), int((z/256)%256), int(z%256), 255))
+  rgb.append((int((x/65536)%256), int((x/256)%256), int(x%256), 255))
+  rgb.append((int((y/65536)%256), int((y/256)%256), int(y%256), 255))
+  rgb.append((int((z/65536)%256), int((z/256)%256), int(z%256), 255))
   return rgb
 def getuv(i):
   x = (data["uvs"][i][0])*65535
   y = (data["uvs"][i][1])*65535
   rgb = []
-  rgb.append((int((x/256/256)%256), int((x/256)%256), int(x%256), 255))
-  rgb.append((int((y/256/256)%256), int((y/256)%256), int(y%256), 255))
+  rgb.append((int((x/65536)%256), int((x/256)%256), int(x%256), 255))
+  rgb.append((int((y/65536)%256), int((y/256)%256), int(y%256), 255))
   return rgb
 def getvert(i):
-  pos = (data["vertices"][i][0])
-  uv = (data["vertices"][i][1])
-  return((int((pos/256)%256), int(pos%256), int((uv/128)%256), int(uv%128)+128))
+  poi = (data["vertices"][i][0])
+  uvi = (data["vertices"][i][1])
+  rgb = []
+  rgb.append((int((poi/65536)%256), int((poi/256)%256), int(poi%256), 255))
+  rgb.append((int((uvi/65536)%256), int((uvi/256)%256), int(uvi%256), 255))
+  return rgb
 
-print("\rWriting texture data...", end='\033[K')
+print("Writing position data...\033[K", end="\r")
 y = 1 + uvheight + texheight
 for i in range(0,len(data["positions"])):
   a = getposition(i)
   for j in range(0,3):
     p = i*3+j
     out.putpixel((p%x,y+math.floor(p/x)), a[j])
+print("Writing uv data...\033[K", end="\r")
 y = 1 + uvheight + texheight + vpheight
 for i in range(0,len(data["uvs"])):
   a = getuv(i)
   for j in range(0,2):
     p = i*2+j
     out.putpixel((p%x,y+math.floor(p/x)), a[j])
+print("Writing vertex data...\033[K", end="\r")
 y = 1 + uvheight + texheight + vpheight + vtheight
 for i in range(0,len(data["vertices"])):
-  out.putpixel((i%x,y+math.floor(i/x)), getvert(i))
+  a = getvert(i)
+  for j in range(0,2):
+    p = i*2+j
+    out.putpixel((p%x,y+math.floor(p/x)), a[j])
 
-print("\rSaving files...", end="\033[K")
+print("Saving files...\033[K", end="\r")
 out.save(output[1]+".png")
 out.close()
-print("\rComplete ---------------------")
+print(col.green+"Complete ---------------------"+col.end)
 quit()
