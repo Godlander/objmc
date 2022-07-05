@@ -50,7 +50,12 @@ The script can be run with arguments to each of these. Example:
 python convert.py --objs cube.obj --texs cube.png --autorotate --flipuv --out potion.json texture.png
 ```
 
+
+
 # samples:
+
+https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-9024-068c48f47cbf.mp4
+
 ![teapot](https://user-images.githubusercontent.com/16228717/151483908-2238f6f9-44c7-434b-a411-f9959bf86a3e.gif)
 
 ![cat](https://user-images.githubusercontent.com/16228717/148311540-503cf422-b6c7-4c95-b4b4-fca1e136dbfe.png)
