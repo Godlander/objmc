@@ -273,7 +273,7 @@ if not len(sys.argv) > 1:
 
   window.mainloop()
   if qq.get():
-    quit()
+    exit()
   if dur.get().isdigit():
     duration = max(int(dur.get()), 1)
   else:
@@ -288,6 +288,7 @@ if not len(sys.argv) > 1:
   colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
   output = [outjson.get(), outpng.get()]
 #--------------------------------
+os.system('color')
 class col:
     head = '\033[95m'
     blue = '\033[94m'
@@ -298,6 +299,11 @@ class col:
     end = '\033[0m'
     bold = '\033[1m'
     underline = '\033[4m'
+def exit():
+  print("Press any key to exit...")
+  os.system('pause >nul')
+  quit()
+
 #file extension optional
 output[0] = output[0].split(".")[0]
 output[1] = output[1].split(".")[0]
@@ -305,13 +311,13 @@ output[1] = output[1].split(".")[0]
 #input error checking
 if duration < 1 or duration > 256:
   print(col.err+"duration must be between 1 and 256"+col.end)
-  quit()
+  exit()
 
 tex = Image.open(texs[0])
 x,y = tex.size
 if x < 8:
   print(col.err+"minimum texture size is 8x"+col.end)
-  quit()
+  exit()
 
 def readobj(name):
   obj = open(name, "r", encoding="utf-8")
@@ -326,7 +332,7 @@ def readobj(name):
   obj.close()
   if 'nfaces' in globals() and len(d["faces"]) != nfaces:
     print(col.err+"mismatched obj face count"+col.end)
-    quit()
+    exit()
   return d
 
 count = [0,0]
@@ -406,7 +412,6 @@ print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", 
 print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
 print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
 
-print("pos: ", len(data["positions"]), ", uvs: ", len(data["uvs"]), ", verts: ", len(data["vertices"]), sep="")
 print("Creating Files...", end="\r")
 #write to json model
 model = open(output[0]+".json", "w")
@@ -448,7 +453,7 @@ for i in range (0,len(texs)):
   nx,ny = tex.size
   if nx != x or ny != y:
     print(col.err+"mismatched texture sizes"+col.end)
-    quit()
+    exit()
   if flipuv:
     out.paste(tex, (0,1+uvheight+(i*y)))
   else:
@@ -543,4 +548,4 @@ print("Saving files...\033[K", end="\r")
 out.save(output[1]+".png")
 out.close()
 print(col.green+"Complete ---------------------"+col.end)
-quit()
+exit()
