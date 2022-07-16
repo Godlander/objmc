@@ -221,4 +221,4 @@ feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9S
 
 **Daminator** - Showing me tkinter (this is so painful why)
 
-**bbq** - Help with edge case hardware inconsistency debugging
+**thebbq** - Help with edge case hardware inconsistency debugging
