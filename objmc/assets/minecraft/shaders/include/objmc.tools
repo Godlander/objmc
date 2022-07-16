@@ -12,18 +12,18 @@ vec3 getpos(ivec2 topleft, int w, int h, int index) {
     vec4 y = texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0);
     vec4 z = texelFetch(Sampler0, topleft + ivec2((i+2)%w,h+((i+2)/w)), 0);
     return vec3(
-        (x.r*256)+(x.g)+(x.b/256),
-        (y.r*256)+(y.g)+(y.b/256),
-        (z.r*256)+(z.g)+(z.b/256)
-    ) - vec3(128.5, 128.0, 128.5);
+        (x.r*255)+(x.g)+(x.b/255),
+        (y.r*255)+(y.g)+(y.b/255),
+        (z.r*255)+(z.g)+(z.b/255)
+    ) - vec3(128.50196078431372, 128.00196078431372, 128.50196078431372);
 }
 vec2 getuv(ivec2 topleft, int w, int h, int index) {
     int i = index*2;
     vec4 x = texelFetch(Sampler0, topleft + ivec2((i  )%w,h+((i  )/w)), 0);
     vec4 y = texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0);
     return vec2(
-        ((x.g*255*256)+(x.b*255))/65535,
-        ((y.g*255*256)+(y.b*255))/65535
+        ((x.g*65280)+(x.b*255))/65535,
+        ((y.g*65280)+(y.b*255))/65535
     );
 }
 ivec2 getvert(ivec2 topleft, int w, int h, int index) {
@@ -31,8 +31,8 @@ ivec2 getvert(ivec2 topleft, int w, int h, int index) {
     ivec4 a = ivec4(texelFetch(Sampler0, topleft + ivec2((i  )%w,h+((i  )/w)), 0)*255);
     ivec4 b = ivec4(texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0)*255);
     return ivec2(
-        a.r*65536+a.g*256+a.b,
-        b.r*65536+b.g*256+b.b
+        ((a.r*65536)+(a.g*256)+a.b),
+        ((b.r*65536)+(b.g*256)+b.b)
     );
 }
 
