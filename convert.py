@@ -57,7 +57,7 @@ colorbehavior = 'xyz'
 #Auto Rotate
 # attempt to estimate rotation with Normals, added to colorbehavior rotation.
 # this is very jittery, best used for far away objects. For display purposes color defined rotation is much better.
-autorotate = False
+autorotate = 0
 
 #Auto Play
 # always interpolate frames, colorbehavior='aaa' overrides this.
@@ -91,8 +91,8 @@ parser.add_argument('--offset', type=float, help='Offset of model in xyz', nargs
 parser.add_argument('--scale', type=float, default=scale, help='Scale of model')
 parser.add_argument('--duration', type=int, help="Duration of each frame in ticks", default=duration)
 parser.add_argument('--easing', type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
-parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavior, 'xyz' = rotate, 'a' = animation", default=colorbehavior)
-parser.add_argument('--autorotate', action='store_true', help="Attempt to estimate rotation with Normals")
+parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavior, 'xyz' = rotate, 'a' = animation time offset, 'o' = overlay hue", default=colorbehavior)
+parser.add_argument('--autorotate', type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: x, 2:y, 3:xy", default=autorotate)
 parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='aaa' overrides this.")
 parser.add_argument("--flipuv", action='store_true', help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action='store_true', help="Disable shadows from face normals")
@@ -107,7 +107,7 @@ scale = args.scale
 duration = args.duration
 easing = args.easing
 colorbehavior = args.colorbehavior
-autorotate = args.autorotate != autorotate
+autorotate = args.autorotate
 autoplay = args.autoplay != autoplay
 flipuv = args.flipuv != flipuv
 noshadow = args.noshadow != noshadow
@@ -183,7 +183,7 @@ if not len(sys.argv) > 1:
   window = tk.Tk()
   window.title("objmc")
   window.geometry("1x1")
-  window.minsize(500,370)
+  window.minsize(500,400)
   window.rowconfigure(0,pad=7)
   window.rowconfigure(1,weight=1)
   window.rowconfigure(2,pad=7)
@@ -223,7 +223,7 @@ if not len(sys.argv) > 1:
   scale.set("1.0")
   #noshadow
   noshadow = tk.BooleanVar()
-  tk.Checkbutton(window, text="No Shadow", variable=noshadow).grid(column=1, row=1, sticky='N', padx=(0,80), pady=(77,0))
+  tk.Checkbutton(window, text="No Shadow", variable=noshadow).grid(column=1, row=1, sticky='N', pady=(77,0))
   #advanced
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=0, sticky='NEW')
   advanced = tk.Frame(window)
@@ -240,36 +240,41 @@ if not len(sys.argv) > 1:
   tk.Label(advanced, text="ticks").grid(column=1, row=1, sticky='E', padx=(0,25))
   #easing
   earr = ["None","Linear","Cubic","Bezier"]
-  tk.Label(advanced, text="Easing Method:").grid(column=0, row=2, sticky='W', padx=(5,0))
+  tk.Label(advanced, text="Easing Method:").grid(column=0, row=2, sticky='W', padx=(5,0), pady=(2,0))
   easing = tk.StringVar()
   easing.set("Linear")
-  ttk.Combobox(advanced, values=earr, textvariable=easing, state='readonly', width=7).grid(column=1, row=2, sticky='W')
+  ttk.Combobox(advanced, values=earr, textvariable=easing, state='readonly', width=7).grid(column=1, row=2, pady=(2,0), sticky='W')
   #autorotate
-  autorotate = tk.BooleanVar()
-  tk.Checkbutton(advanced, text="Auto Rotate", variable=autorotate).grid(column=0, row=3, sticky='E')
+  rarr = ["Off","Yaw","Pitch","Both"]
+  tk.Label(advanced, text="Auto Rotate:").grid(column=0, row=3, sticky='W', padx=(5,0), pady=(2,0))
+  autorotate = tk.StringVar()
+  autorotate.set("Off")
+  ttk.Combobox(advanced, values=rarr, textvariable=autorotate, state='readonly', width=7,).grid(column=1, row=3, pady=(2,0), sticky='W')
+  #autoplay
   autoplay = tk.BooleanVar()
-  tk.Checkbutton(advanced, text="Auto Play", variable=autoplay).grid(column=1, row=3, sticky='W')
+  tk.Checkbutton(advanced, text="Auto Play", variable=autoplay).grid(column=0, row=4, columnspan=2, sticky='N')
   #color behavior
-  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=4, sticky='W', padx=(5,0))
-  cbarr = ["x", "y", "z", "a"]
+  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=5, sticky='W', padx=(5,0))
+  cbarr = ['x', 'y', 'z', 't']
+  cbarr2 = ['x', 'y', 'z', 't', 'o']
   cb = [tk.StringVar() for i in range(3)]
   for i in range(3):
     cb[i].set(cbarr[i])
-  cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=4, sticky='W', padx=(0,0))
-  cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=4, sticky='W', padx=(28,0))
-  cb3menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=4, sticky='W', padx=(56,0))
+  cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(0,0))
+  cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(28,0))
+  cb3menu = ttk.Combobox(advanced, values=cbarr2, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(56,0))
   #output
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=5, columnspan=2, sticky='EW', pady=(7,0))
-  tk.Label(advanced, text="Output:").grid(column=0, row=6, columnspan=2)
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=6, columnspan=2, sticky='EW', pady=(7,0))
+  tk.Label(advanced, text="Output:").grid(column=0, row=7, columnspan=2)
   outjson = tk.StringVar()
   outpng = tk.StringVar()
   outjson.set(output[0].replace(".json", ""))
   outpng.set(output[1].replace(".png", ""))
-  tk.Entry(advanced, textvariable=outjson, width=10).grid(column=0, row=7, columnspan=2, sticky='NEW', padx=(5,10))
-  tk.Label(advanced, text=".json").grid(column=1, row=7, sticky='NE')
-  tk.Entry(advanced, textvariable=outpng, width=10).grid(column=0, row=8, columnspan=2, sticky='NEW', padx=5)
-  tk.Label(advanced, text=".png").grid(column=1, row=8, sticky='NE')
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=9, columnspan=2, sticky='NEW', pady=(5,0))
+  tk.Entry(advanced, textvariable=outjson, width=10).grid(column=0, row=8, columnspan=2, sticky='NEW', padx=(5,10))
+  tk.Label(advanced, text=".json").grid(column=1, row=8, sticky='NE')
+  tk.Entry(advanced, textvariable=outpng, width=10).grid(column=0, row=9, columnspan=2, sticky='NEW', padx=5)
+  tk.Label(advanced, text=".png").grid(column=1, row=9, sticky='NE')
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=10, columnspan=2, sticky='NEW', pady=(5,0))
 
   window.mainloop()
   if qq.get():
@@ -283,7 +288,7 @@ if not len(sys.argv) > 1:
   easing = earr.index(easing.get())
   flipuv = flipuv.get()
   noshadow = noshadow.get()
-  autorotate = autorotate.get()
+  autorotate = rarr.index(autorotate.get())
   autoplay = autoplay.get()
   colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
   output = [outjson.get(), outpng.get()]
@@ -419,25 +424,16 @@ model = open(output[0]+".json", "w")
 out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
 #parse color behavior
-cb = 0
-for i in range(3):
-  cb*=4
-  if colorbehavior[i] == 'x':
-    cb += 0
-  if colorbehavior[i] == 'y':
-    cb += 1
-  if colorbehavior[i] == 'z':
-    cb += 2
-  if colorbehavior[i] == 'a':
-    cb += 3
+ca = [cbarr2.index(i) for i in colorbehavior]
+cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
 
 #first alpha bit for texture height, nvertices, vtheight
 alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5) + (int(vtheight%256/128)<<4)
 #header:
 #0: marker pix
 out.putpixel((0,0), (12,34,56,78))
-#1: autorotate, noshadow, colorbehavior, alpha bits for texsize and nvertices
-out.putpixel((1,0), ((int(autorotate)<<7) + (int(noshadow)<<6), 0, cb, alpha))
+#1: noshadow, autorotate, colorbehavior, alpha bits for texsize and nvertices
+out.putpixel((1,0), ((int(noshadow)<<7) + (int(autorotate)<<5), 0, cb, alpha))
 #2: texture size
 out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
 #3: nvertices

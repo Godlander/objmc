@@ -19,8 +19,8 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     isCustom = 1;
     //grab meta
     ivec4 meta = getmeta(topleft, 1);
-    bool autorotate = bool(getb(meta.r, 7));
-    noshadow = getb(meta.r, 6);
+    vec2 autorotate = vec2(getb(meta.r, 6), getb(meta.r, 5));
+    noshadow = getb(meta.r, 7);
     //size
     ivec4 metasize = getmeta(topleft, 2);
     ivec2 size = ivec2(metasize.r*256 + metasize.g,
@@ -44,34 +44,33 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     int tcolor = 0;
 //colorbehavior
 #ifdef ENTITY
+    overlayColor = vec4(1);
     int colorbehavior = meta.b;
-    if (colorbehavior == 63) { //animation frames 0-8388607
+    if (colorbehavior == 243) { //animation frames 0-8388607
         tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
         //interpolation disabled past 8388608, suso's idea to define starting tick with color
         autoplay = (Color.r <= 0.5);
     } else {
         //bits from colorbehavior
-        int rb = (colorbehavior/16)%4;
-        int gb = (colorbehavior/4)%4;
-        int bb = colorbehavior%4;
         vec3 accuracy = vec3(255./256.);
-        switch (rb) { //first byte
+        switch ((colorbehavior/64)%4) { //first byte of color
             case 0: rotation.x += Color.r*255; accuracy.r *= 256; break;
             case 1: rotation.y += Color.r*255; accuracy.g *= 256; break;
             case 2: rotation.z += Color.r*255; accuracy.b *= 256; break;
             case 3: tcolor = tcolor * 256 + int(Color.r*255); break;
         }
-        switch (gb) { //second byte
+        switch ((colorbehavior/16)%4) { //second byte of color
             case 0: rotation.x += Color.g*255; accuracy.r *= 256; break;
             case 1: rotation.y += Color.g*255; accuracy.g *= 256; break;
             case 2: rotation.z += Color.g*255; accuracy.b *= 256; break;
             case 3: tcolor = tcolor * 256 + int(Color.g*255); break;
         }
-        switch (bb) { //third byte
+        switch (colorbehavior%16) { //third byte of color
             case 0: rotation.x += Color.b*255; accuracy.r *= 256; break;
             case 1: rotation.y += Color.b*255; accuracy.g *= 256; break;
             case 2: rotation.z += Color.b*255; accuracy.b *= 256; break;
             case 3: tcolor = tcolor * 256 + int(Color.b*255); break;
+            case 4: if (Color.b > 0) overlayColor = vec4(hrgb(Color.b),1); break;
         }
         rotation = rotation/accuracy * 2*PI;
     }
@@ -122,13 +121,12 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
 #ifdef ENTITY
     isGUI = int(isgui(ProjMat));
     isHand = int(ishand(FogStart));
-    if (autorotate && isGUI == 0) {
+    if (any(greaterThan(autorotate,vec2(0))) && isGUI == 0) {
         //normal estimated rotation matrix calculation from The Der Discohund
-        vec3 localZ = IViewRotMat * Normal;
-        vec3 localX = normalize(cross(vec3(0, 1, 0), localZ));
-        vec3 localY = cross(localZ, localX);
-        mat3 localRot = mat3(localX, localY, localZ);
-        posoffset = localRot * rotate(rotation) * posoffset * IViewRotMat;
+        vec3 local = IViewRotMat * Normal;
+        float yaw = -atan(local.x, local.z);
+        float pitch = -atan(local.y, length(local.xz));
+        posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset * IViewRotMat;
     }
     //pure color rotation
     else if (isHand == 0) {

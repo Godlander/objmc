@@ -65,6 +65,13 @@ bool ishand(float FogStart) {
     return FogStart*0.000001 > 1;
 }
 
+//hue to rgb
+vec3 hrgb(float h) {
+    vec3 K = vec3(1.0, 2.0 / 3.0, 1.0 / 3.0);
+    vec3 p = abs(fract(K.xyz + h) * 6.0 - 3.0);
+    return clamp(p - K.xxx, 0.0, 1.0);
+}
+
 //4 point bezier formula from Dominexis
 vec3 bezb(vec3 a, vec3 b, vec3 c, vec3 d, float t) {
     float t2 = t * t;
