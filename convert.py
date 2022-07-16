@@ -39,16 +39,13 @@ scale = 1
 duration = 20
 
 #Animation Easing
-# 0: none
-# 1: linear
-# 2: in-out cubic
-# 3: 4-point bezier
+# 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier
 easing = 3
 
 #Item Color Overlay Behavior
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
 # any 3 chars of 'x', 'y', 'z', 'a' is valid
-# 'xyz' = rotate, 'a' = animation
+# 'xyz' = rotate, 'a' = animation, 'o' = overlay hue
 # multiple rotation bytes increase accuracy on that axis
 # for 'aaa', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
 # auto-play color can be calculated by: ((([time query gametime] % 24000) - starting frame) % total duration)
@@ -56,7 +53,8 @@ colorbehavior = 'xyz'
 
 #Auto Rotate
 # attempt to estimate rotation with Normals, added to colorbehavior rotation.
-# this is very jittery, best used for far away objects. For display purposes color defined rotation is much better.
+# one axis is ok but both is jittery. For display purposes color defined rotation is better.
+# 0: none, 1: yaw, 2: pitch, 3: both
 autorotate = 0
 
 #Auto Play
@@ -64,19 +62,18 @@ autorotate = 0
 autoplay = False
 
 #Flip uv
-#if your model renders but textures are not right try toggling this
-#i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
+# if your model renders but textures are not right try toggling this
+# i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
 flipuv = False
 
 #No Shadow
-#disable face normal shading
-#can be used for models with lighting baked into the texture
-#lightmap color still applies
+# disable face normal shading (lightmap color still applies)
+# can be used for models with lighting baked into the texture
 noshadow = False
 
 #No power of two textures
-#i guess saves a bit of space maybe
-#makes it not optifine compatible
+# i guess saves a bit of space maybe
+# makes it not optifine compatible
 nopow = False
 
 #--------------------------------

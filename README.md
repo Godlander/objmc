@@ -36,11 +36,11 @@ there is some optifine/sodium support for item/entity models.
 
 *for custom entity model rotation and controllable animation to work, the model has to be an item with overlay color, like Potion or dyed Leather Armor (can use `CustomModelData`).*
 
-`colorbehavior`: the overlay color of the item r,g,b defines the x,y,z rotation of the model or the animation time, depending on what this is set to in the Python script as you exported the texture.
+`colorbehavior`: the overlay color of the item r,g,b defines the x,y,z rotation of the model or the animation time offset, depending on what this is set to in the Python script as you exported the texture.
 
-*example: `yaa` defines 1 byte of y rotation as red color, and 2 bytes or 65535 frames of animation as green and blue, green being the upper bits and blue lower.*
+*example: `xto` defines 1 byte of red color as yaw rotation, the next byte of blue color as animation time offset , and the last byte of green being overlay color hue.*
 
-`autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. but due to byte inaccuracy this will be jittery and look bad closeup. but for far away things it looks ok, and allows color to be used for other input like controlling animation.
+`autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. but due to byte inaccuracy this will be a little jittery. allows color to be used for other inputs like controlling animation.
 
 `autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'aaa'` will override this.
 
@@ -220,3 +220,5 @@ feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9S
 **kumitatepazuru** - Adding command line arguments for the script
 
 **Daminator** - Showing me tkinter (this is so painful why)
+
+**bbq** - Help with edge case hardware inconsistency debugging
