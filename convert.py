@@ -44,10 +44,10 @@ easing = 3
 
 #Item Color Overlay Behavior
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
-# any 3 chars of 'x', 'y', 'z', 'a' is valid
-# 'xyz' = rotate, 'a' = animation, 'o' = overlay hue
+# any 3 chars of 'x', 'y', 'z', 't', 'o' is valid
+# 'xyz' = rotate, 't' = animation, 'o' = overlay hue
 # multiple rotation bytes increase accuracy on that axis
-# for 'aaa', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
+# for 'ttt', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
 # auto-play color can be calculated by: ((([time query gametime] % 24000) - starting frame) % total duration)
 colorbehavior = 'xyz'
 
@@ -112,6 +112,296 @@ nopow = args.nopow != nopow
 if not frames:
   for i in range(len(objs)):
     frames.append(i)
+
+os.system('color')
+class col:
+    head = '\033[95m'
+    blue = '\033[94m'
+    cyan = '\033[96m'
+    green = '\033[92m'
+    warn = '\033[93mWarning: '
+    err = '\033[91mError: '
+    end = '\033[0m'
+    bold = '\033[1m'
+    underline = '\033[4m'
+def exit():
+  print("Press any key to exit...")
+  os.system('pause >nul')
+  quit()
+
+#--------------------------------
+count = [0,0]
+mem = {"positions":{},"uvs":{}}
+data = {"positions":[],"uvs":[],"vertices":[]}
+def readobj(name):
+  obj = open(name, "r", encoding="utf-8")
+  d = {"positions":[],"uvs":[],"faces":[]}
+  for line in obj:
+    if line.startswith("v "):
+      d["positions"].append(tuple([float(i) for i in " ".join(line.split()).split(" ")[1:]]))
+    if line.startswith("vt "):
+      d["uvs"].append(tuple([float(i) for i in " ".join(line.split()).split(" ")[1:]]))
+    if line.startswith("f "):
+      d["faces"].append(tuple([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]]))
+  obj.close()
+  if 'nfaces' in globals() and len(d["faces"]) != nfaces:
+    print(col.err+"mismatched obj face count"+col.end)
+    exit()
+  return d
+#index vertices
+def indexvert(o, vert):
+  global count
+  global mem
+  global data
+  v = []
+  pos = o["positions"][vert[0]]
+  uv = o["uvs"][vert[1]]
+  posh = ','.join([str(i) for i in pos])
+  uvh =','.join([str(i) for i in uv])
+  try:
+    v.append(mem["positions"][posh])
+  except:
+    mem["positions"][posh] = count[0]
+    data["positions"].append(pos)
+    v.append(count[0])
+    count[0] += 1
+  try:
+    v.append(mem["uvs"][uvh])
+  except:
+    mem["uvs"][uvh] = count[1]
+    data["uvs"].append(uv)
+    v.append(count[1])
+    count[1] += 1
+  data["vertices"].append(v)
+#index obj
+def indexobj(o, frame, nframes, nfaces):
+  for face in range(0, len(o["faces"])):
+    if face % 1000 == 0:
+      print("\Reading obj ", frame+1, " of ", nframes, "...", "{:>15.2f}".format((frame*nfaces+face)*100/(nframes*nfaces)), "%\033[K", sep="", end="\r")
+    face = o["faces"][face]
+    for vert in face:
+      indexvert(o, vert)
+    if len(face) == 3:
+      indexvert(o, face[1])
+
+#unique pixel uv per face with color pointing to topleft
+def getuvpos(out, faceid, x, y, ty):
+  posx = faceid%x
+  posy = math.floor(faceid/x)+1
+  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, (posy-1)%256, 255-(int((posy-1)/256)%256)))
+  return [(posx+0.1)*16/x, (posy+0.1)*16/ty, (posx+0.9)*16/x, (posy+0.9)*16/ty]
+#create elements for model
+js = {
+  "textures": {
+    "0": output[1]
+  },
+  "elements": [],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [85, 0, 0]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [85, 0, 0]
+    }
+  }
+}
+def newelement(out, index, x, y, ty):
+  cube = {
+    "from":[8,0,8],
+    "to":[8.000001,0.000001,8.000001],
+    "faces":{
+      "north":{"uv":getuvpos(out, index, x, y, ty),"texture":"#0","tintindex":0}
+    }
+  }
+  js["elements"].append(cube)
+
+#grab data from the list and convert to rgb
+def getposition(i):
+  x = 8388608+((data["positions"][i][0])*65280)*scale + offset[0]*65280
+  y = 8388608+((data["positions"][i][1])*65280)*scale + offset[1]*65280
+  z = 8388608+((data["positions"][i][2])*65280)*scale + offset[2]*65280
+  rgb = []
+  rgb.append((int((x/65280)%256), int((x/255)%256), int(x%256), 255))
+  rgb.append((int((y/65280)%256), int((y/255)%256), int(y%256), 255))
+  rgb.append((int((z/65280)%256), int((z/255)%256), int(z%256), 255))
+  return rgb
+def getuv(i):
+  x = (data["uvs"][i][0])*65535
+  y = (data["uvs"][i][1])*65535
+  rgb = []
+  rgb.append((int((x/65536)%256), int((x/256)%256), int(x%256), 255))
+  rgb.append((int((y/65536)%256), int((y/256)%256), int(y%256), 255))
+  return rgb
+def getvert(i):
+  poi = (data["vertices"][i][0])
+  uvi = (data["vertices"][i][1])
+  rgb = []
+  rgb.append((int((poi/65536)%256), int((poi/256)%256), int(poi%256), 255))
+  rgb.append((int((uvi/65536)%256), int((uvi/256)%256), int(uvi%256), 255))
+  return rgb
+def strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
+  s = ""
+  s += "--objs " + ' '.join(objs)
+  s += " --texs " + ' '.join(texs)
+  s += " --frames " + ' '.join(str(i) for i in frames)
+  s += " --out " + ' '.join(output)
+  s += " --offset " + ' '.join(str(i) for i in offset)
+  s += " --scale " + str(scale)
+  s += " --duration " + str(duration)
+  s += " --easing " + str(easing)
+  s += " --colorbehavior " + colorbehavior
+  s += " --autorotate " + str(autorotate)
+  if autoplay:
+    s += " --autoplay "
+  if flipuv:
+    s += " --flipuv "
+  if noshadow:
+    s += " --noshadow "
+  if nopow:
+    s += " --nopow"
+  return s
+#--------------------------------
+history = []
+def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
+  context = strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+  global history
+  try:
+    i = history.index(context)
+    history.pop(i)
+    history.insert(0, context)
+  except:
+    history.insert(0, context)
+  print(history)
+
+  global count
+  global mem
+  global data
+  count = [0,0]
+  mem = {"positions":{},"uvs":{}}
+  data = {"positions":[],"uvs":[],"vertices":[]}
+
+  #file extension optional
+  output[0] = output[0].split(".")[0]
+  output[1] = output[1].split(".")[0]
+
+  #input error checking
+  if duration < 1 or duration > 256:
+    print(col.err+"duration must be between 1 and 256"+col.end)
+    exit()
+  tex = Image.open(texs[0])
+  x,y = tex.size
+  if x < 8:
+    print(col.err+"minimum texture size is 8x"+col.end)
+    exit()
+
+  ntextures = len(texs)
+  nframes = len(frames)
+
+  print("\n"+col.cyan+"objmc start ------------------"+col.end)
+  #read obj
+  print("Reading obj 1 of ", nframes, "...", "{:>15.2f}".format(0), "%\033[K", sep="", end="\r")
+  o = readobj(objs[0])
+  nfaces = len(o["faces"])
+  indexobj(o, 0, nframes, nfaces)
+  if nframes > 1:
+    for frame in range(1, nframes):
+      o = readobj(objs[frames[frame]])
+      indexobj(o, frame, nframes, nfaces)
+
+  nvertices = nfaces*4
+  texheight = ntextures * y
+  uvheight = math.ceil(nfaces/x)
+  vpheight = math.ceil(len(data["positions"])*3/x)
+  vtheight = math.ceil(len(data["uvs"])*2/x)
+  vheight = math.ceil(len(data["vertices"])*2/x)
+  #make height power of 2
+  ty = 1 + uvheight + texheight + vpheight + vtheight + vheight
+  if not nopow:
+   ty = 1<<(ty - 1).bit_length()
+  if (ty > 4096 and x < 4096) or (ty > 8*x):
+    print(col.warn+"output height may be too high, consider increasing width of input texture or reducing number of frames to bring the output texture closer to a square."+col.  end)
+
+  #initial info
+  print("%\033[K", end="\r")
+  print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
+  if nframes > 1:
+    print("frames: ", nframes, ", duration: ", duration,"t", ", time: ", duration*nframes/20, "s", ", easing: ", easing, ", autoplay: ", autoplay,  sep="")
+  print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
+  print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
+  print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
+
+  print("Creating Files...", end="\r")
+  #write to json model
+  model = open(output[0]+".json", "w")
+  #create out image with correct dimensions
+  out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
+
+  #parse color behavior
+  ca = [cbarr2.index(i) for i in colorbehavior]
+  cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
+
+  #first alpha bit for texture height, nvertices, vtheight
+  alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5) + (int(vtheight%256/128)<<4)
+  #header:
+  #0: marker pix
+  out.putpixel((0,0), (12,34,56,78))
+  #1: noshadow, autorotate, colorbehavior, alpha bits for texsize and nvertices
+  out.putpixel((1,0), ((int(noshadow)<<7) + (int(autorotate)<<5), 0, cb, alpha))
+  #2: texture size
+  out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
+  #3: nvertices
+  out.putpixel((3,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, 128+nvertices%128))
+  #4: nframes, ntextures, duration, autoplay, easing
+  out.putpixel((4,0), (nframes,ntextures,duration-1, 128+(int(autoplay)<<6)+easing))
+  #5: data heights
+  out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, 128+vtheight%128))
+
+  #actual texture
+  for i in range (0,len(texs)):
+    tex = Image.open(texs[i])
+    nx,ny = tex.size
+    if nx != x or ny != y:
+      print(col.err+"mismatched texture sizes"+col.end)
+      exit()
+    if flipuv:
+      out.paste(tex, (0,1+uvheight+(i*y)))
+    else:
+      out.paste(ImageOps.flip(tex), (0,1+uvheight+(i*y)))
+
+  #generate elements and uv header
+  for i in range(0, nfaces):
+    newelement(out, i, x, y, ty)
+
+  print("Writing json model...\033[K", end="\r")
+  model.write(json.dumps(js,separators=(',',':')))
+  model.close()
+
+  print("Writing position data...\033[K", end="\r")
+  y = 1 + uvheight + texheight
+  for i in range(0,len(data["positions"])):
+    a = getposition(i)
+    for j in range(0,3):
+      p = i*3+j
+      out.putpixel((p%x,y+math.floor(p/x)), a[j])
+  print("Writing uv data...\033[K", end="\r")
+  y = 1 + uvheight + texheight + vpheight
+  for i in range(0,len(data["uvs"])):
+    a = getuv(i)
+    for j in range(0,2):
+      p = i*2+j
+      out.putpixel((p%x,y+math.floor(p/x)), a[j])
+  print("Writing vertex data...\033[K", end="\r")
+  y = 1 + uvheight + texheight + vpheight + vtheight
+  for i in range(0,len(data["vertices"])):
+    a = getvert(i)
+    for j in range(0,2):
+      p = i*2+j
+      out.putpixel((p%x,y+math.floor(p/x)), a[j])
+
+  print("Saving files...\033[K", end="\r")
+  out.save(output[1]+".png")
+  out.close()
+  print(col.green+"Complete ---------------------"+col.end)
 
 #--------------------------------
 #gui if no args
@@ -197,17 +487,8 @@ if not len(sys.argv) > 1:
   texlist = tk.Text(window, height=1)
   texlist.grid(column=1, row=1, sticky='NEW', padx=5)
   settext(texlist, texs[0])
-  flipuv = tk.BooleanVar()
-  tk.Checkbutton(window, text="Flip UV", variable=flipuv).grid(column=1, row=1, sticky='NE')
-  #start quit buttons
-  qq = tk.BooleanVar()
-  qq.set(True)
-  def start():
-    qq.set(False)
-    window.destroy()
-  buttonquit = tk.Button(window, text="Cancel", command=quit).grid(column=0, row=4, padx=5, pady=5)
-  buttonstart = tk.Button(window, text="Start", command=start).grid(column=1, row=4, padx=5, pady=5)
-  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
+  fu = tk.BooleanVar()
+  tk.Checkbutton(window, text="Flip UV", variable=fu).grid(column=1, row=1, sticky='NE')
   #scale and offset
   of = [tk.StringVar() for i in range(3)]
   offsetlable = tk.Label(window, text="Offset:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(32,0))
@@ -215,12 +496,12 @@ if not len(sys.argv) > 1:
   offset2 = Floatbox(window, width=5, textvariable=of[1]).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(32,0))
   offset3 = Floatbox(window, width=5, textvariable=of[2]).grid(column=1, row=1, sticky='N', padx=(110,0), pady=(32,0))
   scalelable = tk.Label(window, text="Scale:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(55,0))
-  scale = tk.StringVar()
-  scalebox = Floatbox(window, width=17, textvariable=scale).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(55,0))
-  scale.set("1.0")
+  sc = tk.StringVar()
+  sc.set("1.0")
+  scalebox = Floatbox(window, width=17, textvariable=sc).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(55,0))
   #noshadow
-  noshadow = tk.BooleanVar()
-  tk.Checkbutton(window, text="No Shadow", variable=noshadow).grid(column=1, row=1, sticky='N', pady=(77,0))
+  ns = tk.BooleanVar()
+  tk.Checkbutton(window, text="No Shadow", variable=ns).grid(column=1, row=1, sticky='N', pady=(77,0))
   #advanced
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=0, sticky='NEW')
   advanced = tk.Frame(window)
@@ -238,18 +519,18 @@ if not len(sys.argv) > 1:
   #easing
   earr = ["None","Linear","Cubic","Bezier"]
   tk.Label(advanced, text="Easing Method:").grid(column=0, row=2, sticky='W', padx=(5,0), pady=(2,0))
-  easing = tk.StringVar()
-  easing.set("Linear")
-  ttk.Combobox(advanced, values=earr, textvariable=easing, state='readonly', width=7).grid(column=1, row=2, pady=(2,0), sticky='W')
+  ea = tk.StringVar()
+  ea.set("Linear")
+  ttk.Combobox(advanced, values=earr, textvariable=ea, state='readonly', width=7).grid(column=1, row=2, pady=(2,0), sticky='W')
   #autorotate
   rarr = ["Off","Yaw","Pitch","Both"]
   tk.Label(advanced, text="Auto Rotate:").grid(column=0, row=3, sticky='W', padx=(5,0), pady=(2,0))
-  autorotate = tk.StringVar()
-  autorotate.set("Off")
-  ttk.Combobox(advanced, values=rarr, textvariable=autorotate, state='readonly', width=7,).grid(column=1, row=3, pady=(2,0), sticky='W')
+  ar = tk.StringVar()
+  ar.set("Off")
+  ttk.Combobox(advanced, values=rarr, textvariable=ar, state='readonly', width=7,).grid(column=1, row=3, pady=(2,0), sticky='W')
   #autoplay
-  autoplay = tk.BooleanVar()
-  tk.Checkbutton(advanced, text="Auto Play", variable=autoplay).grid(column=0, row=4, columnspan=2, sticky='N')
+  ap = tk.BooleanVar()
+  tk.Checkbutton(advanced, text="Auto Play", variable=ap).grid(column=0, row=4, columnspan=2, sticky='N')
   #color behavior
   cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=5, sticky='W', padx=(5,0))
   cbarr = ['x', 'y', 'z', 't']
@@ -273,272 +554,30 @@ if not len(sys.argv) > 1:
   tk.Label(advanced, text=".png").grid(column=1, row=9, sticky='NE')
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=10, columnspan=2, sticky='NEW', pady=(5,0))
 
+  def start():
+    if dur.get().isdigit():
+      duration = max(int(dur.get()), 1)
+    else:
+      duration = 1
+    offset = (float(of[0].get()), float(of[1].get()), float(of[2].get()))
+    scale = float(sc.get())
+    easing = earr.index(ea.get())
+    flipuv = fu.get()
+    noshadow = ns.get()
+    autorotate = rarr.index(ar.get())
+    autoplay = ap.get()
+    colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
+    output = [outjson.get(), outpng.get()]
+    objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+  #start quit buttons
+  buttonquit = tk.Button(window, text="Exit", command=quit).grid(column=0, row=4, padx=5, pady=5)
+  buttonstart = tk.Button(window, text="Start", command=start).grid(column=1, row=4, padx=5, pady=5)
+  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
+
   window.mainloop()
-  if qq.get():
-    exit()
-  if dur.get().isdigit():
-    duration = max(int(dur.get()), 1)
-  else:
-    duration = 1
-  offset = (float(of[0].get()), float(of[1].get()), float(of[2].get()))
-  scale = float(scale.get())
-  easing = earr.index(easing.get())
-  flipuv = flipuv.get()
-  noshadow = noshadow.get()
-  autorotate = rarr.index(autorotate.get())
-  autoplay = autoplay.get()
-  colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
-  output = [outjson.get(), outpng.get()]
+else:
+  cbarr2 = ['x', 'y', 'z', 't', 'o']
+  objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 #--------------------------------
-os.system('color')
-class col:
-    head = '\033[95m'
-    blue = '\033[94m'
-    cyan = '\033[96m'
-    green = '\033[92m'
-    warn = '\033[93mWarning: '
-    err = '\033[91mError: '
-    end = '\033[0m'
-    bold = '\033[1m'
-    underline = '\033[4m'
-def exit():
-  print("Press any key to exit...")
-  os.system('pause >nul')
-  quit()
 
-#file extension optional
-output[0] = output[0].split(".")[0]
-output[1] = output[1].split(".")[0]
-
-#input error checking
-if duration < 1 or duration > 256:
-  print(col.err+"duration must be between 1 and 256"+col.end)
-  exit()
-
-tex = Image.open(texs[0])
-x,y = tex.size
-if x < 8:
-  print(col.err+"minimum texture size is 8x"+col.end)
-  exit()
-
-def readobj(name):
-  obj = open(name, "r", encoding="utf-8")
-  d = {"positions":[],"uvs":[],"faces":[]}
-  for line in obj:
-    if line.startswith("v "):
-      d["positions"].append(tuple([float(i) for i in " ".join(line.split()).split(" ")[1:]]))
-    if line.startswith("vt "):
-      d["uvs"].append(tuple([float(i) for i in " ".join(line.split()).split(" ")[1:]]))
-    if line.startswith("f "):
-      d["faces"].append(tuple([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]]))
-  obj.close()
-  if 'nfaces' in globals() and len(d["faces"]) != nfaces:
-    print(col.err+"mismatched obj face count"+col.end)
-    exit()
-  return d
-
-count = [0,0]
-mem = {"positions":{},"uvs":{}}
-data = {"positions":[],"uvs":[],"vertices":[]}
-#index vertices
-def indexvert(o, vert):
-  global count
-  global mem
-  global data
-  v = []
-  pos = o["positions"][vert[0]]
-  uv = o["uvs"][vert[1]]
-  posh = ','.join([str(i) for i in pos])
-  uvh =','.join([str(i) for i in uv])
-  try:
-    v.append(mem["positions"][posh])
-  except:
-    mem["positions"][posh] = count[0]
-    data["positions"].append(pos)
-    v.append(count[0])
-    count[0] += 1
-  try:
-    v.append(mem["uvs"][uvh])
-  except:
-    mem["uvs"][uvh] = count[1]
-    data["uvs"].append(uv)
-    v.append(count[1])
-    count[1] += 1
-  data["vertices"].append(v)
-#index obj
-def indexobj(o, frame):
-  global nframes
-  global nfaces
-  for face in range(0, len(o["faces"])):
-    if face % 1000 == 0:
-      print("\Reading obj ", frame+1, " of ", nframes, "...", "{:>15.2f}".format((frame*nfaces+face)*100/(nframes*nfaces)), "%\033[K", sep="", end="\r")
-    face = o["faces"][face]
-    for vert in face:
-      indexvert(o, vert)
-    if len(face) == 3:
-      indexvert(o, face[1])
-
-ntextures = len(texs)
-nframes = len(frames)
-
-print("\n"+col.cyan+"objmc start ------------------"+col.end)
-#read obj
-print("Reading obj 1 of ", nframes, "...", "{:>15.2f}".format(0), "%\033[K", sep="", end="\r")
-o = readobj(objs[0])
-nfaces = len(o["faces"])
-indexobj(o, 0)
-if nframes > 1:
-  for frame in range(1, nframes):
-    o = readobj(objs[frames[frame]])
-    indexobj(o, frame)
-
-nvertices = nfaces*4
-texheight = ntextures * y
-uvheight = math.ceil(nfaces/x)
-vpheight = math.ceil(len(data["positions"])*3/x)
-vtheight = math.ceil(len(data["uvs"])*2/x)
-vheight = math.ceil(len(data["vertices"])*2/x)
-#make height power of 2
-ty = 1 + uvheight + texheight + vpheight + vtheight + vheight
-if not nopow:
- ty = 1<<(ty - 1).bit_length()
-if (ty > 4096 and x < 4096) or (ty > 8*x):
-  print(col.warn+"output height may be too high, consider increasing width of input texture or reducing number of frames to bring the output texture closer to a square."+col.end)
-
-#initial info
-print("%\033[K", end="\r")
-print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
-if nframes > 1:
-  print("frames: ", nframes, ", duration: ", duration,"t", ", time: ", duration*nframes/20, "s", ", easing: ", easing, ", autoplay: ", autoplay,  sep="")
-print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
-print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
-print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
-
-print("Creating Files...", end="\r")
-#write to json model
-model = open(output[0]+".json", "w")
-#create out image with correct dimensions
-out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
-
-#parse color behavior
-ca = [cbarr2.index(i) for i in colorbehavior]
-cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
-
-#first alpha bit for texture height, nvertices, vtheight
-alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5) + (int(vtheight%256/128)<<4)
-#header:
-#0: marker pix
-out.putpixel((0,0), (12,34,56,78))
-#1: noshadow, autorotate, colorbehavior, alpha bits for texsize and nvertices
-out.putpixel((1,0), ((int(noshadow)<<7) + (int(autorotate)<<5), 0, cb, alpha))
-#2: texture size
-out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
-#3: nvertices
-out.putpixel((3,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, 128+nvertices%128))
-#4: nframes, ntextures, duration, autoplay, easing
-out.putpixel((4,0), (nframes,ntextures,duration-1, 128+(int(autoplay)<<6)+easing))
-#5: data heights
-out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, 128+vtheight%128))
-
-#actual texture
-for i in range (0,len(texs)):
-  tex = Image.open(texs[i])
-  nx,ny = tex.size
-  if nx != x or ny != y:
-    print(col.err+"mismatched texture sizes"+col.end)
-    exit()
-  if flipuv:
-    out.paste(tex, (0,1+uvheight+(i*y)))
-  else:
-    out.paste(ImageOps.flip(tex), (0,1+uvheight+(i*y)))
-
-#unique pixel uv per face with color pointing to topleft
-def getuvpos(faceid):
-  posx = faceid%x
-  posy = math.floor(faceid/x)+1
-  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, (posy-1)%256, 255-(int((posy-1)/256)%256)))
-  return [(posx+0.1)*16/x, (posy+0.1)*16/ty, (posx+0.9)*16/x, (posy+0.9)*16/ty]
-#create elements for model
-js = {
-  "textures": {
-    "0": output[1]
-  },
-  "elements": [],
-  "display": {
-    "thirdperson_righthand": {
-      "rotation": [85, 0, 0]
-    },
-    "thirdperson_lefthand": {
-      "rotation": [85, 0, 0]
-    }
-  }
-}
-def newelement(index):
-  cube = {
-    "from":[8,0,8],
-    "to":[8.000001,0.000001,8.000001],
-    "faces":{
-      "north":{"uv":getuvpos(index),"texture":"#0","tintindex":0}
-    }
-  }
-  js["elements"].append(cube)
-#generate elements and uv header
-for i in range(0, nfaces):
-  newelement(i)
-
-print("Writing json model...\033[K", end="\r")
-model.write(json.dumps(js,separators=(',',':')))
-model.close()
-
-#grab data from the list and convert to rgb
-def getposition(i):
-  x = 8388608+((data["positions"][i][0])*65280)*scale + offset[0]*65280
-  y = 8388608+((data["positions"][i][1])*65280)*scale + offset[1]*65280
-  z = 8388608+((data["positions"][i][2])*65280)*scale + offset[2]*65280
-  rgb = []
-  rgb.append((int((x/65280)%256), int((x/255)%256), int(x%256), 255))
-  rgb.append((int((y/65280)%256), int((y/255)%256), int(y%256), 255))
-  rgb.append((int((z/65280)%256), int((z/255)%256), int(z%256), 255))
-  return rgb
-def getuv(i):
-  x = (data["uvs"][i][0])*65535
-  y = (data["uvs"][i][1])*65535
-  rgb = []
-  rgb.append((int((x/65536)%256), int((x/256)%256), int(x%256), 255))
-  rgb.append((int((y/65536)%256), int((y/256)%256), int(y%256), 255))
-  return rgb
-def getvert(i):
-  poi = (data["vertices"][i][0])
-  uvi = (data["vertices"][i][1])
-  rgb = []
-  rgb.append((int((poi/65536)%256), int((poi/256)%256), int(poi%256), 255))
-  rgb.append((int((uvi/65536)%256), int((uvi/256)%256), int(uvi%256), 255))
-  return rgb
-
-print("Writing position data...\033[K", end="\r")
-y = 1 + uvheight + texheight
-for i in range(0,len(data["positions"])):
-  a = getposition(i)
-  for j in range(0,3):
-    p = i*3+j
-    out.putpixel((p%x,y+math.floor(p/x)), a[j])
-print("Writing uv data...\033[K", end="\r")
-y = 1 + uvheight + texheight + vpheight
-for i in range(0,len(data["uvs"])):
-  a = getuv(i)
-  for j in range(0,2):
-    p = i*2+j
-    out.putpixel((p%x,y+math.floor(p/x)), a[j])
-print("Writing vertex data...\033[K", end="\r")
-y = 1 + uvheight + texheight + vpheight + vtheight
-for i in range(0,len(data["vertices"])):
-  a = getvert(i)
-  for j in range(0,2):
-    p = i*2+j
-    out.putpixel((p%x,y+math.floor(p/x)), a[j])
-
-print("Saving files...\033[K", end="\r")
-out.save(output[1]+".png")
-out.close()
-print(col.green+"Complete ---------------------"+col.end)
 exit()
