@@ -1,8 +1,11 @@
+import os
+os.system('mode con: cols=60 lines=30')
+os.system("title objmc output")
+os.system('color')
 import argparse
 import math
 import json
 import sys
-import os
 import tkinter as tk
 from tkinter import ttk
 import tkinter.scrolledtext as tkst
@@ -22,27 +25,22 @@ texs = ["cube.png"]
 #defaults to [0-nframes]
 frames = []
 
-#json, png
+#Output json & png
 output = ["potion.json", "out.png"]
 
-#--------------------------------
-#ADVANCED
-#(changing these only changes data on texture, no need to replace model)
-#--------------------------------
-
-#Position/Scaling
+#Position & Scaling
 # just adds & multiplies vertex positions before encoding, so you dont have to re export the model
 offset = (0,0,0)
 scale = 1
 
-#duration of each frame in ticks
+#Duration of each frame in ticks
 duration = 20
 
 #Animation Easing
 # 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier
 easing = 3
 
-#Item Color Overlay Behavior
+#Color Behavior
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
 # any 3 chars of 'x', 'y', 'z', 't', 'o' is valid
 # 'xyz' = rotate, 't' = animation, 'o' = overlay hue
@@ -88,9 +86,9 @@ parser.add_argument('--offset', type=float, help='Offset of model in xyz', nargs
 parser.add_argument('--scale', type=float, default=scale, help='Scale of model')
 parser.add_argument('--duration', type=int, help="Duration of each frame in ticks", default=duration)
 parser.add_argument('--easing', type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
-parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavior, 'xyz' = rotate, 'a' = animation time offset, 'o' = overlay hue", default=colorbehavior)
-parser.add_argument('--autorotate', type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: x, 2:y, 3:xy", default=autorotate)
-parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='aaa' overrides this.")
+parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavior, 'xyz': rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
+parser.add_argument('--autorotate', type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
+parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='ttt' overrides this.")
 parser.add_argument("--flipuv", action='store_true', help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action='store_true', help="Disable shadows from face normals")
 parser.add_argument("--nopow", action='store_true', help="Disable power of two textures")
@@ -113,7 +111,6 @@ if not frames:
   for i in range(len(objs)):
     frames.append(i)
 
-os.system('color')
 class col:
     head = '\033[95m'
     blue = '\033[94m'
@@ -124,10 +121,12 @@ class col:
     end = '\033[0m'
     bold = '\033[1m'
     underline = '\033[4m'
+def quit():
+  sys.exit()
 def exit():
   print("Press any key to exit...")
   os.system('pause >nul')
-  quit()
+  sys.exit()
 
 #--------------------------------
 count = [0,0]
@@ -271,7 +270,6 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
     history.insert(0, context)
   except:
     history.insert(0, context)
-  print(history)
 
   global count
   global mem
@@ -466,9 +464,10 @@ class Floatbox(tk.Entry):
     else:
       self.set(self.old_value)
 if not len(sys.argv) > 1:
-  print("No arguments given, starting gui")
   window = tk.Tk()
   window.title("objmc")
+  ico = tk.PhotoImage(data="""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""")
+  window.tk.call('wm', 'iconphoto', window._w, ico)
   window.geometry("1x1")
   window.minsize(500,400)
   window.rowconfigure(0,pad=7)
@@ -579,5 +578,4 @@ else:
   cbarr2 = ['x', 'y', 'z', 't', 'o']
   objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 #--------------------------------
-
 exit()
