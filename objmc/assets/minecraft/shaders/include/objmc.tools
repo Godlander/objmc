@@ -3,10 +3,44 @@
 
 #define PI 3.1415926535897932
 
-#define NP 4 //per vertex pixel data
-ivec2 getp(ivec2 topleft, ivec2 size, int yoffset, int index, int offset) {
-    int i = (index * NP) + offset;
-    return topleft + ivec2(i % size.x, int(i / size.x) + yoffset);
+ivec4 getmeta(ivec2 topleft, int offset) {
+    return ivec4(texelFetch(Sampler0, topleft + ivec2(offset,0), 0) * 255);
+}
+vec3 getpos(ivec2 topleft, int w, int h, int index) {
+    int i = index*3;
+    vec4 x = texelFetch(Sampler0, topleft + ivec2((i  )%w,h+((i  )/w)), 0);
+    vec4 y = texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0);
+    vec4 z = texelFetch(Sampler0, topleft + ivec2((i+2)%w,h+((i+2)/w)), 0);
+    return vec3(
+        (x.r*255)+(x.g)+(x.b/255),
+        (y.r*255)+(y.g)+(y.b/255),
+        (z.r*255)+(z.g)+(z.b/255)
+    ) - vec3(128.50196078431372, 128.00196078431372, 128.50196078431372);
+}
+vec2 getuv(ivec2 topleft, int w, int h, int index) {
+    int i = index*2;
+    vec4 x = texelFetch(Sampler0, topleft + ivec2((i  )%w,h+((i  )/w)), 0);
+    vec4 y = texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0);
+    return vec2(
+        ((x.g*65280)+(x.b*255))/65535,
+        ((y.g*65280)+(y.b*255))/65535
+    );
+}
+ivec2 getvert(ivec2 topleft, int w, int h, int index) {
+    int i = index*2;
+    ivec4 a = ivec4(texelFetch(Sampler0, topleft + ivec2((i  )%w,h+((i  )/w)), 0)*255);
+    ivec4 b = ivec4(texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0)*255);
+    return ivec2(
+        ((a.r*65536)+(a.g*256)+a.b),
+        ((b.r*65536)+(b.g*256)+b.b)
+    );
+}
+
+int getb(int i, int b) {
+    return (i>>b)&1;
+}
+int geta(int i, int b) {
+    return getb(i,b)<<7;
 }
 
 //3d rotation matrix from Barf Creations
@@ -29,6 +63,13 @@ bool isgui(mat4 ProjMat) {
 //first person hand item model detection from esben
 bool ishand(float FogStart) {
     return FogStart*0.000001 > 1;
+}
+
+//hue to rgb
+vec3 hrgb(float h) {
+    vec3 K = vec3(1.0, 2.0 / 3.0, 1.0 / 3.0);
+    vec3 p = abs(fract(K.xyz + h) * 6.0 - 3.0);
+    return clamp(p - K.xxx, 0.0, 1.0);
 }
 
 //4 point bezier formula from Dominexis

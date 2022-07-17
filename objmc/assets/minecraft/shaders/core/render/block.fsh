@@ -19,17 +19,17 @@ in vec3 Pos;
 in float transition;
 
 flat in int isCustom;
-flat in int noShadow;
+flat in int noshadow;
 
 out vec4 fragColor;
 
 void main() {
     vec4 color = texture(Sampler0, texCoord);
-    if (color.a < 0.01) discard;
 
     //custom lighting
     #define BLOCK
     #moj_import<objmc.light>
 
+    if (color.a < 0.01) discard;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
 }
