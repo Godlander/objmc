@@ -280,16 +280,6 @@ def getcontext(c):
 hid = 0
 history = []
 def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
-  context = strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
-  global history
-  try:
-    i = history.index(context)
-    history.pop(i)
-    history.insert(0, context)
-  except:
-    history.insert(0, context)
-  print(history)
-
   global count
   global mem
   global data
@@ -504,13 +494,13 @@ if not len(sys.argv) > 1:
   tk.Checkbutton(window, text="Flip UV", variable=fu).grid(column=1, row=1, sticky='NE')
   #scale and offset
   of = [tk.StringVar() for i in range(3)]
-  offsetlable = tk.Label(window, text="Offset:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(32,0))
-  offset1 = Floatbox(window, width=5, textvariable=of[0]).grid(column=1, row=1, sticky='N', padx=(0,30), pady=(32,0))
-  offset2 = Floatbox(window, width=5, textvariable=of[1]).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(32,0))
-  offset3 = Floatbox(window, width=5, textvariable=of[2]).grid(column=1, row=1, sticky='N', padx=(110,0), pady=(32,0))
-  scalelable = tk.Label(window, text="Scale:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(55,0))
+  tk.Label(window, text="Offset:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(32,0))
+  Floatbox(window, width=5, textvariable=of[0]).grid(column=1, row=1, sticky='N', padx=(0,30), pady=(32,0))
+  Floatbox(window, width=5, textvariable=of[1]).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(32,0))
+  Floatbox(window, width=5, textvariable=of[2]).grid(column=1, row=1, sticky='N', padx=(110,0), pady=(32,0))
+  tk.Label(window, text="Scale:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(55,0))
   sc = tk.StringVar()
-  scalebox = Floatbox(window, width=17, textvariable=sc).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(55,0))
+  Floatbox(window, width=17, textvariable=sc).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(55,0))
   #noshadow
   ns = tk.BooleanVar()
   tk.Checkbutton(window, text="No Shadow", variable=ns).grid(column=1, row=1, sticky='N', pady=(77,0))
@@ -547,9 +537,9 @@ if not len(sys.argv) > 1:
   cbarr = ['x', 'y', 'z', 't']
   cbarr2 = ['x', 'y', 'z', 't', 'o']
   cb = [tk.StringVar() for i in range(3)]
-  cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(0,0))
-  cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(28,0))
-  cb3menu = ttk.Combobox(advanced, values=cbarr2, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(56,0))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(0,0))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(28,0))
+  ttk.Combobox(advanced, values=cbarr2, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(56,0))
   #output
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=6, columnspan=2, sticky='EW', pady=(7,0))
   tk.Label(advanced, text="Output:").grid(column=0, row=7, columnspan=2)
@@ -578,27 +568,30 @@ if not len(sys.argv) > 1:
 
   def gethistory():
     global history
-    getcontext(history[hid])
-    setval()
-  def prev():
+    if history:
+      hlable.config(text=str(hid+1)+"/"+str(len(history)))
+      getcontext(history[hid])
+      setval()
+  def next():
     global hid
+    global history
     if hid < len(history)-1:
       hid += 1
-    gethistory()
-  def next():
+      gethistory()
+  def prev():
     global hid
     if hid > 0:
       hid -= 1
-    gethistory()
+      gethistory()
   def copyhistory():
     global history
     window.clipboard_clear()
-    window.clipboard_append('\n'.join(history[::-1]))
+    window.clipboard_append('\n'.join(history))
   def loadhistory():
     global history
     global hid
     history = window.clipboard_get().split('\n')
-    hid = 0
+    hid = len(history)-1
     gethistory()
 
   def start():
@@ -619,18 +612,33 @@ if not len(sys.argv) > 1:
     colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
     output = [outjson.get(), outpng.get()]
     objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+    context = strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+    global history
+    global hid
+    try:
+      i = history.index(context)
+      history.pop(i)
+      history.append(context)
+    except:
+      history.append(context)
+    hid = len(history)
+    hlable.config(text=str(hid)+"/"+str(hid))
+    hid -= 1
+  def runhistory():
+    for h in history:
+      getcontext(h)
+      objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 
-  #start quit buttons
-  tk.Button(window, text="Exit", command=quit).grid(column=0, row=4, sticky='W', padx=50, pady=5)
+  #start
   tk.Button(window, text="Start", command=start).grid(column=1, row=4, sticky='E', padx=50, pady=5)
-  buttonprev = tk.Button(window, text="←", command=prev)
-  buttonprev.grid(column=0, columnspan=2, row=4, padx=(0,20), pady=5)
-  buttonnext = tk.Button(window, text="→", command=next)
-  buttonnext.grid(column=0, columnspan=2, row=4, padx=(20,0), pady=5)
-  buttoncopy = tk.Button(window, text="Copy History", command=copyhistory)
-  buttoncopy.grid(column=0, columnspan=2, row=4, padx=(120,0), pady=5)
-  buttonload = tk.Button(window, text="Load History", command=loadhistory)
-  buttonload.grid(column=0, columnspan=2, row=4, padx=(0,120), pady=5)
+  #history
+  hlable = tk.Label(window, text="0/0")
+  hlable.grid(column=0, row=4, sticky='W', padx=5, pady=5)
+  tk.Button(window, text="←", command=prev).grid(column=0, columnspan=2, row=4, sticky='W', padx=(60,0), pady=5)
+  tk.Button(window, text="→", command=next).grid(column=0, columnspan=2, row=4, sticky='W', padx=(80,0), pady=5)
+  tk.Button(window, text="Copy History", command=copyhistory).grid(column=0, columnspan=2, row=4, padx=(0,200), pady=5)
+  tk.Button(window, text="Load History", command=loadhistory).grid(column=0, columnspan=2, row=4, padx=(0,43), pady=5)
+  tk.Button(window, text="Run History", command=runhistory).grid(column=0, columnspan=2, row=4, padx=(106,0), pady=5)
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
 
   window.mainloop()
