@@ -30,8 +30,8 @@ output = ["potion.json", "out.png"]
 
 #Position & Scaling
 # just adds & multiplies vertex positions before encoding, so you dont have to re export the model
-offset = (0,0,0)
-scale = 1
+offset = (0.0,0.0,0.0)
+scale = 1.0
 
 #Duration of each frame in ticks
 duration = 20
@@ -83,30 +83,45 @@ parser.add_argument('--texs', help='Specify a texture file', nargs='*', default=
 parser.add_argument('--frames', type=int, help='List of obj indexes as keyframes', nargs='*', default=[])
 parser.add_argument('--out', type=str, help='Output json and png', nargs=2, default=output)
 parser.add_argument('--offset', type=float, help='Offset of model in xyz', nargs=3, default=offset)
-parser.add_argument('--scale', type=float, default=scale, help='Scale of model')
+parser.add_argument('--scale', type=float, help='Scale of model', default=scale)
 parser.add_argument('--duration', type=int, help="Duration of each frame in ticks", default=duration)
 parser.add_argument('--easing', type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
 parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavior, 'xyz': rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
 parser.add_argument('--autorotate', type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
-parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='ttt' overrides this.")
-parser.add_argument("--flipuv", action='store_true', help="Invert the texture to compensate for flipped UV")
-parser.add_argument("--noshadow", action='store_true', help="Disable shadows from face normals")
-parser.add_argument("--nopow", action='store_true', help="Disable power of two textures")
-args = parser.parse_args()
-objs = args.objs
-texs = args.texs
-frames = args.frames
-output = args.out
-offset = tuple(args.offset)
-scale = args.scale
-duration = args.duration
-easing = args.easing
-colorbehavior = args.colorbehavior
-autorotate = args.autorotate
-autoplay = args.autoplay != autoplay
-flipuv = args.flipuv != flipuv
-noshadow = args.noshadow != noshadow
-nopow = args.nopow != nopow
+parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='ttt' overrides this.", default=autoplay)
+parser.add_argument("--flipuv", action='store_true', help="Invert the texture to compensate for flipped UV", default=flipuv)
+parser.add_argument("--noshadow", action='store_true', help="Disable shadows from face normals", default=noshadow)
+parser.add_argument("--nopow", action='store_true', help="Disable power of two textures", default=nopow)
+def getargs(args):
+  global objs
+  global texs
+  global frames
+  global output
+  global offset
+  global scale
+  global duration
+  global easing
+  global colorbehavior
+  global autorotate
+  global autoplay
+  global flipuv
+  global noshadow
+  global nopow
+  objs = args.objs
+  texs = args.texs
+  frames = args.frames
+  output = args.out
+  offset = tuple(args.offset)
+  scale = args.scale
+  duration = args.duration
+  easing = args.easing
+  colorbehavior = args.colorbehavior
+  autorotate = args.autorotate
+  autoplay = args.autoplay
+  flipuv = args.flipuv
+  noshadow = args.noshadow
+  nopow = args.nopow
+getargs(parser.parse_args())
 if not frames:
   for i in range(len(objs)):
     frames.append(i)
@@ -132,7 +147,7 @@ def exit():
 count = [0,0]
 mem = {"positions":{},"uvs":{}}
 data = {"positions":[],"uvs":[],"vertices":[]}
-def readobj(name):
+def readobj(name, nfaces):
   obj = open(name, "r", encoding="utf-8")
   d = {"positions":[],"uvs":[],"faces":[]}
   for line in obj:
@@ -143,7 +158,7 @@ def readobj(name):
     if line.startswith("f "):
       d["faces"].append(tuple([[int(i)-1 for i in vert.split("/")] for vert in " ".join(line.split()).split(" ")[1:]]))
   obj.close()
-  if 'nfaces' in globals() and len(d["faces"]) != nfaces:
+  if nfaces > 0 and len(d["faces"]) != nfaces:
     print(col.err+"mismatched obj face count"+col.end)
     exit()
   return d
@@ -259,7 +274,10 @@ def strcontext(objs, texs, frames, output, scale, offset, duration, easing, colo
   if nopow:
     s += " --nopow"
   return s
+def getcontext(c):
+  getargs(parser.parse_args(c.split(' ')))
 #--------------------------------
+hid = 0
 history = []
 def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
   context = strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
@@ -270,6 +288,7 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
     history.insert(0, context)
   except:
     history.insert(0, context)
+  print(history)
 
   global count
   global mem
@@ -298,12 +317,12 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
   print("\n"+col.cyan+"objmc start ------------------"+col.end)
   #read obj
   print("Reading obj 1 of ", nframes, "...", "{:>15.2f}".format(0), "%\033[K", sep="", end="\r")
-  o = readobj(objs[0])
+  o = readobj(objs[0], 0)
   nfaces = len(o["faces"])
   indexobj(o, 0, nframes, nfaces)
   if nframes > 1:
     for frame in range(1, nframes):
-      o = readobj(objs[frames[frame]])
+      o = readobj(objs[frames[frame]], nfaces)
       indexobj(o, frame, nframes, nfaces)
 
   nvertices = nfaces*4
@@ -335,7 +354,8 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
   out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
   #parse color behavior
-  ca = [cbarr2.index(i) for i in colorbehavior]
+  cbarr = ['x', 'y', 'z', 't', 'o']
+  ca = [cbarr.index(i) for i in colorbehavior]
   cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
 
   #first alpha bit for texture height, nvertices, vtheight
@@ -425,10 +445,6 @@ def openobjs():
   settext(objlist, "\n".join(f))
 def isnumber(s):
   return (s.isdigit() or s == "")
-def start():
-  if len(objs) == 0 or len(texs) == 0:
-    print("No files selected")
-    return
 class Number(tk.Entry):
   def __init__(self, master=None, **kwargs):
     self.var = kwargs.pop('textvariable', None)
@@ -438,7 +454,7 @@ class Number(tk.Entry):
     self.var.trace('w', self.check)
     self.get, self.set = self.var.get, self.var.set
   def check(self, *args):
-    if self.get().isdigit() or self.get() == '':
+    if self.get().isnumber() or self.get() == '':
       self.old_value = self.get()
     else:
       self.set(self.old_value)
@@ -479,13 +495,11 @@ if not len(sys.argv) > 1:
   tk.Button(window, text='Select Objs', command=openobjs, borderwidth=5).grid(column=0, row=0, sticky='NEW')
   objlist = tkst.ScrolledText(window, height=500)
   objlist.grid(column=0, row=1, rowspan=3, sticky='NEW', padx=5)
-  settext(objlist, "\n".join(objs))
   ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=4, sticky='NSE')
   #tex list
   tk.Button(window, text='Select Texture', command=opentex, borderwidth=5).grid(column=1, row=0, sticky='NEW')
   texlist = tk.Text(window, height=1)
   texlist.grid(column=1, row=1, sticky='NEW', padx=5)
-  settext(texlist, texs[0])
   fu = tk.BooleanVar()
   tk.Checkbutton(window, text="Flip UV", variable=fu).grid(column=1, row=1, sticky='NE')
   #scale and offset
@@ -496,7 +510,6 @@ if not len(sys.argv) > 1:
   offset3 = Floatbox(window, width=5, textvariable=of[2]).grid(column=1, row=1, sticky='N', padx=(110,0), pady=(32,0))
   scalelable = tk.Label(window, text="Scale:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(55,0))
   sc = tk.StringVar()
-  sc.set("1.0")
   scalebox = Floatbox(window, width=17, textvariable=sc).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(55,0))
   #noshadow
   ns = tk.BooleanVar()
@@ -525,7 +538,6 @@ if not len(sys.argv) > 1:
   rarr = ["Off","Yaw","Pitch","Both"]
   tk.Label(advanced, text="Auto Rotate:").grid(column=0, row=3, sticky='W', padx=(5,0), pady=(2,0))
   ar = tk.StringVar()
-  ar.set("Off")
   ttk.Combobox(advanced, values=rarr, textvariable=ar, state='readonly', width=7,).grid(column=1, row=3, pady=(2,0), sticky='W')
   #autoplay
   ap = tk.BooleanVar()
@@ -535,8 +547,6 @@ if not len(sys.argv) > 1:
   cbarr = ['x', 'y', 'z', 't']
   cbarr2 = ['x', 'y', 'z', 't', 'o']
   cb = [tk.StringVar() for i in range(3)]
-  for i in range(3):
-    cb[i].set(cbarr[i])
   cb1menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(0,0))
   cb2menu = ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(28,0))
   cb3menu = ttk.Combobox(advanced, values=cbarr2, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(56,0))
@@ -545,15 +555,56 @@ if not len(sys.argv) > 1:
   tk.Label(advanced, text="Output:").grid(column=0, row=7, columnspan=2)
   outjson = tk.StringVar()
   outpng = tk.StringVar()
-  outjson.set(output[0].replace(".json", ""))
-  outpng.set(output[1].replace(".png", ""))
   tk.Entry(advanced, textvariable=outjson, width=10).grid(column=0, row=8, columnspan=2, sticky='NEW', padx=(5,10))
   tk.Label(advanced, text=".json").grid(column=1, row=8, sticky='NE')
   tk.Entry(advanced, textvariable=outpng, width=10).grid(column=0, row=9, columnspan=2, sticky='NEW', padx=5)
   tk.Label(advanced, text=".png").grid(column=1, row=9, sticky='NE')
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=10, columnspan=2, sticky='NEW', pady=(5,0))
+  def setval():
+    settext(objlist, "\n".join(objs))
+    settext(texlist, texs[0])
+    fu.set(flipuv)
+    for i in range(3):
+      of[i].set(str(offset[i]))
+    sc.set(str(scale))
+    ns.set(noshadow)
+    for i in range(3):
+      cb[i].set(colorbehavior[i])
+    ar.set(rarr[autorotate])
+    ap.set(autoplay)
+    outjson.set(output[0].replace(".json", ""))
+    outpng.set(output[1].replace(".png", ""))
+  setval()
+
+  def gethistory():
+    global history
+    getcontext(history[hid])
+    setval()
+  def prev():
+    global hid
+    if hid < len(history)-1:
+      hid += 1
+    gethistory()
+  def next():
+    global hid
+    if hid > 0:
+      hid -= 1
+    gethistory()
+  def copyhistory():
+    global history
+    window.clipboard_clear()
+    window.clipboard_append('\n'.join(history[::-1]))
+  def loadhistory():
+    global history
+    global hid
+    history = window.clipboard_get().split('\n')
+    hid = 0
+    gethistory()
 
   def start():
+    if len(objs) == 0 or len(texs) == 0:
+      print("No files selected")
+      return
     if dur.get().isdigit():
       duration = max(int(dur.get()), 1)
     else:
@@ -568,14 +619,22 @@ if not len(sys.argv) > 1:
     colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
     output = [outjson.get(), outpng.get()]
     objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+
   #start quit buttons
-  buttonquit = tk.Button(window, text="Exit", command=quit).grid(column=0, row=4, padx=5, pady=5)
-  buttonstart = tk.Button(window, text="Start", command=start).grid(column=1, row=4, padx=5, pady=5)
+  tk.Button(window, text="Exit", command=quit).grid(column=0, row=4, sticky='W', padx=50, pady=5)
+  tk.Button(window, text="Start", command=start).grid(column=1, row=4, sticky='E', padx=50, pady=5)
+  buttonprev = tk.Button(window, text="←", command=prev)
+  buttonprev.grid(column=0, columnspan=2, row=4, padx=(0,20), pady=5)
+  buttonnext = tk.Button(window, text="→", command=next)
+  buttonnext.grid(column=0, columnspan=2, row=4, padx=(20,0), pady=5)
+  buttoncopy = tk.Button(window, text="Copy History", command=copyhistory)
+  buttoncopy.grid(column=0, columnspan=2, row=4, padx=(120,0), pady=5)
+  buttonload = tk.Button(window, text="Load History", command=loadhistory)
+  buttonload.grid(column=0, columnspan=2, row=4, padx=(0,120), pady=5)
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
 
   window.mainloop()
 else:
-  cbarr2 = ['x', 'y', 'z', 't', 'o']
   objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 #--------------------------------
-exit()
+quit()
