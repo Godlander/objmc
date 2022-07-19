@@ -88,10 +88,10 @@ parser.add_argument('--duration', type=int, help="Duration of each frame in tick
 parser.add_argument('--easing', type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
 parser.add_argument('--colorbehavior', type=str, help="Item color overlay behavior, 'xyz': rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
 parser.add_argument('--autorotate', type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
-parser.add_argument('--autoplay', action='store_true', help="Always interpolate frames, colorbehavior='ttt' overrides this.", default=autoplay)
-parser.add_argument("--flipuv", action='store_true', help="Invert the texture to compensate for flipped UV", default=flipuv)
-parser.add_argument("--noshadow", action='store_true', help="Disable shadows from face normals", default=noshadow)
-parser.add_argument("--nopow", action='store_true', help="Disable power of two textures", default=nopow)
+parser.add_argument('--autoplay', action='store_true', dest='autoplay', help="Always interpolate frames, colorbehavior='ttt' overrides this.")
+parser.add_argument("--flipuv", action='store_true', dest='flipuv', help="Invert the texture to compensate for flipped UV")
+parser.add_argument("--noshadow", action='store_true', dest='noshadow', help="Disable shadows from face normals")
+parser.add_argument("--nopow", action='store_true', dest='nopow', help="Disable power of two textures")
 def getargs(args):
   global objs
   global texs
@@ -266,11 +266,11 @@ def strcontext(objs, texs, frames, output, scale, offset, duration, easing, colo
   s += " --colorbehavior " + colorbehavior
   s += " --autorotate " + str(autorotate)
   if autoplay:
-    s += " --autoplay "
+    s += " --autoplay"
   if flipuv:
-    s += " --flipuv "
+    s += " --flipuv"
   if noshadow:
-    s += " --noshadow "
+    s += " --noshadow"
   if nopow:
     s += " --nopow"
   return s
@@ -279,6 +279,7 @@ def getcontext(c):
 #--------------------------------
 hid = 0
 history = []
+runtex = ""
 def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
   global count
   global mem
@@ -304,7 +305,7 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
   ntextures = len(texs)
   nframes = len(frames)
 
-  print("\n"+col.cyan+"objmc start ------------------"+col.end)
+  print("\n"+col.cyan+"objmc start "+runtex+col.end)
   #read obj
   print("Reading obj 1 of ", nframes, "...", "{:>15.2f}".format(0), "%\033[K", sep="", end="\r")
   o = readobj(objs[0], 0)
@@ -332,7 +333,7 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
   print("%\033[K", end="\r")
   print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
   if nframes > 1:
-    print("frames: ", nframes, ", duration: ", duration,"t", ", time: ", duration*nframes/20, "s", ", easing: ", easing, ", autoplay: ", autoplay,  sep="")
+    print("frames: ", nframes, ", duration: ", duration,"t", ", time: ", duration*nframes/20, "s", ", easing: ", easing, ", autoplay: ", autoplay, sep="")
   print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
   print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
   print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
@@ -409,7 +410,7 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
   print("Saving files...\033[K", end="\r")
   out.save(output[1]+".png")
   out.close()
-  print(col.green+"Complete ---------------------"+col.end)
+  print(col.green+"Complete\033[K"+col.end)
 
 #--------------------------------
 #gui if no args
@@ -519,15 +520,14 @@ if not len(sys.argv) > 1:
   Number(advanced, textvariable=dur, width=5).grid(column=1, row=1, sticky='EW', padx=(0,30))
   tk.Label(advanced, text="ticks").grid(column=1, row=1, sticky='E', padx=(0,25))
   #easing
-  earr = ["None","Linear","Cubic","Bezier"]
   tk.Label(advanced, text="Easing Method:").grid(column=0, row=2, sticky='W', padx=(5,0), pady=(2,0))
   ea = tk.StringVar()
-  ea.set("Linear")
+  earr = ["None","Linear","Cubic","Bezier"]
   ttk.Combobox(advanced, values=earr, textvariable=ea, state='readonly', width=7).grid(column=1, row=2, pady=(2,0), sticky='W')
   #autorotate
+  ar = tk.StringVar()
   rarr = ["Off","Yaw","Pitch","Both"]
   tk.Label(advanced, text="Auto Rotate:").grid(column=0, row=3, sticky='W', padx=(5,0), pady=(2,0))
-  ar = tk.StringVar()
   ttk.Combobox(advanced, values=rarr, textvariable=ar, state='readonly', width=7,).grid(column=1, row=3, pady=(2,0), sticky='W')
   #autoplay
   ap = tk.BooleanVar()
@@ -560,6 +560,7 @@ if not len(sys.argv) > 1:
     ns.set(noshadow)
     for i in range(3):
       cb[i].set(colorbehavior[i])
+    ea.set(earr[easing])
     ar.set(rarr[autorotate])
     ap.set(autoplay)
     outjson.set(output[0].replace(".json", ""))
@@ -568,6 +569,7 @@ if not len(sys.argv) > 1:
 
   def gethistory():
     global history
+    global hid
     if history:
       hlable.config(text=str(hid+1)+"/"+str(len(history)))
       getcontext(history[hid])
@@ -595,6 +597,8 @@ if not len(sys.argv) > 1:
     gethistory()
 
   def start():
+    global history
+    global hid
     if len(objs) == 0 or len(texs) == 0:
       print("No files selected")
       return
@@ -613,8 +617,6 @@ if not len(sys.argv) > 1:
     output = [outjson.get(), outpng.get()]
     objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
     context = strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
-    global history
-    global hid
     try:
       i = history.index(context)
       history.pop(i)
@@ -625,9 +627,12 @@ if not len(sys.argv) > 1:
     hlable.config(text=str(hid)+"/"+str(hid))
     hid -= 1
   def runhistory():
-    for h in history:
-      getcontext(h)
+    global runtex
+    for i in range(0,len(history)):
+      runtex = str(i+1)+"/"+str(len(history))
+      getcontext(history[i])
       objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+    runtex = ""
 
   #start
   tk.Button(window, text="Start", command=start).grid(column=1, row=4, sticky='E', padx=50, pady=5)
