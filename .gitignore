@@ -1,3 +1,8 @@
-
-out.png
-potion.json
+/*.png
+/*.json
+*.txt
+*.mtl
+*.obj
+*.bbmodel
+*.gltf
+*.zip
