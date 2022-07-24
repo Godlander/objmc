@@ -77,7 +77,11 @@ nopow = False
 #--------------------------------
 #argument parsing by kumitatepazuru
 #respects above settings as default
-parser = argparse.ArgumentParser(description='python script to convert .OBJ files into Minecraft, rendering them in game with a core shader.\nGithub: https://github.com/Godlander/objmc')
+class ArgumentParserError(Exception): pass
+class ThrowingArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise ArgumentParserError(message)
+parser = ThrowingArgumentParser(description='python script to convert .OBJ files into Minecraft, rendering them in game with a core shader.\nGithub: https://github.com/Godlander/objmc',exit_on_error=False)
 parser.add_argument('--objs', help='List of object files', nargs='*', default=objs)
 parser.add_argument('--texs', help='Specify a texture file', nargs='*', default=texs)
 parser.add_argument('--frames', type=int, help='List of obj indexes as keyframes', nargs='*', default=[])
@@ -275,7 +279,13 @@ def strcontext(objs, texs, frames, output, scale, offset, duration, easing, colo
     s += " --nopow"
   return s
 def getcontext(c):
-  getargs(parser.parse_args(c.split(' ')))
+  a = []
+  try:
+    a = parser.parse_args(c.split(' '))
+  except:
+    print(col.err+"Invalid command: "+col.end+c)
+    return
+  getargs(a)
 #--------------------------------
 hid = 0
 history = []
