@@ -207,7 +207,7 @@ def getuvpos(out, faceid, x, y, ty):
 #create elements for model
 js = {
   "textures": {
-    "0": output[1]
+    "0": output[1].split('.')[0]
   },
   "elements": [],
   "display": {
@@ -231,13 +231,13 @@ def newelement(out, index, x, y, ty):
 
 #grab data from the list and convert to rgb
 def getposition(i):
-  x = 8388608+((data["positions"][i][0])*65280)*scale + offset[0]*65280
-  y = 8388608+((data["positions"][i][1])*65280)*scale + offset[1]*65280
-  z = 8388608+((data["positions"][i][2])*65280)*scale + offset[2]*65280
+  x = 8388608+((data["positions"][i][0])*65536)*scale + offset[0]*65536
+  y = 8388608+((data["positions"][i][1])*65536)*scale + offset[1]*65536
+  z = 8388608+((data["positions"][i][2])*65536)*scale + offset[2]*65536
   rgb = []
-  rgb.append((int((x/65280)%256), int((x/255)%256), int(x%256), 255))
-  rgb.append((int((y/65280)%256), int((y/255)%256), int(y%256), 255))
-  rgb.append((int((z/65280)%256), int((z/255)%256), int(z%256), 255))
+  rgb.append((int((x/65536)%256), int((x/256)%256), int(x%256), 255))
+  rgb.append((int((y/65536)%256), int((y/256)%256), int(y%256), 255))
+  rgb.append((int((z/65536)%256), int((z/256)%256), int(z%256), 255))
   return rgb
 def getuv(i):
   x = (data["uvs"][i][0])*65535
