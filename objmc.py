@@ -1,16 +1,16 @@
+import sys
 import os
 os.system('mode con: cols=60 lines=30')
 os.system("title objmc output")
 os.system('color')
-import argparse
 import math
 import json
-import sys
-import tkinter as tk
+import argparse
+from PIL import Image, ImageOps
 from tkinter import ttk
+import tkinter as tk
 import tkinter.scrolledtext as tkst
 import tkinter.filedialog as tkfd
-from PIL import Image, ImageOps
 
 #--------------------------------
 #INPUT
@@ -203,7 +203,7 @@ def indexobj(o, frame, nframes, nfaces):
       indexvert(o, face[1])
 
 #unique pixel uv per face with color pointing to topleft
-def getuvpos(out, faceid, x, y, ty):
+def getheader(out, faceid, x, y, ty):
   posx = faceid%x
   posy = math.floor(faceid/x)+1
   out.putpixel((posx, posy), (int(posx/256)%256, posx%256, (posy-1)%256, 255-(int((posy-1)/256)%256)))
@@ -228,7 +228,7 @@ def newelement(out, index, x, y, ty):
     "from":[8,0,8],
     "to":[8.000001,0.000001,8.000001],
     "faces":{
-      "north":{"uv":getuvpos(out, index, x, y, ty),"texture":"#0","tintindex":0}
+      "north":{"uv":getheader(out, index, x, y, ty),"texture":"#0","tintindex":0}
     }
   }
   js["elements"].append(cube)
@@ -286,6 +286,7 @@ def getcontext(c):
     print(col.err+"Invalid command: "+col.end+c)
     return
   getargs(a)
+  setval()
 #--------------------------------
 hid = 0
 history = []
@@ -583,7 +584,6 @@ if not len(sys.argv) > 1:
     if history:
       hlable.config(text=str(hid+1)+"/"+str(len(history)))
       getcontext(history[hid])
-      setval()
   def next():
     global hid
     global history
@@ -599,11 +599,21 @@ if not len(sys.argv) > 1:
     global history
     window.clipboard_clear()
     window.clipboard_append('\n'.join(history))
+  def savehistory():
+    global history
+    hf = open("history.txt",'w')
+    hf.write('\n'.join(history))
+    hf.close()
+    print("Saved to history.txt")
   def loadhistory():
     global history
     global hid
-    history = window.clipboard_get().split('\n')
+    f = tkfd.askopenfilename(initialdir=path,title="Select History File")
+    hf = open(f,'r')
+    history = hf.read().split('\n')
+    hf.close()
     hid = len(history)-1
+    print("Loaded "+str(hid+1)+" items")
     gethistory()
 
   def start():
@@ -637,6 +647,7 @@ if not len(sys.argv) > 1:
     hlable.config(text=str(hid)+"/"+str(hid))
     hid -= 1
   def runhistory():
+    print("Running:")
     global runtex
     for i in range(0,len(history)):
       runtex = str(i+1)+"/"+str(len(history))
@@ -651,11 +662,18 @@ if not len(sys.argv) > 1:
   hlable.grid(column=0, row=4, sticky='W', padx=5, pady=5)
   tk.Button(window, text="←", command=prev).grid(column=0, columnspan=2, row=4, sticky='W', padx=(60,0), pady=5)
   tk.Button(window, text="→", command=next).grid(column=0, columnspan=2, row=4, sticky='W', padx=(80,0), pady=5)
-  tk.Button(window, text="Copy History", command=copyhistory).grid(column=0, columnspan=2, row=4, padx=(0,200), pady=5)
-  tk.Button(window, text="Load History", command=loadhistory).grid(column=0, columnspan=2, row=4, padx=(0,43), pady=5)
-  tk.Button(window, text="Run History", command=runhistory).grid(column=0, columnspan=2, row=4, padx=(106,0), pady=5)
+  tk.Button(window, text="Save History", command=savehistory).grid(column=0, columnspan=2, row=4, padx=(0,200), pady=5)
+  tk.Button(window, text="Load History", command=loadhistory).grid(column=0, columnspan=2, row=4, padx=(0,45), pady=5)
+  tk.Button(window, text="Run History", command=runhistory).grid(column=0, columnspan=2, row=4, padx=(105,0), pady=5)
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
 
+  #hotkeys
+  window.bind('<Return>', lambda e: start())
+  window.bind('<Escape>', lambda e: quit())
+  window.bind('<Control-c>', lambda e: copyhistory())
+  window.bind('<Control-s>', lambda e: savehistory())
+  window.bind('<Control-d>', lambda e: loadhistory())
+  window.bind('<Control-r>', lambda e: runhistory())
   window.mainloop()
 else:
   objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
