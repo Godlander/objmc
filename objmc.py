@@ -595,6 +595,13 @@ if not len(sys.argv) > 1:
     if hid > 0:
       hid -= 1
       gethistory()
+  def delhistory():
+    global history
+    global hid
+    history.pop(hid)
+    if hid >= len(history):
+      hid-=1
+    gethistory()
   def copyhistory():
     global history
     window.clipboard_clear()
@@ -604,7 +611,7 @@ if not len(sys.argv) > 1:
     hf = open("history.txt",'w')
     hf.write('\n'.join(history))
     hf.close()
-    print("Saved to history.txt")
+    print("Saved "+str(len(history))+" items to history.txt")
   def loadhistory():
     global history
     global hid
@@ -614,6 +621,13 @@ if not len(sys.argv) > 1:
     hf.close()
     hid = len(history)-1
     print("Loaded "+str(hid+1)+" items")
+    gethistory()
+  def pastehistory():
+    global history
+    global hid
+    history = window.clipboard_get().split('\n')
+    hid = len(history)-1
+    print("Pasted "+str(hid+1)+" items")
     gethistory()
 
   def start():
@@ -663,8 +677,8 @@ if not len(sys.argv) > 1:
   tk.Button(window, text="←", command=prev).grid(column=0, columnspan=2, row=4, sticky='W', padx=(60,0), pady=5)
   tk.Button(window, text="→", command=next).grid(column=0, columnspan=2, row=4, sticky='W', padx=(80,0), pady=5)
   tk.Button(window, text="Save History", command=savehistory).grid(column=0, columnspan=2, row=4, padx=(0,200), pady=5)
-  tk.Button(window, text="Load History", command=loadhistory).grid(column=0, columnspan=2, row=4, padx=(0,45), pady=5)
-  tk.Button(window, text="Run History", command=runhistory).grid(column=0, columnspan=2, row=4, padx=(105,0), pady=5)
+  tk.Button(window, text="Load History", command=loadhistory).grid(column=0, columnspan=2, row=4, padx=(0,47), pady=5)
+  tk.Button(window, text="Run History", command=runhistory).grid(column=0, columnspan=2, row=4, padx=(102,0), pady=5)
   ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
 
   #hotkeys
@@ -673,7 +687,9 @@ if not len(sys.argv) > 1:
   window.bind('<Control-c>', lambda e: copyhistory())
   window.bind('<Control-s>', lambda e: savehistory())
   window.bind('<Control-d>', lambda e: loadhistory())
+  window.bind('<Control-v>', lambda e: pastehistory())
   window.bind('<Control-r>', lambda e: runhistory())
+  window.bind('<Control-x>', lambda e: delhistory())
   window.mainloop()
 else:
   objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
