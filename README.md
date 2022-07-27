@@ -5,7 +5,7 @@ either edit the script with your inputs, or run `python convert.py` with correct
 
 running the script without any arguments will open a gui with slightly more limited options.
 
-![image](https://user-images.githubusercontent.com/16228717/179418686-4565b1b7-b8c8-4abd-9c78-bfbce411bb12.png)
+![image](https://user-images.githubusercontent.com/16228717/181353217-5a7af1e3-cb9b-44a2-8fe1-18b12d14c441.png)
 
 place the model and texture output generated with this tool in the correct location in the resourcepack along with the shaders folder, and should display properly.
 
@@ -42,7 +42,7 @@ there is some optifine/sodium support for item/entity models.
 
 `autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. but due to byte inaccuracy this will be a little jittery. allows color to be used for other inputs like controlling animation.
 
-`autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'aaa'` will override this.
+`autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'ttt'` will override this.
 
 The script can be run with arguments to each of these. Example:
 
