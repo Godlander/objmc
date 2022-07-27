@@ -12,10 +12,10 @@ vec3 getpos(ivec2 topleft, int w, int h, int index) {
     vec4 y = texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0);
     vec4 z = texelFetch(Sampler0, topleft + ivec2((i+2)%w,h+((i+2)/w)), 0);
     return vec3(
-        (x.r*255)+(x.g)+(x.b/255),
-        (y.r*255)+(y.g)+(y.b/255),
-        (z.r*255)+(z.g)+(z.b/255)
-    ) - vec3(128.50196078431372, 128.00196078431372, 128.50196078431372);
+        (x.r*256)+(x.g)+(x.b/256),
+        (y.r*256)+(y.g)+(y.b/256),
+        (z.r*256)+(z.g)+(z.b/256)
+    )*(255./256.) - vec3(128);
 }
 vec2 getuv(ivec2 topleft, int w, int h, int index) {
     int i = index*2;
