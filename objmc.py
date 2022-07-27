@@ -445,8 +445,6 @@ def openobjs():
     frames.append(i)
   f = [os.path.basename(f) for f in f]
   settext(objlist, "\n".join(f))
-def isnumber(s):
-  return (s.isdigit() or s == "")
 class Number(tk.Entry):
   def __init__(self, master=None, **kwargs):
     self.var = kwargs.pop('textvariable', None)
@@ -456,7 +454,7 @@ class Number(tk.Entry):
     self.var.trace('w', self.check)
     self.get, self.set = self.var.get, self.var.set
   def check(self, *args):
-    if self.get().isnumber() or self.get() == '':
+    if self.get().isdigit() or self.get() == '':
       self.old_value = self.get()
     else:
       self.set(self.old_value)
