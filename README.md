@@ -105,7 +105,7 @@ this doesnt seem to happen through Blender tho.
 
 ### controlling animation
 
-any bits declared as `a` in `colorbehavior` will act as a time offset in ticks from 0 if `autoplay` is off, or from the current tick if `autoplay` is on.
+any bits declared as `t` in `colorbehavior` will act as a time offset in ticks from 0 if `autoplay` is off, or from the current tick if `autoplay` is on.
 
 to calculate the offset for a frame while using `autoplay`, you can use this formula:
 
