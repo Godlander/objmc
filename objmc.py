@@ -209,20 +209,7 @@ def getheader(out, faceid, x, y, ty):
   out.putpixel((posx, posy), (int(posx/256)%256, posx%256, (posy-1)%256, 255-(int((posy-1)/256)%256)))
   return [(posx+0.1)*16/x, (posy+0.1)*16/ty, (posx+0.9)*16/x, (posy+0.9)*16/ty]
 #create elements for model
-js = {
-  "textures": {
-    "0": output[1].split('.')[0]
-  },
-  "elements": [],
-  "display": {
-    "thirdperson_righthand": {
-      "rotation": [85, 0, 0]
-    },
-    "thirdperson_lefthand": {
-      "rotation": [85, 0, 0]
-    }
-  }
-}
+js = {}
 def newelement(out, index, x, y, ty):
   cube = {
     "from":[8,0,8],
@@ -388,7 +375,22 @@ def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbeha
     else:
       out.paste(ImageOps.flip(tex), (0,1+uvheight+(i*y)))
 
-  #generate elements and uv header
+  #generate json model elements and uv header
+  global js
+  js = {
+    "textures": {
+      "0": output[1].split('.')[0]
+    },
+    "elements": [],
+    "display": {
+      "thirdperson_righthand": {
+        "rotation": [85, 0, 0]
+      },
+      "thirdperson_lefthand": {
+        "rotation": [85, 0, 0]
+      }
+    }
+  }
   for i in range(0, nfaces):
     newelement(out, i, x, y, ty)
 
