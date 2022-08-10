@@ -219,7 +219,7 @@ feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9S
 
 **Suso** - Idea for controlled interpolated animation
 
-**Dominexus** - Help with spline math
+**Dominexis** - Help with spline math
 
 **Barf Creations** - Help replicating Minecraft's jank Pose rotation matrix
 
