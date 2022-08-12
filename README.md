@@ -1,7 +1,7 @@
 # usage:
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
 
-either edit the script with your inputs, or run `python convert.py` with correct arguments in command line to generate the model and texture outputs that go in a resourcepack.
+either edit the script with your inputs, or run `python objmc.py` with correct arguments in command line to generate the model and texture outputs that go in a resourcepack.
 
 running the script without any arguments will open a gui with slightly more limited options.
 
@@ -47,7 +47,7 @@ there is some optifine/sodium support for item/entity models.
 The script can be run with arguments to each of these. Example:
 
 ```py
-python convert.py --objs cube.obj --texs cube.png --autorotate --flipuv --out potion.json texture.png
+python objmc.py --objs cube.obj --texs cube.png --autorotate --flipuv --out potion.json texture.png
 ```
 
 
