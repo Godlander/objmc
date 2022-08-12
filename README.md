@@ -93,7 +93,7 @@ if you make a model with 6 faces, you can expect it to perform similarly to a no
 
 thus, performance optimization is largely on the user to optimize the face count of the input model.
 
-a zombie has a model with 6 elements each with 6 faces. a objmc entity model with 20k faces should expect similar performance to rendering 556 noAi zombies on the screen. similarly, a objmc block model with 20k faces should expect similar performance to rendering 3333 blocks on screen, *without any culling*.
+a zombie has a model with 6 elements each with 6 faces. a objmc entity model with 20k faces should expect similar performance to rendering 556 NoAI zombies on the screen. similarly, a objmc block model with 20k faces should expect similar performance to rendering 3333 blocks on screen, *without any culling*.
 
 ### model not rendering
 most of the time this is due to an error in your resourcepack. make sure the shaders are in the correct place, double check the file paths for model and texture (by default model will point to the root textures folder, not textures/block or textures/items), try using latest version of objmc script and shader if you have an older version.
