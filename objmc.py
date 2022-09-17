@@ -278,7 +278,11 @@ def getcontext(c):
 hid = 0
 history = []
 runtex = ""
-def objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
+def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
+  global offset
+  global scale
+  offset = off
+  scale = sc
   global count
   global mem
   global data
