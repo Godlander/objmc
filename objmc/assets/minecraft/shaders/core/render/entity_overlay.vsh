@@ -38,7 +38,7 @@ flat out int isGUI;
 flat out int isHand;
 flat out int noshadow;
 
-#moj_import <objmc.tools>
+#moj_import <objmc_tools.glsl>
 
 void main() {
     Pos = Position;
@@ -50,7 +50,7 @@ void main() {
 
     //objmc
     #define ENTITY
-    #moj_import <objmc.main>
+    #moj_import <objmc_main.glsl>
 
     gl_Position = ProjMat * ModelViewMat * (vec4(Pos, 1.0));
     vertexDistance = fog_distance(ModelViewMat, IViewRotMat * Pos, FogShape);

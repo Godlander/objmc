@@ -29,7 +29,7 @@ out float transition;
 flat out int isCustom;
 flat out int noshadow;
 
-#moj_import <objmc.tools>
+#moj_import <objmc_tools.glsl>
 
 void main() {
     //default
@@ -41,7 +41,7 @@ void main() {
 
     //objmc
     #define BLOCK
-    #moj_import <objmc.main>
+    #moj_import <objmc_main.glsl>
 
     gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);
     vertexDistance = fog_distance(ModelViewMat, Pos, FogShape);

@@ -34,7 +34,7 @@ void main() {
 
     //custom lighting
     #define ENTITY
-    #moj_import<objmc.light>
+    #moj_import<objmc_light.glsl>
 
     if (color.a < 0.01) discard;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
