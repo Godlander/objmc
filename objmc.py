@@ -26,7 +26,7 @@ texs = ["cube.png"]
 frames = []
 
 #Output json & png
-output = ["potion.json", "out.png"]
+output = ["potion.json", "block/out.png"]
 
 #Position & Scaling
 # just adds & multiplies vertex positions before encoding, so you dont have to re export the model
@@ -291,8 +291,10 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   data = {"positions":[],"uvs":[],"vertices":[]}
 
   #file extension optional
-  output[0] = output[0].split(".")[0]
-  output[1] = output[1].split(".")[0]
+  if (output[0][-5:] != ".json"):
+   output[0] += ".json"
+  if (output[1][-4:] != ".png"):
+   output[1] += ".png"
 
   #input error checking
   if duration < 1 or duration > 256:
@@ -425,7 +427,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
       out.putpixel((p%x,y+math.floor(p/x)), a[j])
 
   print("Saving files...\033[K", end="\r")
-  out.save(output[1]+".png")
+  out.save(output[1].split('/')[-1])
   out.close()
   print(col.green+"Complete\033[K"+col.end)
 
