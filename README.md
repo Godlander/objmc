@@ -1,3 +1,5 @@
+i cannot guarantee modded compatibility. core shaders are a vanilla resourcepack feature, if a mod breaks a vanilla feature i cant do anything.
+
 # usage:
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
 
@@ -10,8 +12,6 @@ running the script without any arguments will open a gui with slightly more limi
 place the model and texture output generated with this tool in the correct location in the resourcepack along with the shaders folder, and should display properly.
 
 make sure your minecraft version is 1.18.1+ as the shader will not work with lower versions.
-
-there is some optifine/sodium support for item/entity models.
 
 ### script inputs
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
