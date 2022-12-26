@@ -74,6 +74,8 @@ noshadow = False
 # makes it not optifine compatible
 nopow = False
 
+#Joining multiple models
+join = []
 #--------------------------------
 #argument parsing by kumitatepazuru
 #respects above settings as default
@@ -96,6 +98,7 @@ parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Al
 parser.add_argument("--flipuv", action="store_true", dest="flipuv", help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
 parser.add_argument("--nopow", action="store_true", dest="nopow", help="Disable power of two textures")
+parser.add_argument("--join", nargs='*', dest="join", help="Joins multiple json models into one")
 def getargs(args):
   global objs
   global texs
@@ -111,6 +114,7 @@ def getargs(args):
   global flipuv
   global noshadow
   global nopow
+  global join
   objs = args.objs
   texs = args.texs
   frames = args.frames
@@ -125,6 +129,7 @@ def getargs(args):
   flipuv = args.flipuv
   noshadow = args.noshadow
   nopow = args.nopow
+  join = args.join
 getargs(parser.parse_args())
 if not frames:
   for i in range(len(objs)):
@@ -697,6 +702,34 @@ if not len(sys.argv) > 1:
   window.bind('<Control-r>', lambda e: runhistory())
   window.bind('<Control-x>', lambda e: delhistory())
   window.mainloop()
+elif join:
+  js = {
+    "textures": {},
+    "elements": [],
+    "display": {
+      "thirdperson_righthand": {
+        "rotation": [85, 0, 0]
+      },
+      "thirdperson_lefthand": {
+        "rotation": [85, 0, 0]
+      }
+    }
+  }
+  tid = 0
+  out = open(output[0], "w")
+  for file in join:
+    model = json.load(open(file))
+    temp = {}
+    for key,value in model["textures"].items():
+      js["textures"][str(tid)] = value
+      temp[key] = tid
+      tid += 1
+    for element in model["elements"]:
+      for key,value in element["faces"].items():
+        value["texture"] = "#" + str(temp[value["texture"][1:]])
+      js["elements"].append(element)
+  out.write(json.dumps(js,separators=(',',':')))
+
 else:
   objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 #--------------------------------
