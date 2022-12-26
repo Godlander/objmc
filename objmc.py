@@ -344,7 +344,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
 
   print("Creating Files...", end="\r")
   #write to json model
-  model = open(output[0]+".json", "w")
+  model = open(output[0], "w")
   #create out image with correct dimensions
   out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
