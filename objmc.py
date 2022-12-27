@@ -69,6 +69,11 @@ flipuv = False
 # can be used for models with lighting baked into the texture
 noshadow = False
 
+#Visibility
+# determins where the model is visible
+# 3 bits for: world, hand, gui
+visibility = 7
+
 #No power of two textures
 # i guess saves a bit of space maybe
 # makes it not optifine compatible
@@ -94,7 +99,8 @@ parser.add_argument("--duration", type=int, help="Duration of each frame in tick
 parser.add_argument("--easing", type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
 parser.add_argument("--colorbehavior", type=str, help="Item color overlay behavior, \"xyz\": rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
 parser.add_argument("--autorotate", type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
-parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate frames, colorbehavior=\"ttt\" overrides this.")
+parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate frames, colorbehavior=\"ttt\" overrides this")
+parser.add_argument("--visibility", type=int, help="Determines where the model is visible", default=visibility)
 parser.add_argument("--flipuv", action="store_true", dest="flipuv", help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
 parser.add_argument("--nopow", action="store_true", dest="nopow", help="Disable power of two textures")
@@ -111,6 +117,7 @@ def getargs(args):
   global colorbehavior
   global autorotate
   global autoplay
+  global visibility
   global flipuv
   global noshadow
   global nopow
@@ -126,6 +133,7 @@ def getargs(args):
   colorbehavior = args.colorbehavior
   autorotate = args.autorotate
   autoplay = args.autoplay
+  visibility = args.visibility
   flipuv = args.flipuv
   noshadow = args.noshadow
   nopow = args.nopow
@@ -346,7 +354,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
   print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
   print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
-
+  print("visible:", " world" if visibility & 4 > 0 else "", " hand" if visibility & 2 > 0 else "", " gui" if visibility & 1 > 0 else "", sep="")
   print("Creating Files...", end="\r")
   #write to json model
   model = open(output[0], "w")
@@ -370,7 +378,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   #3: nvertices
   out.putpixel((3,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, 128+nvertices%128))
   #4: nframes, ntextures, duration, autoplay, easing
-  out.putpixel((4,0), (nframes,ntextures,duration-1, 128+(int(autoplay)<<6)+easing))
+  out.putpixel((4,0), (nframes,ntextures,duration-1, 128+(int(autoplay)<<6)+(easing<<4)+visibility))
   #5: data heights
   out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, 128+vtheight%128))
 

@@ -40,11 +40,13 @@ make sure your minecraft version is 1.18.1+ as the shader will not work with low
 
 *example: `xto` defines 1 byte of red color as yaw rotation, the next byte of blue color as animation time offset , and the last byte of green being overlay color hue.*
 
-`autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. but due to byte inaccuracy this will be a little jittery. allows color to be used for other inputs like controlling animation.
+`autorotate`: tells the shader to estimate rotation from Normals instead of defining it by color. due to byte inaccuracy this will be a little jittery. allows color to be used for other inputs like controlling animation.
 
-`autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'ttt'` will override this.
+`autoplay`: make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'ttt'` will override this.
 
-`join` is used by itself to combine generated models. `--join model1.json model2.json` will combine the two or more models into one. the textures still need to be placed in the right paths for all of the models
+`visibility`: 3 bit number, defines where a model is visible. 1: in gui, 2: in first person hand, 4: in world. (7 would mean visible everywhere.) models with limited visibility can be joined together allowing for different models to show up in different places.
+
+`join`: used by itself to combine generated models. `--join model1.json model2.json` will combine the two or more models into one. the textures still need to be placed in the right paths for all of the models.
 
 The script can be run with arguments to each of these. Example:
 
