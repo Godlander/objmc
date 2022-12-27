@@ -128,6 +128,8 @@ setblock ~ ~ ~ minecraft:spawner{MaxNearbyEntities:0,RequiredPlayerRange:0,Spawn
 ### multiple textures
 there is no support for stitching multiple textures. you will have to use another program like blender to bake them onto one texture along with the neccesary uv changes on the model itself.
 
+https://github.com/Grim-es/material-combiner-addon is a blender addon that can combine multiple textures into an atlas.
+
 ### gltf animation to obj per frame
 Blockbench exports animations to gltf format, which objmc doesn't support.
 
