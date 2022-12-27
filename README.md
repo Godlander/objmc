@@ -23,7 +23,7 @@ make sure your minecraft version is 1.18.1+ as the shader will not work with low
 ### script output
 `output`: array of two string file names: the json model, and the texture.
 
-### advanced/animation:
+### advanced:
 `offset` and `scale`: just adds & multiplies vertex positions before encoding, so you dont have to re-export the model.
 
 `duration`: integer duration of each frame in ticks.
@@ -43,6 +43,8 @@ make sure your minecraft version is 1.18.1+ as the shader will not work with low
 `autorotate` can be used to make shader estimate rotation from Normals instead of defining it by color. but due to byte inaccuracy this will be a little jittery. allows color to be used for other inputs like controlling animation.
 
 `autoplay` will make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'ttt'` will override this.
+
+`join` is used by itself to combine generated models. `--join model1.json model2.json` will combine the two or more models into one. the textures still need to be placed in the right paths for all of the models
 
 The script can be run with arguments to each of these. Example:
 

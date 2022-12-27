@@ -702,6 +702,7 @@ if not len(sys.argv) > 1:
   window.bind('<Control-r>', lambda e: runhistory())
   window.bind('<Control-x>', lambda e: delhistory())
   window.mainloop()
+
 elif join:
   js = {
     "textures": {},
