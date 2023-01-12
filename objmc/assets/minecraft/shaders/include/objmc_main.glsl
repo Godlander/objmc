@@ -34,15 +34,15 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     int ntextures = max(t[2].a, 1);
     //3: duration, autoplay, easing
     float duration = max(t[3].r*65536 + t[3].g*256 + t[3].b, 1);
-    bool autoplay = getb(t[3].a, 7);
+    bool autoplay = getb(t[3].a, 6);
     int easing = getb(t[3].a, 4, 2);
     //4: data heights
     int vph = t[4].r*256 + t[4].g;
     int vth = t[4].b*256 + t[4].a;
     //5: noshadow, autorotate, visibility, colorbehavior
     noshadow = getb(t[5].r, 8, 1);
-    vec2 autorotate = vec2(getb(t[5].r, 7, 1), getb(t[5].r, 6, 1));
-    bvec3 visibility = bvec3(getb(t[5].r, 5), getb(t[5].r, 4), getb(t[5].r, 3));
+    vec2 autorotate = vec2(getb(t[5].r, 6, 1), getb(t[5].r, 5, 1));
+    bvec3 visibility = bvec3(getb(t[5].r, 4), getb(t[5].r, 3), getb(t[5].r, 2));
     int colorbehavior = t[5].g;
 
     //time in ticks
@@ -91,8 +91,8 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
             rotation = rotation/accuracy * 2*PI;
         }
 #endif
-        time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
-        int frame = int(time/duration) % nframes;
+        time = autoplay ? time + duration - mod(tcolor, duration) : tcolor;
+        int frame = int(time * duration / nframes) % int(duration);
         //relative vertex id from unique face uv
         int id = (((uvoffset.y-1) * size.x) + uvoffset.x) * 4 + corner;
         id += frame * nvertices;
@@ -110,7 +110,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
             index = getvert(topleft, size.x, height+vph+vth, id);
             vec3 posoffset2 = getpos(topleft, size.x, height, index.x);
             //interpolate
-            transition = fract(time/duration);
+            transition = fract(time * duration / nframes);
             switch (easing) { //easing
                 case 1: //linear
                     posoffset = mix(posoffset, posoffset2, transition);

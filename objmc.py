@@ -95,7 +95,7 @@ parser.add_argument("--frames", type=int, help="List of obj indexes as keyframes
 parser.add_argument("--out", type=str, help="Output json and png", nargs=2, default=output)
 parser.add_argument("--offset", type=float, help="Offset of model in xyz", nargs=3, default=offset)
 parser.add_argument("--scale", type=float, help="Scale of model", default=scale)
-parser.add_argument("--duration", type=int, help="Duration of the animation in miliseconds", default=duration)
+parser.add_argument("--duration", type=int, help="Duration of the animation in ticks", default=duration)
 parser.add_argument("--easing", type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
 parser.add_argument("--colorbehavior", type=str, help="Item color overlay behavior, \"xyz\": rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
 parser.add_argument("--autorotate", type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
@@ -350,7 +350,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   print("%\033[K", end="\r")
   print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
   if nframes > 1:
-    print("frames: ", nframes, ", duration: ", duration,"t", ", time: ", duration*nframes/20, "s", ", easing: ", easing, ", autoplay: ", autoplay, sep="")
+    print("frames: ", nframes, ", duration: ", duration,"t", ", ", duration/20, "s", ", easing: ", easing, ", autoplay: ", autoplay, sep="")
   print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
   print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
   print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
@@ -365,9 +365,6 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   cbarr = ['x', 'y', 'z', 't', 'o']
   ca = [cbarr.index(i) for i in colorbehavior]
   cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
-
-  #first alpha bit for texture height, nvertices, vtheight
-  alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5) + (int(vtheight%256/128)<<4)
 
   # header
   #| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2  \4| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
@@ -385,7 +382,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   #5: data heights
   out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, vtheight%256))
   #6: noshadow, autorotate, visibility, colorbehavior
-  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2), colorbehavior, 0, 255))
+  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2), cb, 0, 255))
 
   #actual texture
   for i in range (0,len(texs)):
@@ -550,7 +547,7 @@ if not len(sys.argv) > 1:
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW')
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW', pady=(25,5))
   #duration
-  tk.Label(advanced, text="Frame Duration:").grid(column=0, row=1, sticky='W', padx=(5,0))
+  tk.Label(advanced, text="Total Duration:").grid(column=0, row=1, sticky='W', padx=(5,0))
   dur = tk.StringVar()
   Number(advanced, textvariable=dur, width=5).grid(column=1, row=1, sticky='EW', padx=(0,30))
   tk.Label(advanced, text="ticks").grid(column=1, row=1, sticky='E', padx=(0,25))
