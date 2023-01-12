@@ -219,7 +219,7 @@ def indexobj(o, frame, nframes, nfaces):
 def getheader(out, faceid, x, y, ty):
   posx = faceid%x
   posy = math.floor(faceid/x)+1
-  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, (posy-1)%256, 255-(int((posy-1)/256)%256)))
+  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, int(posy/256)%256, posy%256))
   return [(posx+0.1)*16/x, (posy+0.1)*16/ty, (posx+0.9)*16/x, (posy+0.9)*16/ty]
 #create elements for model
 js = {}

@@ -9,10 +9,10 @@ ivec2 uv = ivec2((UV0 * atlasSize));
 vec3 posoffset = vec3(0);
 vec3 rotation = vec3(0);
 int headerheight = 0;
+ivec4 t[8];
 //read uv offset
-ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
-ivec2 uvoffset = ivec2(metauvoffset.r*256 + metauvoffset.g,
-                       metauvoffset.b+1); //no alpha due to optifine, max number of faces greatly limited (probably still a couple million more than needed)
+t[0] = ivec4(texelFetch(Sampler0, uv, 0) * 255);
+ivec2 uvoffset = ivec2(t[0].r*256 + t[0].g, t[0].b*256 + t[0].a);
 //find and read topleft pixel
 ivec2 topleft = uv - uvoffset;
 //if topleft marker is correct
@@ -21,29 +21,28 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     // header
     //| 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2  \4| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
     //| tex size | nvertices | nobjs, ntexs | duration, autoplay, easing | data heights | noshadow, autorotate, visibility, colorbehavior |
-    ivec4 t[7];
-    for (int i = 0; i < 7; i++) {
-        t[i] = getmeta(topleft, i+1);
+    for (int i = 1; i < 8; i++) {
+        t[i] = getmeta(topleft, i);
     }
-    //0: texsize
-    ivec2 size = ivec2(t[0].r*256 + t[0].g, t[0].b*256 + t[0].a);
-    //1: nvertices
-    int nvertices = t[1].r*16777216 + t[1].g*65536 + t[1].b*256 + t[1].a;
-    //2: nobjs, ntexs
-    int nframes = max(t[2].r*65536 + t[2].g*256 + t[2].b, 1);
-    int ntextures = max(t[2].a, 1);
-    //3: duration, autoplay, easing
-    float duration = max(t[3].r*65536 + t[3].g*256 + t[3].b, 1);
-    bool autoplay = getb(t[3].a, 6);
-    int easing = getb(t[3].a, 4, 2);
-    //4: data heights
-    int vph = t[4].r*256 + t[4].g;
-    int vth = t[4].b*256 + t[4].a;
-    //5: noshadow, autorotate, visibility, colorbehavior
-    noshadow = getb(t[5].r, 8, 1);
-    vec2 autorotate = vec2(getb(t[5].r, 6, 1), getb(t[5].r, 5, 1));
-    bvec3 visibility = bvec3(getb(t[5].r, 4), getb(t[5].r, 3), getb(t[5].r, 2));
-    int colorbehavior = t[5].g;
+    //1: texsize
+    ivec2 size = ivec2(t[1].r*256 + t[1].g, t[1].b*256 + t[1].a);
+    //2: nvertices
+    int nvertices = t[2].r*16777216 + t[2].g*65536 + t[2].b*256 + t[2].a;
+    //3: nobjs, ntexs
+    int nframes = max(t[3].r*65536 + t[3].g*256 + t[3].b, 1);
+    int ntextures = max(t[3].a, 1);
+    //4: duration, autoplay, easing
+    float duration = max(t[4].r*65536 + t[4].g*256 + t[4].b, 1);
+    bool autoplay = getb(t[4].a, 6);
+    int easing = getb(t[4].a, 4, 2);
+    //5: data heights
+    int vph = t[5].r*256 + t[5].g;
+    int vth = t[5].b*256 + t[5].a;
+    //6: noshadow, autorotate, visibility, colorbehavior
+    noshadow = getb(t[6].r, 8, 1);
+    vec2 autorotate = vec2(getb(t[6].r, 6, 1), getb(t[6].r, 5, 1));
+    bvec3 visibility = bvec3(getb(t[6].r, 4), getb(t[6].r, 3), getb(t[6].r, 2));
+    int colorbehavior = t[6].g;
 
     //time in ticks
     float time = GameTime * 24000;
@@ -135,7 +134,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
         }
 //custom entity rotation
 #ifdef ENTITY
-        if (any(greaterThan(autorotate,vec2(0))) && isGUI == 0) {
+        if (any(greaterThan(autorotate,vec2(0))) && !bool(isHand) && !bool(isGUI)) {
             //normal estimated rotation calculation from The Der Discohund
             vec3 local = IViewRotMat * Normal;
             float yaw = -atan(local.x, local.z);
@@ -143,7 +142,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
             posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset * IViewRotMat;
         }
         //pure color rotation
-        else if (isHand == 0) {
+        else if (!bool(isHand) && !bool(isGUI)) {
             posoffset = rotate(rotation) * posoffset * IViewRotMat;
         }
     }

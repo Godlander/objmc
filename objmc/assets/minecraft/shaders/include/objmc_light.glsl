@@ -10,7 +10,10 @@ else if (noshadow == 0) {
 
     //block lighting
     #ifdef BLOCK
-    color *= vec4(vec3(clamp(dot(normal, vec3(0.2,1,0)) * 0.5 + 0.6, 0.1,1)), 1.0);
+    float vertical = sign(normal.y) * 0.3 + 0.7;
+    float horizontal = abs(normal.z) * 0.25 + 0.5;
+    float brightness = mix(horizontal, vertical, abs(normal.y));
+    color *= vec4(vec3(brightness), 1.0);
     #endif
 
     //entity lighting
