@@ -18,25 +18,37 @@ ivec2 topleft = uv - uvoffset;
 //if topleft marker is correct
 if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     isCustom = 1;
-    //grab meta
-    ivec4 meta = getmeta(topleft, 1);
-    vec2 autorotate = vec2(getb(meta.r, 6), getb(meta.r, 5));
-    noshadow = getb(meta.r, 7);
-    //size
-    ivec4 metasize = getmeta(topleft, 2);
-    ivec2 size = ivec2(metasize.r*256 + metasize.g,
-                       metasize.b*256 + metasize.a-128+geta(meta.a,6));
-    //nvertices
-    ivec4 metanvertices = getmeta(topleft, 3);
-    int nvertices = metanvertices.r*16777216 + metanvertices.g*65536 + metanvertices.b*256 + metanvertices.a-128+geta(meta.a,5);
-    //frames
-    ivec4 metaanim = getmeta(topleft, 4);
-    int nframes = clamp(metaanim.r, 1,255);
-    int ntextures = clamp(metaanim.g, 1,255);
-    float duration = float(metaanim.b + 1);
-    bool autoplay = bool(getb(metaanim.a, 6));
-    int easing = (metaanim.a >> 4) & 3;
-    bvec3 visibility = bvec3((metaanim.a & 4) > 0, (metaanim.a & 2) > 0, (metaanim.a & 1) > 0);
+    // header
+    //| 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2  \4| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
+    //| tex size | nvertices | nobjs, ntexs | duration, autoplay, easing | data heights | noshadow, autorotate, visibility, colorbehavior |
+    ivec4 t[7];
+    for (int i = 0; i < 7; i++) {
+        t[i] = getmeta(topleft, i+1);
+    }
+    //0: texsize
+    ivec2 size = ivec2(t[0].r*256 + t[0].g, t[0].b*256 + t[0].a);
+    //1: nvertices
+    int nvertices = t[1].r*16777216 + t[1].g*65536 + t[1].b*256 + t[1].a;
+    //2: nobjs, ntexs
+    int nframes = max(t[2].r*65536 + t[2].g*256 + t[2].b, 1);
+    int ntextures = max(t[2].a, 1);
+    //3: duration, autoplay, easing
+    float duration = max(t[3].r*65536 + t[3].g*256 + t[3].b, 1);
+    bool autoplay = getb(t[3].a, 7);
+    int easing = getb(t[3].a, 4, 2);
+    //4: data heights
+    int vph = t[4].r*256 + t[4].g;
+    int vth = t[4].b*256 + t[4].a;
+    //5: noshadow, autorotate, visibility, colorbehavior
+    noshadow = getb(t[5].r, 8, 1);
+    vec2 autorotate = vec2(getb(t[5].r, 7, 1), getb(t[5].r, 6, 1));
+    bvec3 visibility = bvec3(getb(t[5].r, 5), getb(t[5].r, 4), getb(t[5].r, 3));
+    int colorbehavior = t[5].g;
+
+    //time in ticks
+    float time = GameTime * 24000;
+    int tcolor = 0;
+
 #ifdef BLOCK
     if (!visibility.x) { //world
         Pos = vec3(0); posoffset = vec3(0);
@@ -48,18 +60,8 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     if (!(!bool(isHand) && !bool(isGUI) && visibility.x) && !(bool(isHand) && visibility.y) && !(bool(isGUI) && visibility.z)) {
         Pos = vec3(0); posoffset = vec3(0);
     } else {
-#endif
-        //data heights
-        ivec4 metaheight = getmeta(topleft, 5);
-        int vph = metaheight.r*256 + metaheight.g;
-        int vth = metaheight.b*256 + metaheight.a-128+geta(meta.a,4);
-        //time in ticks
-        float time = GameTime * 24000;
-        int tcolor = 0;
-//colorbehavior
-#ifdef ENTITY
+        //colorbehavior
         overlayColor = vec4(1);
-        int colorbehavior = meta.b;
         if (colorbehavior == 243) { //animation frames 0-8388607
             tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
             //interpolation disabled past 8388608, suso's idea to define starting tick with color

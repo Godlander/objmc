@@ -33,7 +33,7 @@ output = ["potion.json", "block/out.png"]
 offset = (0.0,0.0,0.0)
 scale = 1.0
 
-#Duration of each frame in ticks
+#Duration of the animation in ticks
 duration = 20
 
 #Animation Easing
@@ -95,7 +95,7 @@ parser.add_argument("--frames", type=int, help="List of obj indexes as keyframes
 parser.add_argument("--out", type=str, help="Output json and png", nargs=2, default=output)
 parser.add_argument("--offset", type=float, help="Offset of model in xyz", nargs=3, default=offset)
 parser.add_argument("--scale", type=float, help="Scale of model", default=scale)
-parser.add_argument("--duration", type=int, help="Duration of each frame in ticks", default=duration)
+parser.add_argument("--duration", type=int, help="Duration of the animation in miliseconds", default=duration)
 parser.add_argument("--easing", type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
 parser.add_argument("--colorbehavior", type=str, help="Item color overlay behavior, \"xyz\": rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
 parser.add_argument("--autorotate", type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
@@ -368,19 +368,24 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
 
   #first alpha bit for texture height, nvertices, vtheight
   alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5) + (int(vtheight%256/128)<<4)
-  #header:
-  #0: marker pix
+
+  # header
+  #| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2  \4| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
+  #| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing | data heights | noshadow, autorotate, visibility, colorbehavior |
+  #0: marker
   out.putpixel((0,0), (12,34,56,78))
-  #1: noshadow, autorotate, colorbehavior, alpha bits for texsize and nvertices
-  out.putpixel((1,0), ((int(noshadow)<<7) + (int(autorotate)<<5), 0, cb, alpha))
-  #2: texture size
-  out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
-  #3: nvertices
-  out.putpixel((3,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, 128+nvertices%128))
-  #4: nframes, ntextures, duration, autoplay, easing
-  out.putpixel((4,0), (nframes,ntextures,duration-1, 128+(int(autoplay)<<6)+(easing<<4)+visibility))
+  #1: texsize
+  out.putpixel((1,0), (int(x/256), x%256, int(y/256), y%256))
+  #2: nvertices
+  out.putpixel((2,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, nvertices%256))
+  #3: nobjs, ntexs
+  out.putpixel((3,0), (int(nframes/65536)%256, int(nframes/256)%256, nframes%256, ntextures))
+  #4: duration, autoplay, easing
+  out.putpixel((4,0), (int(duration/65536)%256, int(duration/256)%256, duration%256, 128+(int(autoplay)<<6)+(easing<<4)))
   #5: data heights
-  out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, 128+vtheight%128))
+  out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, vtheight%256))
+  #6: noshadow, autorotate, visibility, colorbehavior
+  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2), colorbehavior, 0, 255))
 
   #actual texture
   for i in range (0,len(texs)):
