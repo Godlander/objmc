@@ -19,8 +19,8 @@ ivec2 topleft = uv - uvoffset;
 if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     isCustom = 1;
     // header
-    //| 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2  \4| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
-    //| tex size | nvertices | nobjs, ntexs | duration, autoplay, easing | data heights | noshadow, autorotate, visibility, colorbehavior |
+    //| 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2 \2| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
+    //| tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp| data heights | noshadow, autorotate, visibility, colorbehavior |
     for (int i = 1; i < 8; i++) {
         t[i] = getmeta(topleft, i);
     }
@@ -34,7 +34,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     //4: duration, autoplay, easing
     float duration = max(t[4].r*65536 + t[4].g*256 + t[4].b, 1);
     bool autoplay = getb(t[4].a, 6);
-    int easing = getb(t[4].a, 4, 2);
+    ivec2 easing = ivec2(getb(t[4].a, 4, 2), getb(t[4].a, 2, 2));
     //5: data heights
     int vph = t[5].r*256 + t[5].g;
     int vth = t[5].b*256 + t[5].a;
@@ -102,7 +102,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
         ivec2 index = getvert(topleft, size.x, height+vph+vth, id);
         posoffset = getpos(topleft, size.x, height, index.x);
         texCoord = getuv(topleft, size.x, height+vph, index.y) * size;
-        if (nframes > 1 && easing > 0) {
+        if (nframes > 1) {
             int nids = (nframes * nvertices);
             //next frame
             id = (id+nvertices) % nids;
@@ -110,7 +110,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
             vec3 posoffset2 = getpos(topleft, size.x, height, index.x);
             //interpolate
             transition = fract(time * duration / nframes);
-            switch (easing) { //easing
+            switch (easing.x) { //easing
                 case 1: //linear
                     posoffset = mix(posoffset, posoffset2, transition);
                     break;
