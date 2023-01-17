@@ -155,7 +155,7 @@ spawner models also unload 1 subchunk away behind but unload 8 subchunks away in
 
 these items have custom rgb tint overlay that can be used to pass data:
 
-`potion`, `splash_potion`, `lingering_potion`, `leather_helmet`, `leather_chestplate`, `leather_leggings`, `leather_boots`, `leather_horse_armor`, `filled_map`
+`potion`, `splash_potion`, `lingering_potion`, `leather_helmet`, `leather_chestplate`, `leather_leggings`, `leather_boots`, `leather_horse_armor`, `firework_star`, `filled_map`
 
 ### vertex count limits
 
