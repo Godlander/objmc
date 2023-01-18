@@ -55,10 +55,8 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
 #endif
 #ifdef ENTITY
     isGUI = int(isgui(ProjMat));
-    isHand = int(ishand(FogStart));
-    if (!(!bool(isHand) && !bool(isGUI) && visibility.x) && !(bool(isHand) && visibility.y) && !(bool(isGUI) && visibility.z)) {
-        Pos = vec3(0); posoffset = vec3(0);
-    } else {
+    isHand = int(ishand(FogStart) && !bool(isGUI));
+    if (((isGUI + isHand == 0) && visibility.x) || (bool(isHand) && visibility.y) || (bool(isGUI) && visibility.z)) {
         //colorbehavior
         overlayColor = vec4(1);
         if (colorbehavior == 243) { //animation frames 0-8388607
@@ -134,16 +132,18 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
         }
 //custom entity rotation
 #ifdef ENTITY
-        if (any(greaterThan(autorotate,vec2(0))) && !bool(isHand) && !bool(isGUI)) {
-            //normal estimated rotation calculation from The Der Discohund
-            vec3 local = IViewRotMat * Normal;
-            float yaw = -atan(local.x, local.z);
-            float pitch = -atan(local.y, length(local.xz));
-            posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset * IViewRotMat;
-        }
-        //pure color rotation
-        else if (!bool(isHand) && !bool(isGUI)) {
-            posoffset = rotate(rotation) * posoffset * IViewRotMat;
+        if (isHand + isGUI == 0) {
+            if (any(greaterThan(autorotate,vec2(0)))) {
+                //normal estimated rotation calculation from The Der Discohund
+                vec3 local = IViewRotMat * Normal;
+                float yaw = -atan(local.x, local.z);
+                float pitch = -atan(local.y, length(local.xz));
+                posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset * IViewRotMat;
+            }
+            //pure color rotation
+            else {
+                posoffset = rotate(rotation) * posoffset * IViewRotMat;
+            }
         }
     }
 #endif
