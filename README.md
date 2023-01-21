@@ -75,7 +75,7 @@ https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-
 ### general output format
 this is just a reference, actual format may change as i add/change stuff.
 
-![image](https://user-images.githubusercontent.com/16228717/148311479-0cade68e-dab8-491b-83fb-f7d22c78bd1b.png)
+![image](https://user-images.githubusercontent.com/16228717/213836978-89154d30-349a-42a0-bc8f-7ccf85ef7a4a.png)
 
 ### modded compatibility
 item/entity models mostly work with both optifine and sodium.
