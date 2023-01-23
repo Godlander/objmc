@@ -9,34 +9,45 @@ ivec2 uv = ivec2((UV0 * atlasSize));
 vec3 posoffset = vec3(0);
 vec3 rotation = vec3(0);
 int headerheight = 0;
+ivec4 t[8];
 //read uv offset
-ivec4 metauvoffset = ivec4(texelFetch(Sampler0, uv, 0) * 255);
-ivec2 uvoffset = ivec2(metauvoffset.r*256 + metauvoffset.g,
-                       metauvoffset.b+1); //no alpha due to optifine, max number of faces greatly limited (probably still a couple million more than needed)
+t[0] = ivec4(texelFetch(Sampler0, uv, 0) * 255);
+ivec2 uvoffset = ivec2(t[0].r*256 + t[0].g, t[0].b*256 + t[0].a);
 //find and read topleft pixel
 ivec2 topleft = uv - uvoffset;
 //if topleft marker is correct
 if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     isCustom = 1;
-    //grab meta
-    ivec4 meta = getmeta(topleft, 1);
-    vec2 autorotate = vec2(getb(meta.r, 6), getb(meta.r, 5));
-    noshadow = getb(meta.r, 7);
-    //size
-    ivec4 metasize = getmeta(topleft, 2);
-    ivec2 size = ivec2(metasize.r*256 + metasize.g,
-                       metasize.b*256 + metasize.a-128+geta(meta.a,6));
-    //nvertices
-    ivec4 metanvertices = getmeta(topleft, 3);
-    int nvertices = metanvertices.r*16777216 + metanvertices.g*65536 + metanvertices.b*256 + metanvertices.a-128+geta(meta.a,5);
-    //frames
-    ivec4 metaanim = getmeta(topleft, 4);
-    int nframes = clamp(metaanim.r, 1,255);
-    int ntextures = clamp(metaanim.g, 1,255);
-    float duration = float(metaanim.b + 1);
-    bool autoplay = bool(getb(metaanim.a, 6));
-    int easing = (metaanim.a >> 4) & 3;
-    bvec3 visibility = bvec3((metaanim.a & 4) > 0, (metaanim.a & 2) > 0, (metaanim.a & 1) > 0);
+    // header
+    //| 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2 \2| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
+    //| tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp| data heights | noshadow, autorotate, visibility, colorbehavior |
+    for (int i = 1; i < 8; i++) {
+        t[i] = getmeta(topleft, i);
+    }
+    //1: texsize
+    ivec2 size = ivec2(t[1].r*256 + t[1].g, t[1].b*256 + t[1].a);
+    //2: nvertices
+    int nvertices = t[2].r*16777216 + t[2].g*65536 + t[2].b*256 + t[2].a;
+    //3: nobjs, ntexs
+    int nframes = max(t[3].r*65536 + t[3].g*256 + t[3].b, 1);
+    int ntextures = max(t[3].a, 1);
+    //4: duration, autoplay, easing
+    float duration = max(t[4].r*65536 + t[4].g*256 + t[4].b, 1);
+    bool autoplay = getb(t[4].a, 6);
+    ivec2 easing = ivec2(getb(t[4].a, 4, 2), getb(t[4].a, 2, 2));
+    //5: data heights
+    int vph = t[5].r*256 + t[5].g;
+    int vth = t[5].b*256 + t[5].a;
+    //6: noshadow, autorotate, visibility, colorbehavior
+    noshadow = getb(t[6].r, 8, 1);
+    vec2 autorotate = vec2(getb(t[6].r, 6, 1), getb(t[6].r, 5, 1));
+    bvec3 visibility = bvec3(getb(t[6].r, 4), getb(t[6].r, 3), getb(t[6].r, 2));
+    int colorbehavior = t[6].g;
+
+    //time in ticks
+    float time = GameTime * 24000;
+    int tcolor = 0;
+
 #ifdef BLOCK
     if (!visibility.x) { //world
         Pos = vec3(0); posoffset = vec3(0);
@@ -44,22 +55,10 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
 #endif
 #ifdef ENTITY
     isGUI = int(isgui(ProjMat));
-    isHand = int(ishand(FogStart));
-    if (!(!bool(isHand) && !bool(isGUI) && visibility.x) && !(bool(isHand) && visibility.y) && !(bool(isGUI) && visibility.z)) {
-        Pos = vec3(0); posoffset = vec3(0);
-    } else {
-#endif
-        //data heights
-        ivec4 metaheight = getmeta(topleft, 5);
-        int vph = metaheight.r*256 + metaheight.g;
-        int vth = metaheight.b*256 + metaheight.a-128+geta(meta.a,4);
-        //time in ticks
-        float time = GameTime * 24000;
-        int tcolor = 0;
-//colorbehavior
-#ifdef ENTITY
+    isHand = int(ishand(FogStart) && !bool(isGUI));
+    if (((isGUI + isHand == 0) && visibility.x) || (bool(isHand) && visibility.y) || (bool(isGUI) && visibility.z)) {
+        //colorbehavior
         overlayColor = vec4(1);
-        int colorbehavior = meta.b;
         if (colorbehavior == 243) { //animation frames 0-8388607
             tcolor = (int(Color.r*255)*65536)%32768 + int(Color.g*255)*256 + int(Color.b*255);
             //interpolation disabled past 8388608, suso's idea to define starting tick with color
@@ -89,8 +88,8 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
             rotation = rotation/accuracy * 2*PI;
         }
 #endif
-        time = autoplay ? time + (nframes*duration) - mod(tcolor, nframes*duration) : tcolor;
-        int frame = int(time/duration) % nframes;
+        time = autoplay ? time + duration - mod(tcolor, duration) : tcolor;
+        int frame = int(time * duration / nframes) % int(duration);
         //relative vertex id from unique face uv
         int id = (((uvoffset.y-1) * size.x) + uvoffset.x) * 4 + corner;
         id += frame * nvertices;
@@ -101,15 +100,15 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
         ivec2 index = getvert(topleft, size.x, height+vph+vth, id);
         posoffset = getpos(topleft, size.x, height, index.x);
         texCoord = getuv(topleft, size.x, height+vph, index.y) * size;
-        if (nframes > 1 && easing > 0) {
+        if (nframes > 1) {
             int nids = (nframes * nvertices);
             //next frame
             id = (id+nvertices) % nids;
             index = getvert(topleft, size.x, height+vph+vth, id);
             vec3 posoffset2 = getpos(topleft, size.x, height, index.x);
             //interpolate
-            transition = fract(time/duration);
-            switch (easing) { //easing
+            transition = fract(time * duration / nframes);
+            switch (easing.x) { //easing
                 case 1: //linear
                     posoffset = mix(posoffset, posoffset2, transition);
                     break;
@@ -133,16 +132,18 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
         }
 //custom entity rotation
 #ifdef ENTITY
-        if (any(greaterThan(autorotate,vec2(0))) && isGUI == 0) {
-            //normal estimated rotation calculation from The Der Discohund
-            vec3 local = IViewRotMat * Normal;
-            float yaw = -atan(local.x, local.z);
-            float pitch = -atan(local.y, length(local.xz));
-            posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset * IViewRotMat;
-        }
-        //pure color rotation
-        else if (isHand == 0) {
-            posoffset = rotate(rotation) * posoffset * IViewRotMat;
+        if (isHand + isGUI == 0) {
+            if (any(greaterThan(autorotate,vec2(0)))) {
+                //normal estimated rotation calculation from The Der Discohund
+                vec3 local = IViewRotMat * Normal;
+                float yaw = -atan(local.x, local.z);
+                float pitch = -atan(local.y, length(local.xz));
+                posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset * IViewRotMat;
+            }
+            //pure color rotation
+            else {
+                posoffset = rotate(rotation) * posoffset * IViewRotMat;
+            }
         }
     }
 #endif

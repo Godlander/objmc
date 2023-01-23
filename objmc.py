@@ -17,13 +17,9 @@ import tkinter.filedialog as tkfd
 #--------------------------------
 
 #objs
-objs = ["cube.obj"]
+objs = [""]
 #texture animations not supported yet
-texs = ["cube.png"]
-
-#array of frame indexes
-#defaults to [0-nframes]
-frames = []
+texs = [""]
 
 #Output json & png
 output = ["potion.json", "block/out.png"]
@@ -33,12 +29,16 @@ output = ["potion.json", "block/out.png"]
 offset = (0.0,0.0,0.0)
 scale = 1.0
 
-#Duration of each frame in ticks
+#Duration of the animation in ticks
 duration = 20
 
 #Animation Easing
 # 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier
 easing = 3
+
+#Texture Interpolation
+# 0: none, 1: fade
+interpolation = 1
 
 #Color Behavior
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
@@ -53,7 +53,7 @@ colorbehavior = 'xyz'
 # attempt to estimate rotation with Normals, added to colorbehavior rotation.
 # one axis is ok but both is jittery. For display purposes color defined rotation is better.
 # 0: none, 1: yaw, 2: pitch, 3: both
-autorotate = 0
+autorotate = 1
 
 #Auto Play
 # always interpolate frames, colorbehavior='aaa' overrides this.
@@ -77,7 +77,7 @@ visibility = 7
 #No power of two textures
 # i guess saves a bit of space maybe
 # makes it not optifine compatible
-nopow = False
+nopow = True
 
 #Joining multiple models
 join = []
@@ -91,15 +91,15 @@ class ThrowingArgumentParser(argparse.ArgumentParser):
 parser = ThrowingArgumentParser(description="python script to convert .OBJ files into Minecraft, rendering them in game with a core shader.\nGithub: https://github.com/Godlander/objmc")
 parser.add_argument("--objs", help="List of object files", nargs='*', default=objs)
 parser.add_argument("--texs", help="Specify a texture file", nargs='*', default=texs)
-parser.add_argument("--frames", type=int, help="List of obj indexes as keyframes", nargs='*', default=[])
 parser.add_argument("--out", type=str, help="Output json and png", nargs=2, default=output)
 parser.add_argument("--offset", type=float, help="Offset of model in xyz", nargs=3, default=offset)
 parser.add_argument("--scale", type=float, help="Scale of model", default=scale)
-parser.add_argument("--duration", type=int, help="Duration of each frame in ticks", default=duration)
+parser.add_argument("--duration", type=int, help="Duration of the animation in ticks", default=duration)
 parser.add_argument("--easing", type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
+parser.add_argument("--interpolation", type=int, help="Texture interpolation, 0: none, 1: fade", default=interpolation)
 parser.add_argument("--colorbehavior", type=str, help="Item color overlay behavior, \"xyz\": rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
 parser.add_argument("--autorotate", type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
-parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate frames, colorbehavior=\"ttt\" overrides this")
+parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate animation, colorbehavior=\"ttt\" overrides this")
 parser.add_argument("--visibility", type=int, help="Determines where the model is visible", default=visibility)
 parser.add_argument("--flipuv", action="store_true", dest="flipuv", help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
@@ -108,12 +108,12 @@ parser.add_argument("--join", nargs='*', dest="join", help="Joins multiple json 
 def getargs(args):
   global objs
   global texs
-  global frames
   global output
   global offset
   global scale
   global duration
   global easing
+  global interpolation
   global colorbehavior
   global autorotate
   global autoplay
@@ -124,12 +124,12 @@ def getargs(args):
   global join
   objs = args.objs
   texs = args.texs
-  frames = args.frames
   output = args.out
   offset = tuple(args.offset)
   scale = args.scale
   duration = args.duration
   easing = args.easing
+  interpolation = args.interpolation
   colorbehavior = args.colorbehavior
   autorotate = args.autorotate
   autoplay = args.autoplay
@@ -139,9 +139,6 @@ def getargs(args):
   nopow = args.nopow
   join = args.join
 getargs(parser.parse_args())
-if not frames:
-  for i in range(len(objs)):
-    frames.append(i)
 
 class col:
     head = '\033[95m'
@@ -219,7 +216,7 @@ def indexobj(o, frame, nframes, nfaces):
 def getheader(out, faceid, x, y, ty):
   posx = faceid%x
   posy = math.floor(faceid/x)+1
-  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, (posy-1)%256, 255-(int((posy-1)/256)%256)))
+  out.putpixel((posx, posy), (int(posx/256)%256, posx%256, int(posy/256)%256, posy%256))
   return [(posx+0.1)*16/x, (posy+0.1)*16/ty, (posx+0.9)*16/x, (posy+0.9)*16/ty]
 #create elements for model
 js = {}
@@ -257,16 +254,16 @@ def getvert(i):
   rgb.append((int((poi/65536)%256), int((poi/256)%256), int(poi%256), 255))
   rgb.append((int((uvi/65536)%256), int((uvi/256)%256), int(uvi%256), 255))
   return rgb
-def strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
+def strcontext(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
   s = ""
   s += "--objs " + ' '.join(objs)
   s += " --texs " + ' '.join(texs)
-  s += " --frames " + ' '.join(str(i) for i in frames)
   s += " --out " + ' '.join(output)
   s += " --offset " + ' '.join(str(i) for i in offset)
   s += " --scale " + str(scale)
   s += " --duration " + str(duration)
   s += " --easing " + str(easing)
+  s += " --interpolation " + str(interpolation)
   s += " --colorbehavior " + colorbehavior
   s += " --autorotate " + str(autorotate)
   if autoplay:
@@ -291,7 +288,7 @@ def getcontext(c):
 hid = 0
 history = []
 runtex = ""
-def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
+def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow):
   global offset
   global scale
   offset = off
@@ -320,7 +317,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
     exit()
 
   ntextures = len(texs)
-  nframes = len(frames)
+  nframes = len(objs)
 
   print("\n"+col.cyan+"objmc start "+runtex+col.end)
   #read obj
@@ -330,7 +327,7 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   indexobj(o, 0, nframes, nfaces)
   if nframes > 1:
     for frame in range(1, nframes):
-      o = readobj(objs[frames[frame]], nfaces)
+      o = readobj(objs[frame], nfaces)
       indexobj(o, frame, nframes, nfaces)
 
   nvertices = nfaces*4
@@ -349,8 +346,9 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   #initial info
   print("%\033[K", end="\r")
   print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
-  if nframes > 1:
-    print("frames: ", nframes, ", duration: ", duration,"t", ", time: ", duration*nframes/20, "s", ", easing: ", easing, ", autoplay: ", autoplay, sep="")
+  if nframes > 1 or ntextures > 1:
+    print("objs: ", nframes, ", duration: ", duration,"t", ", ", duration/20, "s", sep="")
+    print("easing: ", easing, ", interpolation: ", interpolation, ", autoplay: ", autoplay, sep="")
   print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
   print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
   print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
@@ -366,21 +364,23 @@ def objmc(objs, texs, frames, output, sc, off, duration, easing, colorbehavior, 
   ca = [cbarr.index(i) for i in colorbehavior]
   cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
 
-  #first alpha bit for texture height, nvertices, vtheight
-  alpha = 128 + (int(y%256/128)<<6) + (int(nvertices%256/128)<<5) + (int(vtheight%256/128)<<4)
-  #header:
-  #0: marker pix
+  # header
+  #| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2  \2| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
+  #| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp | data heights | noshadow, autorotate, visibility, colorbehavior |
+  #0: marker
   out.putpixel((0,0), (12,34,56,78))
-  #1: noshadow, autorotate, colorbehavior, alpha bits for texsize and nvertices
-  out.putpixel((1,0), ((int(noshadow)<<7) + (int(autorotate)<<5), 0, cb, alpha))
-  #2: texture size
-  out.putpixel((2,0), (int(x/256), x%256, int(y/256), 128+y%128))
-  #3: nvertices
-  out.putpixel((3,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, 128+nvertices%128))
-  #4: nframes, ntextures, duration, autoplay, easing
-  out.putpixel((4,0), (nframes,ntextures,duration-1, 128+(int(autoplay)<<6)+(easing<<4)+visibility))
+  #1: texsize
+  out.putpixel((1,0), (int(x/256), x%256, int(y/256), y%256))
+  #2: nvertices
+  out.putpixel((2,0), (int(nvertices/16777216)%256, int(nvertices/65536)%256, int(nvertices/256)%256, nvertices%256))
+  #3: nobjs, ntexs
+  out.putpixel((3,0), (int(nframes/65536)%256, int(nframes/256)%256, nframes%256, ntextures))
+  #4: duration, autoplay, easing
+  out.putpixel((4,0), (int(duration/65536)%256, int(duration/256)%256, duration%256, 128+(int(autoplay)<<6)+(easing<<4)+(interpolation<<2)))
   #5: data heights
-  out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, 128+vtheight%128))
+  out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, vtheight%256))
+  #6: noshadow, autorotate, visibility, colorbehavior
+  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2), cb, 0, 255))
 
   #actual texture
   for i in range (0,len(texs)):
@@ -453,17 +453,15 @@ def settext(box,text):
   box.insert('1.0',text)
   box.configure(state='disabled')
 def opentex():
-  f = tkfd.askopenfilename(initialdir=path,title='Select Texture File',filetypes=[("Image File", ".png .jpg .jpeg .bmp")])
+  f = tkfd.askopenfilenames(initialdir=path,title='Select Texture Files',filetypes=[("Image File", ".png .jpg .jpeg .bmp")])
   global texs
-  texs = [f.replace("\\","\\\\")]
-  settext(texlist, os.path.basename(f))
+  texs = list(f)
+  f = [os.path.basename(f) for f in f]
+  settext(texlist, "\n".join(f))
 def openobjs():
   f = tkfd.askopenfilenames(initialdir=path,title='Select Obj Files',filetypes=[("Obj Files", ".obj")])
-  global objs, frames
+  global objs
   objs = list(f)
-  frames = []
-  for i in range(len(f)):
-    frames.append(i)
   f = [os.path.basename(f) for f in f]
   settext(objlist, "\n".join(f))
 class Number(tk.Entry):
@@ -518,7 +516,7 @@ if not len(sys.argv) > 1:
   objlist.grid(column=0, row=1, rowspan=3, sticky='NEW', padx=5)
   ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=4, sticky='NSE')
   #tex list
-  tk.Button(window, text='Select Texture', command=opentex, borderwidth=5).grid(column=1, row=0, sticky='NEW')
+  tk.Button(window, text='Select Textures', command=opentex, borderwidth=5).grid(column=1, row=0, sticky='NEW')
   texlist = tk.Text(window, height=1)
   texlist.grid(column=1, row=1, sticky='NEW', padx=5)
   fu = tk.BooleanVar()
@@ -545,7 +543,7 @@ if not len(sys.argv) > 1:
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW')
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW', pady=(25,5))
   #duration
-  tk.Label(advanced, text="Frame Duration:").grid(column=0, row=1, sticky='W', padx=(5,0))
+  tk.Label(advanced, text="Total Duration:").grid(column=0, row=1, sticky='W', padx=(5,0))
   dur = tk.StringVar()
   Number(advanced, textvariable=dur, width=5).grid(column=1, row=1, sticky='EW', padx=(0,30))
   tk.Label(advanced, text="ticks").grid(column=1, row=1, sticky='E', padx=(0,25))
@@ -582,7 +580,7 @@ if not len(sys.argv) > 1:
   ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=10, columnspan=2, sticky='NEW', pady=(5,0))
   def setval():
     settext(objlist, "\n".join(objs))
-    settext(texlist, texs[0])
+    settext(texlist, "\n".join(texs))
     fu.set(flipuv)
     for i in range(3):
       of[i].set(str(offset[i]))
@@ -668,8 +666,8 @@ if not len(sys.argv) > 1:
     autoplay = ap.get()
     colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
     output = [outjson.get(), outpng.get()]
-    objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
-    context = strcontext(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+    objmc(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+    context = strcontext(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
     try:
       i = history.index(context)
       history.pop(i)
@@ -685,7 +683,7 @@ if not len(sys.argv) > 1:
     for i in range(0,len(history)):
       runtex = str(i+1)+"/"+str(len(history))
       getcontext(history[i])
-      objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+      objmc(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
     runtex = ""
 
   #start
@@ -740,6 +738,6 @@ elif join:
   out.write(json.dumps(js,separators=(',',':')))
 
 else:
-  objmc(objs, texs, frames, output, scale, offset, duration, easing, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
+  objmc(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 #--------------------------------
 quit()
