@@ -147,6 +147,8 @@ block models unload when its more than 1 subchunk away directly behind the playe
 
 entity models stay loaded in front of the player just as well as blocks but unloads instantly if their hitbox is not on screen.
 
+item/block display entities have controllable `view_range`, at 0 they don't cull and always stay rendered within renderdistance
+
 *leashed entities become linked, and unrender when both of their hitboxes are no longer on screen.*
 
 spawner models also unload 1 subchunk away behind but unload 8 subchunks away in front of the player, basically making render distance 8 regardless of real setting.
