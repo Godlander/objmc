@@ -22,6 +22,6 @@ else if (noshadow == 0) {
     if (isGUI == 1) normal.xz = -normal.xz;
     color *= minecraft_mix_light(Light0_Direction, Light1_Direction, normal, overlayColor);
     #endif
+
+    color *= lightColor * ColorModulator;
 }
-//noshadow
-else {color *= lightColor * ColorModulator;}
