@@ -27,7 +27,6 @@ out vec4 vertexColor;
 out vec4 lightColor;
 out vec4 overlayColor;
 out vec2 texCoord;
-out vec2 texCoord2;
 out vec3 Pos;
 out float transition;
 

@@ -18,7 +18,6 @@ in vec4 vertexColor;
 in vec4 lightColor;
 in vec4 overlayColor;
 in vec2 texCoord;
-in vec2 texCoord2;
 in vec3 Pos;
 in float transition;
 

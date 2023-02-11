@@ -173,9 +173,11 @@ nfaces = 0
 #load obj
 indexobj(readobj(obj))
 #normalize positions
-data["positions"] = [[int(255*p/data["maxpos"]) for p in v] for v in data["positions"]]
+print(data["positions"])
+data["positions"] = [[int(127.5 + 127.5*p/data["maxpos"]) for p in v] for v in data["positions"]]
+print(data["positions"])
 #normalize uvs
-data["uvs"] = [[int(32*v) for v in u] for u in data["uvs"]]
+data["uvs"] = [[int(255*v) for v in u] for u in data["uvs"]]
 
 npos = len(data["positions"])
 nuv = len(data["uvs"])
