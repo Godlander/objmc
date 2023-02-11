@@ -42,9 +42,9 @@ class ThrowingArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         raise ArgumentParserError(message)
 parser = ThrowingArgumentParser(description="python script to convert .OBJ files into Minecraft, rendering them in game with a core shader.\nGithub: https://github.com/Godlander/objmc")
-parser.add_argument("--obj", type=str, help="List of object files", default=obj)
+parser.add_argument("--obj", type=str, help="Specify an obj file", default=obj)
 parser.add_argument("--tex", type=str, help="Specify a texture file", default=tex)
-parser.add_argument("--out", type=str, help="Output json and png", default=output)
+parser.add_argument("--out", type=str, help="Output skin png", default=output)
 parser.add_argument("--scale", type=int, help="Scale of model 1+(0-255)", default=scale)
 parser.add_argument("--flipuv", action="store_true", dest="flipuv", help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
@@ -105,7 +105,7 @@ if skin:
   value = base64.b64encode(str(value).encode())
   value = re.search(r'\'(.+)\'',str(value)).group(1)
 
-  print(value)
+  print(col.green+value+col.end)
   exit()
 
 #--------------------------------
