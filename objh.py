@@ -227,6 +227,6 @@ command = "execute "
 command += "positioned ~ ~2 ~"
 for i in range(nheads):
   command += " summon item_display"
-command += ' as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run item replace entity @s container.0 with minecraft:player_head{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"eyd0ZXh0dXJlcyc6IHsnU0tJTic6IHsndXJsJzogJ2h0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTVlYzdhZjJlODZlZThlODQ5NzJhOGZhNjZkMzllZTNkMzhlYjE5YjY3MzBmZDA1MmIzNzg1YjVjMmQwYzRkMid9fX0="}]}}}'
+command += ' as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run item replace entity @s container.0 with minecraft:player_head{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"ewogICJ0aW1lc3RhbXAiIDogMTY3NjA4MjI1MjM1NywKICAicHJvZmlsZUlkIiA6ICJhNGMyNmU5MDQ2ZTU0YmQ4YWMwMjNjYjY5NzAzZDI4ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJHb2RsYW5kZXIiLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDcyMzRhNTQ1MGQwYzA1NDdlMWE4Mzg5Yzk1M2ZhNWFlODlkY2I3OGI0MjMwNDcxYjA1MDBhNTNhYjdiMDhkOCIKICAgIH0KICB9Cn0="}]}}}'
 print(command)
 quit()
