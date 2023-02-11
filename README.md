@@ -54,8 +54,6 @@ The script can be run with arguments to each of these. Example:
 python objmc.py --objs cube.obj --texs cube.png --autorotate --flipuv --out potion.json texture.png
 ```
 
-
-
 # samples:
 
 https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-9024-068c48f47cbf.mp4
@@ -69,6 +67,8 @@ https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-
 ![robo](https://user-images.githubusercontent.com/16228717/148869708-310e7ec4-7d89-40e8-8fc6-38d2e6116cb7.png)
 
 ![room](https://user-images.githubusercontent.com/16228717/155235807-250932d3-0ffd-43ca-92c8-3112df12a64e.png)
+
+# heads
 
 # faqs / random notes about the tool
 
