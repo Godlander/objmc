@@ -9,7 +9,7 @@ vec3 posoffset = vec3(0);
 //if marker is correct
 if (textureSize(Sampler0, 0) == vec2(64) && ivec4(texelFetch(Sampler0, ivec2(0,32), 0)*255) == ivec4(12,34,56,78)) {
     isCustom = 1;
-    ivec4 meta = ivec4(texelFetch(Sampler0, ivec2(1,33), 0)*255);
+    ivec4 meta = ivec4(texelFetch(Sampler0, ivec2(1,32), 0)*255);
     noshadow = meta.b;
     int npos = meta.r*256 + meta.g;
 
