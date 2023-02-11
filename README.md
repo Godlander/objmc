@@ -4,7 +4,7 @@ the resourcepack must be equipped
 
 # heads
 
-model geometry complexity is very limited, and textures must be 32x32
+model geometry complexity is limited per skin, and textures must be 32x32
 
 `python objh.py --obj model.obj --tex texture.png --out skin.png --scale 5`
 
