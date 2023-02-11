@@ -1,5 +1,7 @@
 only works in snapshot 23w06a+
 
+the resourcepack must be equipped
+
 # heads
 
 model geometry complexity is very limited, and textures must be 32x32
