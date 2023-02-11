@@ -24,12 +24,6 @@ output = ""
 offset = (0.0,0.0,0.0)
 scale = 1.0
 
-#Auto Rotate
-# attempt to estimate rotation with Normals, added to colorbehavior rotation.
-# one axis is ok but both is jittery. For display purposes color defined rotation is better.
-# 0: none, 1: yaw, 2: pitch, 3: both
-autorotate = 1
-
 #No Shadow
 # disable face normal shading (lightmap color still applies)
 # can be used for models with lighting baked into the texture
@@ -48,7 +42,6 @@ parser.add_argument("--tex", type=str, help="Specify a texture file", default=te
 parser.add_argument("--out", type=str, help="Output json and png", default=output)
 parser.add_argument("--offset", type=float, help="Offset of model in xyz", nargs=3, default=offset)
 parser.add_argument("--scale", type=float, help="Scale of model", default=scale)
-parser.add_argument("--autorotate", type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
 def getargs(args):
   global obj
@@ -56,14 +49,12 @@ def getargs(args):
   global output
   global offset
   global scale
-  global autorotate
   global noshadow
   obj = args.obj
   tex = args.tex
   output = args.out
   offset = tuple(args.offset)
   scale = args.scale
-  autorotate = args.autorotate
   noshadow = args.noshadow
 getargs(parser.parse_args())
 
@@ -227,6 +218,6 @@ command = "execute "
 command += "positioned ~ ~2 ~"
 for i in range(nheads):
   command += " summon item_display"
-command += ' as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run item replace entity @s container.0 with minecraft:player_head{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"ewogICJ0aW1lc3RhbXAiIDogMTY3NjA4MjI1MjM1NywKICAicHJvZmlsZUlkIiA6ICJhNGMyNmU5MDQ2ZTU0YmQ4YWMwMjNjYjY5NzAzZDI4ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJHb2RsYW5kZXIiLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDcyMzRhNTQ1MGQwYzA1NDdlMWE4Mzg5Yzk1M2ZhNWFlODlkY2I3OGI0MjMwNDcxYjA1MDBhNTNhYjdiMDhkOCIKICAgIH0KICB9Cn0="}]}}}'
+command += ' as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run data merge entity @s {transformation:[0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,1f],item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"INSERT_BASE64_HERE"}]}}}}}'
 print(command)
 quit()
