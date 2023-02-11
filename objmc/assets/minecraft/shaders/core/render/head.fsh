@@ -32,6 +32,7 @@ void main() {
     vec4 color = texture(Sampler0, texCoord);
 
     //custom lighting
+    #define ENTITY
     #define HEAD
     #moj_import<objmc_light.glsl>
 

@@ -46,6 +46,7 @@ void main() {
     vec3 normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
 
     //objmc
+    #define ENTITY
     #define HEAD
     #moj_import<objmc_head.glsl>
 

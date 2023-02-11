@@ -19,7 +19,7 @@ if (textureSize(Sampler0, 0) == vec2(64) && ivec4(texelFetch(Sampler0, ivec2(0,3
     int id = gl_VertexID;
     ivec2 xy = ivec2(32 + id % 32, id / 32);
     ivec4 face = ivec4(texelFetch(Sampler0, xy, 0)*255);
-    if (face.a == 0) Pos = posoffset = vec3(0);
+    if (id > 0 && face.rgb == vec3(0)) Pos = posoffset = vec3(0);
     ivec2 index = ivec2(((face.r>>4)<<8)+face.g, ((face.r%32)<<8)+face.b+npos);
     xy = ivec2(index.x % 64, 33 + int(index.x/64));
     posoffset = texelFetch(Sampler0, xy, 0).rgb;
@@ -29,9 +29,7 @@ if (textureSize(Sampler0, 0) == vec2(64) && ivec4(texelFetch(Sampler0, ivec2(0,3
     posoffset = posoffset * IViewRotMat;
     //final pos and uv
     Pos += posoffset;
-    texCoord = (texCoord)/64.
-                //make sure that faces with same uv beginning/ending renders
-                + vec2(onepixel * 0.0001 * corner, onepixel * 0.0001 * ((corner + 1) % 4));
+    texCoord = (texCoord)/2.;
 }
 //debug
 //else {
