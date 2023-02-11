@@ -9,27 +9,32 @@ vec3 posoffset = vec3(0);
 //if marker is correct
 if (textureSize(Sampler0, 0) == vec2(64) && ivec4(texelFetch(Sampler0, ivec2(0,32), 0)*255) == ivec4(12,34,56,78)) {
     isCustom = 1;
-    ivec4 meta = ivec4(texelFetch(Sampler0, ivec2(1,32), 0)*255);
-    noshadow = meta.b;
-    int npos = meta.r*256 + meta.g;
+    ivec4 metan = ivec4(texelFetch(Sampler0, ivec2(1,32), 0)*255);
+    int nfaces = ((metan.r>>4)<<8)+metan.g;
+    int npos   = ((metan.r%32)<<8)+metan.b;
+    int nvertices = nfaces * 4;
+    ivec4 metad = ivec4(texelFetch(Sampler0, ivec2(2,32), 0)*255);
+    float scale = metad.g;
+    noshadow = metad.r;
 
     isGUI = int(isgui(ProjMat));
     isHand = int(ishand(FogStart) && !bool(isGUI));
 
-    int id = gl_VertexID;
-    ivec2 xy = ivec2(32 + id % 32, id / 32);
-    ivec4 face = ivec4(texelFetch(Sampler0, xy, 0)*255);
-    if (id > 0 && face.rgb == vec3(0)) Pos = posoffset = vec3(0);
-    ivec2 index = ivec2(((face.r>>4)<<8)+face.g, ((face.r%32)<<8)+face.b+npos);
-    xy = ivec2(index.x % 64, 33 + int(index.x/64));
-    posoffset = texelFetch(Sampler0, xy, 0).rgb;
-    xy = ivec2(index.y % 64, 33 + int(index.y/64));
-    texCoord = texelFetch(Sampler0, xy, 0).rg;
+    int eid = (gl_VertexID/48) % ((nfaces+11)/12);
+    int vid = (eid * 48) + (gl_VertexID % 48);
+    ivec4 face = ivec4(texelFetch(Sampler0, hid(vid), 0)*255);
+    if (vid > nvertices) Pos = posoffset = vec3(0);
+    int pid = ((face.r>>4)<<8)+face.g + nvertices;
+    int uid = ((face.r%32)<<8)+face.b + nvertices+npos;
+    posoffset = texelFetch(Sampler0, hid(pid), 0).rgb;
+    texCoord = texelFetch(Sampler0, hid(uid), 0).rg;
 
-    posoffset = posoffset * IViewRotMat;
+    posoffset = (posoffset - vec3(0.5)) * scale * IViewRotMat;
     //final pos and uv
     Pos += posoffset;
-    texCoord = (texCoord)/2.;
+    texCoord = clamp(vec2(texCoord.x, 1-texCoord.y)/2., 0.0001, 0.4999)
+                //make sure that faces with same uv beginning/ending renders
+                + onepixel*vec2(0.0001*corner, 0.0001*((corner + 1) % 4));
 }
 //debug
 //else {

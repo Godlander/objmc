@@ -1,11 +1,8 @@
-import sys
-import os
+import sys,os
 os.system("title objmc output")
 os.system('color')
-import math
-import argparse
-from PIL import Image
-from tkinter import Tk
+import math,argparse,re,urllib.request,json,base64
+from PIL import Image, ImageOps
 
 #--------------------------------
 #INPUT
@@ -19,15 +16,23 @@ tex = ""
 #Output json & png
 output = ""
 
-#Position & Scaling
-# just adds & multiplies vertex positions before encoding, so you dont have to re export the model
-offset = (0.0,0.0,0.0)
-scale = 1.0
+#Scale
+# multiplies final size by an integer factor 1 + (0-255)
+scale = 0
+
+#Flip uv
+# if your model renders but textures are not right try toggling this
+# i find that blockbench ends up flipping uv, but blender does not. dont trust me too much on this tho i have no idea what causes it.
+flipuv = False
 
 #No Shadow
 # disable face normal shading (lightmap color still applies)
 # can be used for models with lighting baked into the texture
 noshadow = False
+
+#Skin
+# grabs skin data of user
+skin = ""
 
 #--------------------------------
 #argument parsing by kumitatepazuru
@@ -40,22 +45,25 @@ parser = ThrowingArgumentParser(description="python script to convert .OBJ files
 parser.add_argument("--obj", type=str, help="List of object files", default=obj)
 parser.add_argument("--tex", type=str, help="Specify a texture file", default=tex)
 parser.add_argument("--out", type=str, help="Output json and png", default=output)
-parser.add_argument("--offset", type=float, help="Offset of model in xyz", nargs=3, default=offset)
-parser.add_argument("--scale", type=float, help="Scale of model", default=scale)
+parser.add_argument("--scale", type=int, help="Scale of model 1+(0-255)", default=scale)
+parser.add_argument("--flipuv", action="store_true", dest="flipuv", help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
+parser.add_argument("--skin", type=str, help="Username to grab skin data from", default=obj)
 def getargs(args):
   global obj
   global tex
   global output
-  global offset
   global scale
+  global flipuv
   global noshadow
+  global skin
   obj = args.obj
   tex = args.tex
   output = args.out
-  offset = tuple(args.offset)
   scale = args.scale
+  flipuv = args.flipuv
   noshadow = args.noshadow
+  skin = args.skin
 getargs(parser.parse_args())
 
 class col:
@@ -74,6 +82,31 @@ def exit():
   print("Press any key to exit...")
   os.system('pause >nul')
   sys.exit()
+
+#--------------------------------
+if skin:
+  url = 'https://api.mojang.com/users/profiles/minecraft/'+skin
+  response = urllib.request.urlopen(url)
+  content = json.loads(response.read().decode('utf8'))
+  uuid = content['id']
+
+  hexArray = re.split('(........)', uuid)[1::2]
+  intArray = [int(v, 16) for v in hexArray]
+  intArray =  [v-2147483648*2 if 2147483647<v else v for v in intArray]
+  strArray = [str(v) for v in intArray]
+
+  url = 'https://sessionserver.mojang.com/session/minecraft/profile/'+uuid
+  response = urllib.request.urlopen(url)
+  content = json.loads(response.read().decode('utf8'))
+  value = content['properties'][0]['value']
+
+  content = json.loads(base64.b64decode(value).decode())
+  value = {k: v for k, v in content.items() if k == 'textures'}
+  value = base64.b64encode(str(value).encode())
+  value = re.search(r'\'(.+)\'',str(value)).group(1)
+
+  print(value)
+  exit()
 
 #--------------------------------
 count = [0,0]
@@ -129,44 +162,21 @@ def indexobj(o):
     if len(face) == 3:
       indexvert(o, face[1])
 
-#grab data from the list and convert to rgb
-def getposition(i):
-  x = 8388608+((data["positions"][i][0])*65536)*scale + offset[0]*65536
-  y = 8388608+((data["positions"][i][1])*65536)*scale + offset[1]*65536
-  z = 8388608+((data["positions"][i][2])*65536)*scale + offset[2]*65536
-  rgb = []
-  rgb.append((int((x/65536)%256), int((x/256)%256), int(x%256), 255))
-  rgb.append((int((y/65536)%256), int((y/256)%256), int(y%256), 255))
-  rgb.append((int((z/65536)%256), int((z/256)%256), int(z%256), 255))
-  return rgb
-def getuv(i):
-  x = (data["uvs"][i][0])*65535
-  y = (data["uvs"][i][1])*65535
-  rgb = []
-  rgb.append((int((x/65536)%256), int((x/256)%256), int(x%256), 255))
-  rgb.append((int((y/65536)%256), int((y/256)%256), int(y%256), 255))
-  return rgb
-def getvert(i):
-  poi = (data["vertices"][i][0])
-  uvi = (data["vertices"][i][1])
-  rgb = []
-  rgb.append((int((poi/65536)%256), int((poi/256)%256), int(poi%256), 255))
-  rgb.append((int((uvi/65536)%256), int((uvi/256)%256), int(uvi%256), 255))
-  return rgb
-#-------------------------------------------------------------------------
+#--------------------------------
 
 tex = Image.open(tex)
 if tex.size != (32,32):
-  print(col.err+"Texture size must be 32x32."+col.end)
+  print(col.err+"Texture size must be 32x32"+col.end)
+  exit()
+if scale > 255 or scale < 0:
+  print(col.err+"Scale must be between 0-255"+col.end)
   exit()
 
 nfaces = 0
 #load obj
 indexobj(readobj(obj))
 #normalize positions
-print(data["positions"])
 data["positions"] = [[int(127.5 + 127.5*p/data["maxpos"]) for p in v] for v in data["positions"]]
-print(data["positions"])
 #normalize uvs
 data["uvs"] = [[int(255*v) for v in u] for u in data["uvs"]]
 
@@ -179,39 +189,49 @@ print("\n"+col.cyan+"objh start "+col.end)
 print("%\033[K", end="\r")
 print("faces: ", nfaces, ", verts: ", nvertices, ", heads: ", nheads, sep="")
 print("pos: ", npos, ", uv: ", nuv, sep="")
+print("scale:", scale, ", noshadow: ", noshadow, sep="")
 
-if nvertices > 1056 or npos + nuv > 1984:
-  print(col.err+"Model too complicated."+col.end)
+ndata = nvertices + npos + nuv
+if ndata > 3040:
+  print(col.err+"Model too complicated ("+str(ndata)+">"+"3040)"+col.end)
   exit()
 
 out = Image.new("RGBA", (64, 64), (0,0,0,0))
-out.paste(tex,(0,0))
+if flipuv:
+  out.paste(ImageOps.flip(tex), (0,0))
+else:
+  out.paste(tex, (0,0))
+
 #0: marker
 out.putpixel((0,32), (12,34,56,78))
-#1: npos, noshadow
-out.putpixel((1,32), (int(npos/256),npos%256,noshadow,255))
+#1: nfaces, npos
+out.putpixel((1,32), ((int(nfaces/256)<<4) + int(npos/256), nfaces%256, npos%256, 255))
+#2: noshadow, scale, reserved
+out.putpixel((2,32), (noshadow, scale, 0, 255))
+
+def coord(id):
+  if id < 1056:
+    x = 32 + id % 32
+    y = int(id/32)
+  else:
+    id -= 1056
+    x = id % 64
+    y = 33 + int(id/64)
+  return (x,y)
 
 #encode data
 id = 0
 for v in data["vertices"]:
-  x = 32 + id % 32
-  y = int(id/32)
-  out.putpixel((x,y), ((int(v[0]/256)<<4) + int(v[1]/256), v[0]%256, v[1]%256, 255))
+  out.putpixel(coord(id), ((int(v[0]/256)<<4) + int(v[1]/256), v[0]%256, v[1]%256, 255))
   id += 1
-
-id = 0
 for p in data["positions"]:
-  x = id % 64
-  y = 33 + int(id/64)
-  out.putpixel((x,y), (p[0], p[1], p[2], 255))
+  out.putpixel(coord(id), (p[0], p[1], p[2], 255))
   id += 1
 for u in data["uvs"]:
-  x = id % 64
-  y = 33 + int(id/64)
-  out.putpixel((x,y), (u[0], u[1], 0, 255))
+  out.putpixel(coord(id), (u[0], u[1], 0, 255))
   id += 1
 
-print("Saving files...\033[K", end="\r")
+print("Saving skin...\033[K", end="\r")
 out.save(output)
 
 command = "execute "
@@ -219,5 +239,5 @@ command += "positioned ~ ~2 ~"
 for i in range(nheads):
   command += " summon item_display"
 command += ' as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run data merge entity @s {transformation:[0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,1f],item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"INSERT_BASE64_HERE"}]}}}}}'
-print(command)
+print(col.green+command+col.end+'\n')
 quit()
