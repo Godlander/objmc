@@ -7,7 +7,8 @@ float onepixel = 1./64;
 ivec2 uv = ivec2((UV0 * 64));
 vec3 posoffset = vec3(0);
 //if marker is correct
-if (textureSize(Sampler0, 0) == vec2(64) && ivec4(texelFetch(Sampler0, ivec2(0,32), 0)*255) == ivec4(12,34,56,78)) {
+ivec4 marker = ivec4(texelFetch(Sampler0, ivec2(0,32), 0)*255);
+if (textureSize(Sampler0, 0) == vec2(64) && (marker == ivec4(12,34,56,78) || marker == ivec4(13,33,56,78))) {
     isCustom = 1;
     ivec4 metan = ivec4(texelFetch(Sampler0, ivec2(1,32), 0)*255);
     int nfaces = ((metan.r>>4)<<8)+metan.g;
