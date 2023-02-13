@@ -164,17 +164,15 @@ by default most animation programs outputs a lot more frames than you will likel
 
 in the sample teapot animation, i only exported every 5th frame, and the animation still looks good enough.
 
-### model unloading
+### model display
 
-block models unload when its more than 1 subchunk away directly behind the player. that means objmc can be used in 16x16x16 block sized subchunks if a map is entirely modeled.
+placed block models are the most performant. they unload when its more than 1 subchunk away directly behind the player. that means objmc can be used in 16x16x16 block sized subchunks if a map is entirely modeled.
 
-entity models stay loaded in front of the player just as well as blocks but unloads instantly if their hitbox is not on screen.
+item models shown by entities are a couple hundred times worse performance than block models. entity models stay loaded in front of the player just as well as blocks but unloads if their hitbox is not on screen.
 
-item/block display entities have controllable `view_range`, at 0 they don't cull and always stay rendered within renderdistance
+spawner models are special, they unload 1 subchunk away behind and 8 subchunks away in front of the player, behaving similar to blocks with renderdistance 8, but rendering costs the same as entities.
 
-*leashed entities become linked, and unrender when both of their hitboxes are no longer on screen.*
-
-spawner models also unload 1 subchunk away behind but unload 8 subchunks away in front of the player, basically making render distance 8 regardless of real setting.
+**item/block display entities have controllable `view_range`, at 0 they don't cull and always stay rendered within renderdistance. they are the best entity method of displaying a model.**
 
 ### items with overlay color
 
@@ -184,13 +182,13 @@ these items have custom rgb tint overlay that can be used to pass data:
 
 ### vertex count limits
 
-there appears to be a hard vertex count limit per chunk in Minecraft for blocks, and exceeding that instantly crashes the game, regardless of whether your computer can handle rendering that many faces, with a crash message similar to this:
+there appears to be a hard vertex count limit per chunk in Minecraft for placed blocks, and exceeding that instantly crashes the game, regardless of whether your computer can handle rendering that many faces, with a crash message similar to this:
 ```
 java.lang.IllegalArgumentException: newLimit > capacity: (151999848 > 37748736)
 ```
 this limit seems dependent on hardware. for me, it is `37748736`. keep in mind that for block models all vertices are located in the one placed block, not where they appear in the rendered model.
 
-however, entity renderer has no such limit, and entity models can go over millions of faces regardless of whether your computer can handle rendering that many.
+the entity renderer has no such limit, and entity models can go over millions of faces regardless of whether your computer can handle rendering that many.
 
 ### versioning
 due to me changing stuff, different versions of the objmc shader may only work with the script texture/model outputs of that specific version.
@@ -242,11 +240,13 @@ execute store result entity @s ArmorItems[3].tag.CustomPotionColor int 1 run sco
 feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9SvZd
 
 # contributors:
+**vilder50** - Original concept of mesh models
+
+**Onnowhere** - Help with formatting and testing
+
 **DartCat25** - Helped me get started
 
 **The Der Discohund** - Help with matrix operations
-
-**Onnowhere** - Help with formatting decisions and testing
 
 **Suso** - Idea for controlled interpolated animation
 
@@ -260,4 +260,4 @@ feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9S
 
 **thebbq** - Help with edge case hardware inconsistency debugging
 
-**midorikuma** - Original idea of using player heads to encode arbitrary models
+**midorikuma** - Original concept of using player heads to encode arbitrary models
