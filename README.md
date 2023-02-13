@@ -152,12 +152,13 @@ there is no support for stitching multiple textures. you will have to use anothe
 
 https://github.com/Grim-es/material-combiner-addon is a blender addon that can combine multiple textures into an atlas.
 
-### gltf animation to obj per frame
-Blockbench exports animations to gltf format, which objmc doesn't support.
+### blockbench export
 
-you can import gltf format into blender and then export as waveform .obj, check the animation checkbox when exporting to generate .obj files per frame of the animation.
+blockbench can export obj per frame with a plugin https://www.blockbench.net/plugins/obj_animation_export
 
-by default blender outputs a lot more frames than you will likely need, especially since objmc shader does interpolation between the frames. you can change the time stretching and frame range in blender to be lower to potentially decrease file size by a lot.
+### number of frames
+
+by default most animation programs outputs a lot more frames than you will likely need, especially since objmc shader does interpolation between the frames. you can change the time stretching and frame range in blender to be lower to potentially decrease file size by a lot.
 
 ![image](https://user-images.githubusercontent.com/16228717/151484572-927dd40b-bd5d-4046-bb09-2cdf7ae23cf9.png)
 
