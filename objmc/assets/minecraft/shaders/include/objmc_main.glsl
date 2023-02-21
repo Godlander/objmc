@@ -32,7 +32,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     int nframes = max(t[3].r*65536 + t[3].g*256 + t[3].b, 1);
     int ntextures = max(t[3].a, 1);
     //4: duration, autoplay, easing
-    float duration = max(t[4].r*65536 + t[4].g*256 + t[4].b, 1);
+    int duration = max(t[4].r*65536 + t[4].g*256 + t[4].b, 1);
     bool autoplay = getb(t[4].a, 6);
     ivec2 easing = ivec2(getb(t[4].a, 4, 2), getb(t[4].a, 2, 2));
     //5: data heights
@@ -89,7 +89,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
         }
 #endif
         time = autoplay ? time + duration - mod(tcolor, duration) : tcolor;
-        int frame = int(time * duration / nframes) % int(duration);
+        int frame = int(time * nframes / duration) % nframes;
         //relative vertex id from unique face uv
         int id = (((uvoffset.y-1) * size.x) + uvoffset.x) * 4 + corner;
         id += frame * nvertices;
@@ -107,7 +107,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
             index = getvert(topleft, size.x, height+vph+vth, id);
             vec3 posoffset2 = getpos(topleft, size.x, height, index.x);
             //interpolate
-            transition = fract(time * duration / nframes);
+            transition = fract(time * nframes / duration);
             switch (easing.x) { //easing
                 case 1: //linear
                     posoffset = mix(posoffset, posoffset2, transition);
