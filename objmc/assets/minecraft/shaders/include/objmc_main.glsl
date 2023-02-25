@@ -2,6 +2,8 @@
 //https://github.com/Godlander/objmc
 
 isCustom = 0;
+transition = 0;
+texCoord2 = texCoord;
 int corner = gl_VertexID % 4;
 ivec2 atlasSize = textureSize(Sampler0, 0);
 vec2 onepixel = 1./atlasSize;
@@ -39,7 +41,7 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
     int vph = t[5].r*256 + t[5].g;
     int vth = t[5].b*256 + t[5].a;
     //6: noshadow, autorotate, visibility, colorbehavior
-    noshadow = getb(t[6].r, 8, 1);
+    noshadow = getb(t[6].r, 7, 1);
     vec2 autorotate = vec2(getb(t[6].r, 6, 1), getb(t[6].r, 5, 1));
     bvec3 visibility = bvec3(getb(t[6].r, 4), getb(t[6].r, 3), getb(t[6].r, 2));
     int colorbehavior = t[6].g;
@@ -95,12 +97,12 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
         id += frame * nvertices;
         //calculate height offsets
         headerheight = 1 + int(ceil(nvertices*0.25/size.x));
-        int height = headerheight + (size.y);
+        int height = headerheight + (size.y * ntextures);
         //read data
         ivec2 index = getvert(topleft, size.x, height+vph+vth, id);
         posoffset = getpos(topleft, size.x, height, index.x);
-        texCoord = getuv(topleft, size.x, height+vph, index.y) * size;
         if (nframes > 1) {
+            transition = fract(time * nframes / duration);
             int nids = (nframes * nvertices);
             //next frame
             id = (id+nvertices) % nids;
@@ -130,6 +132,19 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
                     break;
             }
         }
+        transition = 0;
+        texCoord = getuv(topleft, size.x, height+vph, index.y);
+        texCoord2 = texCoord;
+        if (ntextures > 1) {
+            frame = int(time * ntextures / duration) % ntextures;
+            texCoord.y += frame;
+            switch (easing.y) { //interpolation
+                case 1:
+                    transition = fract(time * ntextures / duration);
+                    texCoord2.y += (frame + 1) % ntextures;
+                    break;
+            }
+        }
 //custom entity rotation
 #ifdef ENTITY
         if (isHand + isGUI == 0) {
@@ -152,9 +167,12 @@ if (ivec4(texelFetch(Sampler0, topleft, 0)*255) == ivec4(12,34,56,78)) {
 #endif
     //final pos and uv
     Pos += posoffset;
-    texCoord = (vec2(topleft.x, topleft.y+headerheight) + texCoord)/atlasSize
+    texCoord = (vec2(topleft.x,topleft.y+headerheight) + texCoord*size)/atlasSize
                 //make sure that faces with same uv beginning/ending renders
-                + vec2(onepixel.x * 0.0001 * corner, onepixel.y * 0.0001 * ((corner + 1) % 4));
+                + vec2(onepixel.x*0.0001*corner,onepixel.y*0.0001*((corner+1)%4));
+    texCoord2 = (vec2(topleft.x,topleft.y+headerheight) + texCoord2*size)/atlasSize
+                //make sure that faces with same uv beginning/ending renders
+                + vec2(onepixel.x*0.0001*corner,onepixel.y*0.0001*((corner+1)%4));
 }
 //debug
 //else {
