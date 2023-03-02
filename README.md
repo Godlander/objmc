@@ -100,15 +100,10 @@ this is just a reference, actual format may change as i add/change stuff.
 ![image](https://user-images.githubusercontent.com/16228717/213836978-89154d30-349a-42a0-bc8f-7ccf85ef7a4a.png)
 
 ### modded compatibility
-item/entity models mostly work with both optifine and sodium.
 
-the main difference is that pixels in texture with alpha < 0.1 (25.6) are simply discarded and become rgba(0,0,0,0).
+i cannot guarantee modded compatibility. core shaders are a vanilla resourcepack feature, if a mod breaks a vanilla feature i cant do anything.
 
-to circumvent this i shift the first bit of all alpha values onto some other pixel. if the first bit is always 1 then alpha is guaranteed to be >= 0.5 (128)
-
-placed block models may not work, entity models will render fine.
-
-sodium users might expect incompatibility in the future:
+sodium users might expect complete incompatibility in the future:
 
 ![image](https://user-images.githubusercontent.com/16228717/161360296-c5883d7c-c33f-4aa0-bc25-e1360f2f2eca.png)
 
