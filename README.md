@@ -26,7 +26,7 @@ make sure your minecraft version is 1.18.1+ as the shader will not work with low
 ### advanced:
 `offset` and `scale`: just adds & multiplies vertex positions before encoding, so you dont have to re-export the model.
 
-`duration`: integer duration of each frame in ticks.
+`duration`: integer duration of the animation in ticks.
 
 `noshadow`: disable shading the model based on face normals.
 
