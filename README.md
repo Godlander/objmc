@@ -54,8 +54,6 @@ The script can be run with arguments to each of these. Example:
 python objmc.py --objs cube.obj --texs cube.png --autorotate --flipuv --out potion.json texture.png
 ```
 
-
-
 # samples:
 
 https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-9024-068c48f47cbf.mp4
@@ -70,6 +68,30 @@ https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-
 
 ![room](https://user-images.githubusercontent.com/16228717/155235807-250932d3-0ffd-43ca-92c8-3112df12a64e.png)
 
+# heads
+arbitrary model display using player skin to encode model data
+
+only works in snapshot 23w06a+, the resourcepack must be equipped
+
+model geometry complexity is limited per skin, and textures must be 32x32
+
+`python objh.py --obj model.obj --tex texture.png --out skin.png --scale 5`
+
+will output a skin image and a command missing a base64 url in the nbt
+
+upload the skin to your account, then run `python objh.py --skin username` to get the base64 url
+
+complete the command, then you can run it to summon the model. anyone with the resourcepack will be able to see the model.
+
+## example
+
+tree model:
+
+![image](https://user-images.githubusercontent.com/16228717/218281527-a05341cc-a478-4a80-b41b-0a7da3545f51.png)
+```js
+execute positioned ~ ~2 ~ summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display summon item_display as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run data merge entity @s {transformation:[0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,1f],item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"eyd0ZXh0dXJlcyc6IHsnU0tJTic6IHsndXJsJzogJ2h0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjI1YjM1NDhjMjFiZWE5MmU2YjQ5NTViMTZkMTQ1M2YzYmExMzE4MTE3YTgwNGE4ZmIzZTliZGJjNDQwMGM0Myd9fX0="}]}}}}}
+```
+
 # faqs / random notes about the tool
 
 ### general output format
@@ -78,15 +100,10 @@ this is just a reference, actual format may change as i add/change stuff.
 ![image](https://user-images.githubusercontent.com/16228717/213836978-89154d30-349a-42a0-bc8f-7ccf85ef7a4a.png)
 
 ### modded compatibility
-item/entity models mostly work with both optifine and sodium.
 
-the main difference is that pixels in texture with alpha < 0.1 (25.6) are simply discarded and become rgba(0,0,0,0).
+i cannot guarantee modded compatibility. core shaders are a vanilla resourcepack feature, if a mod breaks a vanilla feature i cant do anything.
 
-to circumvent this i shift the first bit of all alpha values onto some other pixel. if the first bit is always 1 then alpha is guaranteed to be >= 0.5 (128)
-
-placed block models may not work, entity models will render fine.
-
-sodium users might expect incompatibility in the future:
+sodium users might expect complete incompatibility in the future:
 
 ![image](https://user-images.githubusercontent.com/16228717/161360296-c5883d7c-c33f-4aa0-bc25-e1360f2f2eca.png)
 
@@ -130,42 +147,43 @@ there is no support for stitching multiple textures. you will have to use anothe
 
 https://github.com/Grim-es/material-combiner-addon is a blender addon that can combine multiple textures into an atlas.
 
-### gltf animation to obj per frame
-Blockbench exports animations to gltf format, which objmc doesn't support.
+### blockbench export
 
-you can import gltf format into blender and then export as waveform .obj, check the animation checkbox when exporting to generate .obj files per frame of the animation.
+blockbench can export obj per frame with a plugin https://www.blockbench.net/plugins/obj_animation_export
 
-by default blender outputs a lot more frames than you will likely need, especially since objmc shader does interpolation between the frames. you can change the time stretching and frame range in blender to be lower to potentially decrease file size by a lot.
+### number of frames
+
+by default most animation programs outputs a lot more frames than you will likely need, especially since objmc shader does interpolation between the frames. you can change the time stretching and frame range in blender to be lower to potentially decrease file size by a lot.
 
 ![image](https://user-images.githubusercontent.com/16228717/151484572-927dd40b-bd5d-4046-bb09-2cdf7ae23cf9.png)
 
 in the sample teapot animation, i only exported every 5th frame, and the animation still looks good enough.
 
-### model unloading
+### model display
 
-block models unload when its more than 1 subchunk away directly behind the player. that means objmc can be used in 16x16x16 block sized subchunks if a map is entirely modeled.
+placed block models are the most performant. they unload when its more than 1 subchunk away directly behind the player. that means objmc can be used in 16x16x16 block sized subchunks if a map is entirely modeled.
 
-entity models stay loaded in front of the player just as well as blocks but unloads instantly if their hitbox is not on screen.
+item models shown by entities are a couple hundred times worse performance than block models. entity models stay loaded in front of the player just as well as blocks but unloads if their hitbox is not on screen.
 
-*leashed entities become linked, and unrender when both of their hitboxes are no longer on screen.*
+spawner models are special, they unload 1 subchunk away behind and 8 subchunks away in front of the player, behaving similar to blocks with renderdistance 8, but rendering costs the same as entities.
 
-spawner models also unload 1 subchunk away behind but unload 8 subchunks away in front of the player, basically making render distance 8 regardless of real setting.
+**item/block display entities have controllable `view_range`, at 0 they don't cull and always stay rendered within renderdistance. they are the best entity method of displaying a model.**
 
 ### items with overlay color
 
 these items have custom rgb tint overlay that can be used to pass data:
 
-`potion`, `splash_potion`, `lingering_potion`, `leather_helmet`, `leather_chestplate`, `leather_leggings`, `leather_boots`, `leather_horse_armor`, `filled_map`
+`potion`, `splash_potion`, `lingering_potion`, `leather_helmet`, `leather_chestplate`, `leather_leggings`, `leather_boots`, `leather_horse_armor`, `firework_star`, `filled_map`
 
 ### vertex count limits
 
-there appears to be a hard vertex count limit per chunk in Minecraft for blocks, and exceeding that instantly crashes the game, regardless of whether your computer can handle rendering that many faces, with a crash message similar to this:
+there appears to be a hard vertex count limit per chunk in Minecraft for placed blocks, and exceeding that instantly crashes the game, regardless of whether your computer can handle rendering that many faces, with a crash message similar to this:
 ```
 java.lang.IllegalArgumentException: newLimit > capacity: (151999848 > 37748736)
 ```
 this limit seems dependent on hardware. for me, it is `37748736`. keep in mind that for block models all vertices are located in the one placed block, not where they appear in the rendered model.
 
-however, entity renderer has no such limit, and entity models can go over millions of faces regardless of whether your computer can handle rendering that many.
+the entity renderer has no such limit, and entity models can go over millions of faces regardless of whether your computer can handle rendering that many.
 
 ### versioning
 due to me changing stuff, different versions of the objmc shader may only work with the script texture/model outputs of that specific version.
@@ -217,11 +235,13 @@ execute store result entity @s ArmorItems[3].tag.CustomPotionColor int 1 run sco
 feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9SvZd
 
 # contributors:
+**vilder50** - Original concept of mesh models
+
+**Onnowhere** - Help with formatting and testing
+
 **DartCat25** - Helped me get started
 
 **The Der Discohund** - Help with matrix operations
-
-**Onnowhere** - Help with formatting decisions and testing
 
 **Suso** - Idea for controlled interpolated animation
 
@@ -234,3 +254,5 @@ feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9S
 **Daminator** - Showing me tkinter (this is so painful why)
 
 **thebbq** - Help with edge case hardware inconsistency debugging
+
+**midorikuma** - Original concept of using player heads to encode arbitrary models

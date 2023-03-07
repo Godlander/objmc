@@ -19,7 +19,7 @@ else if (noshadow == 0) {
     //entity lighting
     #ifdef ENTITY
     //flip normal for gui
-    if (isGUI == 1) normal.xz = -normal.xz;
+    if (isGUI == 1) normal.x = -normal.x;
     color *= minecraft_mix_light(Light0_Direction, Light1_Direction, normal, overlayColor);
     #endif
 
