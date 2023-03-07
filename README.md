@@ -71,8 +71,6 @@ https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-
 # heads
 arbitrary model display using player skin to encode model data
 
-only works in snapshot 23w06a+, the resourcepack must be equipped
-
 model geometry complexity is limited per skin, and textures must be 32x32
 
 `python objh.py --obj model.obj --tex texture.png --out skin.png --scale 5`
