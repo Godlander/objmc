@@ -7,11 +7,11 @@ either edit the script with your inputs, or run `python objmc.py` with correct a
 
 running the script without any arguments will open a gui with slightly more limited options.
 
-![image](https://user-images.githubusercontent.com/16228717/181353217-5a7af1e3-cb9b-44a2-8fe1-18b12d14c441.png)
+![image](https://user-images.githubusercontent.com/16228717/223296316-2278b049-0c10-4eb5-8e2e-4e8898dd01fa.png)
 
 place the model and texture output generated with this tool in the correct location in the resourcepack along with the shaders folder, and should display properly.
 
-make sure your minecraft version is 1.18.1+ as the shader will not work with lower versions.
+make sure your minecraft version is 1.19.4+ as the shader will not work with lower versions.
 
 ### script inputs
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
@@ -26,7 +26,7 @@ make sure your minecraft version is 1.18.1+ as the shader will not work with low
 ### advanced:
 `offset` and `scale`: just adds & multiplies vertex positions before encoding, so you dont have to re-export the model.
 
-`duration`: integer duration of each frame in ticks.
+`duration`: total duration of the animation in ticks.
 
 `noshadow`: disable shading the model based on face normals.
 
