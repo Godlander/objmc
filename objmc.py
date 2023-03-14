@@ -42,12 +42,11 @@ interpolation = 1
 
 #Color Behavior
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
-# any 3 chars of 'x', 'y', 'z', 't', 'o' is valid
-# 'xyz' = rotate, 't' = animation, 'o' = overlay hue
+# any 3 of 'pitch', 'yaw', 'roll', '
 # multiple rotation bytes increase accuracy on that axis
-# for 'ttt', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
+# when all 3 are 'time', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
 # auto-play color can be calculated by: ((([time query gametime] % 24000) - starting frame) % total duration)
-colorbehavior = 'xyz'
+colorbehavior = ['pitch', 'yaw', 'roll']
 
 #Auto Rotate
 # attempt to estimate rotation with Normals, added to colorbehavior rotation.
@@ -56,7 +55,7 @@ colorbehavior = 'xyz'
 autorotate = 1
 
 #Auto Play
-# always interpolate frames, colorbehavior='aaa' overrides this.
+# always interpolate frames, colorbehavior of all 'time' overrides this.
 autoplay = False
 
 #Flip uv
@@ -92,14 +91,14 @@ parser = ThrowingArgumentParser(description="python script to convert .OBJ files
 parser.add_argument("--objs", help="List of object files", nargs='*', default=objs)
 parser.add_argument("--texs", help="Specify a texture file", nargs='*', default=texs)
 parser.add_argument("--out", type=str, help="Output json and png", nargs=2, default=output)
-parser.add_argument("--offset", type=float, help="Offset of model in xyz", nargs=3, default=offset)
+parser.add_argument("--offset", type=float, help="Positional offset of model", nargs=3, default=offset)
 parser.add_argument("--scale", type=float, help="Scale of model", default=scale)
 parser.add_argument("--duration", type=int, help="Duration of the animation in ticks", default=duration)
 parser.add_argument("--easing", type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
 parser.add_argument("--interpolation", type=int, help="Texture interpolation, 0: none, 1: fade", default=interpolation)
-parser.add_argument("--colorbehavior", type=str, help="Item color overlay behavior, \"xyz\": rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
+parser.add_argument("--colorbehavior", type=str, nargs=3, help="Item color overlay behavior: 'pitch', 'yaw', 'roll', 'time', 'scale', 'overlay'.", default=colorbehavior)
 parser.add_argument("--autorotate", type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
-parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate animation, colorbehavior=\"ttt\" overrides this")
+parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate animation, colorbehavior of all 'time' overrides this")
 parser.add_argument("--visibility", type=int, help="Determines where the model is visible", default=visibility)
 parser.add_argument("--flipuv", action="store_true", dest="flipuv", help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
@@ -264,7 +263,7 @@ def strcontext(objs, texs, output, scale, offset, duration, easing, interpolatio
   s += " --duration " + str(duration)
   s += " --easing " + str(easing)
   s += " --interpolation " + str(interpolation)
-  s += " --colorbehavior " + colorbehavior
+  s += " --colorbehavior " + ' '.join(colorbehavior)
   s += " --autorotate " + str(autorotate)
   if autoplay:
     s += " --autoplay"
@@ -343,15 +342,20 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   if (ty > 4096 and x < 4096) or (ty > 8*x):
     print(col.warn+"output height may be too high, consider increasing width of input texture or reducing number of frames to bring the output texture closer to a square."+col.  end)
 
+  #parse color behavior
+  cbarr = ['pitch', 'yaw', 'roll', 'time', 'scale', 'overlay']
+  ca = [cbarr.index(i) for i in colorbehavior]
+  cb = ((ca[0]<<6) + (ca[1]<<3) + (ca[2]))
+
   #initial info
   print("%\033[K", end="\r")
-  print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
+  print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), ", flipuv: ", flipuv, sep="")
   if nframes > 1 or ntextures > 1:
     print("objs: ", nframes, ", easing: ", easing, sep="")
     print("texs: ", ntextures, ", interpolation: ", interpolation, sep="")
     print("duration: ", duration,"t", ", ", duration/20, "s, autoplay: ", autoplay, sep="")
   print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
-  print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
+  print("colorbehavior: ", " ".join(colorbehavior), " (", cb, ")", ", autorotate: ", autorotate, sep="")
   print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
   print("visible:", " world" if visibility & 4 > 0 else "", " hand" if visibility & 2 > 0 else "", " gui" if visibility & 1 > 0 else "", sep="")
   print("Creating Files...", end="\r")
@@ -360,14 +364,9 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   #create out image with correct dimensions
   out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
-  #parse color behavior
-  cbarr = ['x', 'y', 'z', 't', 'o']
-  ca = [cbarr.index(i) for i in colorbehavior]
-  cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
-
   # header
-  #| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2  \2| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
-  #| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp | data heights | noshadow, autorotate, visibility, colorbehavior |
+  #| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2  \2| 2^16x2       | 2^1     + 2^2       + 2^3    \1 + 2^1 + 2^8   \16|
+  #| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp | data heights | noshadow, autorotate, visibility, colorbehavior  |
   #0: marker
   out.putpixel((0,0), (12,34,56,78))
   #1: texsize
@@ -381,7 +380,7 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   #5: data heights
   out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, vtheight%256))
   #6: noshadow, autorotate, visibility, colorbehavior
-  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2), cb, 0, 255))
+  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2) + int(cb/256), cb%256, 255))
 
   #actual texture
   for i in range (0,len(texs)):
@@ -513,11 +512,11 @@ if not len(sys.argv) > 1:
   window.columnconfigure(0,weight=1)
   window.columnconfigure(1,weight=1)
   #obj list
-  tk.Button(window, text='Select Objs', command=openobjs, borderwidth=5).grid(column=0, row=0, padx=(5,20), pady=(5,0),sticky='NEW')
+  tk.Button(window, text='Select Objs', command=openobjs, borderwidth=3).grid(column=0, row=0, padx=(5,20), pady=(5,0),sticky='NEW')
   objlist = tkst.ScrolledText(window, height=500)
   objlist.grid(column=0, row=1, rowspan=3, sticky='NEW', padx=5)
   #tex list
-  tk.Button(window, text='Select Textures', command=opentex, borderwidth=5).grid(column=1, row=0, padx=(5,65), pady=(5,0), sticky='NEW')
+  tk.Button(window, text='Select Textures', command=opentex, borderwidth=3).grid(column=1, row=0, padx=(5,65), pady=(5,0), sticky='NEW')
   fu = tk.BooleanVar()
   tk.Checkbutton(window, text="Flip UV", variable=fu).grid(column=1, row=0, sticky='NES')
   texlist = tkst.ScrolledText(window, height=500)
@@ -573,21 +572,20 @@ if not len(sys.argv) > 1:
   earr = ["None","Linear","Cubic","Bezier"]
   ttk.Combobox(advanced, values=earr, textvariable=ea, state='readonly', width=8).grid(column=2, row=2, pady=(2,0), sticky='W')
   #interpolation
-  tk.Label(advanced, text="Texture Interpolation:").grid(column=0, row=3, sticky='W', padx=(5,0), pady=(2,0))
+  tk.Label(advanced, text="Texture Interpolation:").grid(column=0, row=3, sticky='W', padx=(5,5), pady=(2,0))
   it = tk.StringVar()
   iarr = ["None","Linear"]
-  ttk.Combobox(advanced, values=iarr, textvariable=it, state='readonly', width=8).grid(column=2, row=3, pady=(2,0), sticky='W')
+  ttk.Combobox(advanced, values=iarr, textvariable=it, state='readonly', width=8).grid(column=2, row=3, padx=(0,5), pady=(2,0), sticky='W')
   #autoplay
   ap = tk.BooleanVar()
   tk.Checkbutton(advanced, text="Auto Play", variable=ap).grid(column=0, row=4, columnspan=3, sticky='N')
   #color behavior
-  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=5, sticky='W', padx=(5,0))
-  cbarr = ['x', 'y', 'z', 't']
-  cbarr2 = ['x', 'y', 'z', 't', 'o']
+  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=5, columnspan=3)
+  cbarr = ['yaw', 'pitch', 'roll', 'time', 'scale', 'overlay']
   cb = [tk.StringVar() for i in range(3)]
-  ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=2, row=5, sticky='W', padx=(0,0))
-  ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=2, row=5, sticky='W', padx=(28,0))
-  ttk.Combobox(advanced, values=cbarr2, textvariable=cb[2], width=1, state='readonly').grid(column=2, row=5, sticky='W', padx=(56,0))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=7, state='readonly').grid(column=0, row=6, columnspan=3, padx=(0,125))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=7, state='readonly').grid(column=0, row=6, columnspan=3, padx=(0,0))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[2], width=7, state='readonly').grid(column=0, row=6, columnspan=3, padx=(125,0))
 
   #output
   outfooter = tk.Frame(window)
@@ -692,7 +690,7 @@ if not len(sys.argv) > 1:
     noshadow = ns.get()
     autorotate = rarr.index(ar.get())
     autoplay = ap.get()
-    colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
+    colorbehavior = [cb[0].get(), cb[1].get(), cb[2].get()]
     output = [outjson.get(), outpng.get()]
     objmc(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
     context = strcontext(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
