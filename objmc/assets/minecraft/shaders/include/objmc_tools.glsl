@@ -36,6 +36,14 @@ ivec2 getvert(ivec2 topleft, int w, int h, int index) {
     );
 }
 
+ivec2 hid(int id) {
+  if (id < 1056)
+    return ivec2((32 + id % 32), (id/32));
+  else
+    id -= 1056;
+    return ivec2((id % 64), 33 + int(id/64));
+}
+
 bool getb(int i, int b) {
     return bool((i>>b)&1);
 }

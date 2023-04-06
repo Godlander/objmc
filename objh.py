@@ -240,4 +240,5 @@ for i in range(nheads):
   command += " summon item_display"
 command += ' as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run data merge entity @s {transformation:[0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,1f],item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"INSERT_BASE64_HERE"}]}}}}}'
 print(col.green+command+col.end+'\n')
+
 quit()
