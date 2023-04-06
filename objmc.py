@@ -37,17 +37,16 @@ duration = 20
 easing = 3
 
 #Texture Interpolation
-# 0: none, 1: fade
+# 0: none, 1: linear
 interpolation = 1
 
 #Color Behavior
 # defines the behavior of 3 bytes of rgb to rotation and animation frames,
-# any 3 chars of 'x', 'y', 'z', 't', 'o' is valid
-# 'xyz' = rotate, 't' = animation, 'o' = overlay hue
+# any 3 of 'pitch', 'yaw', 'roll', '
 # multiple rotation bytes increase accuracy on that axis
-# for 'ttt', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
+# when all 3 are 'time', autoplay is automatically on. numbers past 8388608 define paused frame to display (suso's idea)
 # auto-play color can be calculated by: ((([time query gametime] % 24000) - starting frame) % total duration)
-colorbehavior = 'xyz'
+colorbehavior = ['pitch', 'yaw', 'roll']
 
 #Auto Rotate
 # attempt to estimate rotation with Normals, added to colorbehavior rotation.
@@ -56,7 +55,7 @@ colorbehavior = 'xyz'
 autorotate = 1
 
 #Auto Play
-# always interpolate frames, colorbehavior='aaa' overrides this.
+# always interpolate frames, colorbehavior of all 'time' overrides this.
 autoplay = False
 
 #Flip uv
@@ -92,14 +91,14 @@ parser = ThrowingArgumentParser(description="python script to convert .OBJ files
 parser.add_argument("--objs", help="List of object files", nargs='*', default=objs)
 parser.add_argument("--texs", help="Specify a texture file", nargs='*', default=texs)
 parser.add_argument("--out", type=str, help="Output json and png", nargs=2, default=output)
-parser.add_argument("--offset", type=float, help="Offset of model in xyz", nargs=3, default=offset)
+parser.add_argument("--offset", type=float, help="Positional offset of model", nargs=3, default=offset)
 parser.add_argument("--scale", type=float, help="Scale of model", default=scale)
 parser.add_argument("--duration", type=int, help="Duration of the animation in ticks", default=duration)
 parser.add_argument("--easing", type=int, help="Animation easing, 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier", default=easing)
 parser.add_argument("--interpolation", type=int, help="Texture interpolation, 0: none, 1: fade", default=interpolation)
-parser.add_argument("--colorbehavior", type=str, help="Item color overlay behavior, \"xyz\": rotate, 't': animation time offset, 'o': overlay hue", default=colorbehavior)
+parser.add_argument("--colorbehavior", type=str, nargs=3, help="Item color overlay behavior: 'pitch', 'yaw', 'roll', 'time', 'scale', 'overlay'.", default=colorbehavior)
 parser.add_argument("--autorotate", type=int, help="Attempt to estimate rotation with Normals, 0: off, 1: yaw, 2: pitch, 3: both", default=autorotate)
-parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate animation, colorbehavior=\"ttt\" overrides this")
+parser.add_argument("--autoplay", action="store_true", dest="autoplay", help="Always interpolate animation, colorbehavior of all 'time' overrides this")
 parser.add_argument("--visibility", type=int, help="Determines where the model is visible", default=visibility)
 parser.add_argument("--flipuv", action="store_true", dest="flipuv", help="Invert the texture to compensate for flipped UV")
 parser.add_argument("--noshadow", action="store_true", dest="noshadow", help="Disable shadows from face normals")
@@ -264,7 +263,7 @@ def strcontext(objs, texs, output, scale, offset, duration, easing, interpolatio
   s += " --duration " + str(duration)
   s += " --easing " + str(easing)
   s += " --interpolation " + str(interpolation)
-  s += " --colorbehavior " + colorbehavior
+  s += " --colorbehavior " + ' '.join(colorbehavior)
   s += " --autorotate " + str(autorotate)
   if autoplay:
     s += " --autoplay"
@@ -313,7 +312,7 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   tex = Image.open(texs[0])
   x,y = tex.size
   if x < 8:
-    print(col.err+"minimum texture size is 8x"+col.end)
+    print(col.err+"minimum texture size is 8x8"+col.end)
     exit()
 
   ntextures = len(texs)
@@ -343,14 +342,20 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   if (ty > 4096 and x < 4096) or (ty > 8*x):
     print(col.warn+"output height may be too high, consider increasing width of input texture or reducing number of frames to bring the output texture closer to a square."+col.  end)
 
+  #parse color behavior
+  cbarr = ['pitch', 'yaw', 'roll', 'time', 'scale', 'overlay']
+  ca = [cbarr.index(i) for i in colorbehavior]
+  cb = ((ca[0]<<6) + (ca[1]<<3) + (ca[2]))
+
   #initial info
   print("%\033[K", end="\r")
-  print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), sep="")
+  print("faces: ", nfaces, ", verts: ", nvertices, ", tex: ", (x,y), ", flipuv: ", flipuv, sep="")
   if nframes > 1 or ntextures > 1:
-    print("objs: ", nframes, ", duration: ", duration,"t", ", ", duration/20, "s", sep="")
-    print("easing: ", easing, ", interpolation: ", interpolation, ", autoplay: ", autoplay, sep="")
+    print("objs: ", nframes, ", easing: ", easing, sep="")
+    print("texs: ", ntextures, ", interpolation: ", interpolation, sep="")
+    print("duration: ", duration,"t", ", ", duration/20, "s, autoplay: ", autoplay, sep="")
   print("uvhead: ", uvheight, ", vph: ", vpheight, ", vth: ", vtheight, ", vh: ", vheight, ", total: ", ty, sep="")
-  print("colorbehavior: ", colorbehavior, ", flipuv: ", flipuv, ", autorotate: ", autorotate, sep="")
+  print("colorbehavior: ", " ".join(colorbehavior), " (", cb, ")", ", autorotate: ", autorotate, sep="")
   print("offset: ", offset, ", scale: ", scale, ", noshadow: ", noshadow, sep="")
   print("visible:", " world" if visibility & 4 > 0 else "", " hand" if visibility & 2 > 0 else "", " gui" if visibility & 1 > 0 else "", sep="")
   print("Creating Files...", end="\r")
@@ -359,14 +364,9 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   #create out image with correct dimensions
   out = Image.new("RGBA", (x, int(ty)), (0,0,0,0))
 
-  #parse color behavior
-  cbarr = ['x', 'y', 'z', 't', 'o']
-  ca = [cbarr.index(i) for i in colorbehavior]
-  cb = (ca[0]<<6) + (ca[1]<<4) + (ca[2])
-
   # header
-  #| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2  \2| 2^16x2       | 2^1     + 2^2       + 2^3    \2 + 2^8        \16|
-  #| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp | data heights | noshadow, autorotate, visibility, colorbehavior |
+  #| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2  \2| 2^16x2       | 2^1     + 2^2       + 2^3    \1 + 2^1 + 2^8   \16|
+  #| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp | data heights | noshadow, autorotate, visibility, colorbehavior  |
   #0: marker
   out.putpixel((0,0), (12,34,56,78))
   #1: texsize
@@ -380,7 +380,7 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   #5: data heights
   out.putpixel((5,0), (int(vpheight/256)%256, int(vpheight)%256, int(vtheight/256)%256, vtheight%256))
   #6: noshadow, autorotate, visibility, colorbehavior
-  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2), cb, 0, 255))
+  out.putpixel((6,0), ((int(noshadow)<<7)+(autorotate<<5)+(visibility<<2) + int(cb/256), cb%256, 255))
 
   #actual texture
   for i in range (0,len(texs)):
@@ -504,80 +504,105 @@ if not len(sys.argv) > 1:
   ico = tk.PhotoImage(data="""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""")
   window.tk.call('wm', 'iconphoto', window._w, ico)
   window.geometry("1x1")
-  window.minsize(500,400)
+  window.minsize(700,450)
   window.rowconfigure(0,pad=7)
   window.rowconfigure(1,weight=1)
-  window.rowconfigure(2,pad=7)
-  window.columnconfigure(0,weight=8)
-  window.columnconfigure(1,weight=9)
+  window.rowconfigure(2,weight=1)
+  window.rowconfigure(3,weight=1)
+  window.columnconfigure(0,weight=1)
+  window.columnconfigure(1,weight=1)
   #obj list
-  tk.Button(window, text='Select Objs', command=openobjs, borderwidth=5).grid(column=0, row=0, sticky='NEW')
+  tk.Button(window, text='Select Objs', command=openobjs, borderwidth=3).grid(column=0, row=0, padx=(5,20), pady=(5,0),sticky='NEW')
   objlist = tkst.ScrolledText(window, height=500)
   objlist.grid(column=0, row=1, rowspan=3, sticky='NEW', padx=5)
-  ttk.Separator(window, orient=tk.VERTICAL).grid(column=0, row=0, rowspan=4, sticky='NSE')
   #tex list
-  tk.Button(window, text='Select Textures', command=opentex, borderwidth=5).grid(column=1, row=0, sticky='NEW')
-  texlist = tk.Text(window, height=1)
-  texlist.grid(column=1, row=1, sticky='NEW', padx=5)
+  tk.Button(window, text='Select Textures', command=opentex, borderwidth=3).grid(column=1, row=0, padx=(5,65), pady=(5,0), sticky='NEW')
   fu = tk.BooleanVar()
-  tk.Checkbutton(window, text="Flip UV", variable=fu).grid(column=1, row=1, sticky='NE')
+  tk.Checkbutton(window, text="Flip UV", variable=fu).grid(column=1, row=0, sticky='NES')
+  texlist = tkst.ScrolledText(window, height=500)
+  texlist.grid(column=1, row=1, rowspan=3, sticky='NEW', padx=5)
+
+  #options
+  ttk.Separator(window, orient=tk.VERTICAL).grid(column=1, row=0, rowspan=4, sticky='NSE')
+  tk.Label(window, text="Options").grid(column=2, row=0, sticky='NESW')
+  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=2, row=1, sticky='NEW')
+
+  #basic
+  basic = tk.Frame(window)
+  basic.columnconfigure(0, weight=1)
+  basic.columnconfigure(1, weight=1)
+  basic.columnconfigure(2, weight=1)
+  basic.columnconfigure(3, weight=1)
+  basic.columnconfigure(4, weight=2)
+  basic.grid(column=2, row=1, sticky='EW')
   #scale and offset
   of = [tk.StringVar() for i in range(3)]
-  tk.Label(window, text="Offset:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(32,0))
-  Floatbox(window, width=5, textvariable=of[0]).grid(column=1, row=1, sticky='N', padx=(0,30), pady=(32,0))
-  Floatbox(window, width=5, textvariable=of[1]).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(32,0))
-  Floatbox(window, width=5, textvariable=of[2]).grid(column=1, row=1, sticky='N', padx=(110,0), pady=(32,0))
-  tk.Label(window, text="Scale:").grid(column=1, row=1, sticky='N', padx=(0,110), pady=(55,0))
+  tk.Label(basic, text="Offset:").grid(column=0, row=0, sticky='E', padx=(10))
+  Floatbox(basic, width=5, textvariable=of[0]).grid(column=1, row=0, sticky='NESW')
+  Floatbox(basic, width=5, textvariable=of[1]).grid(column=2, row=0, sticky='NESW')
+  Floatbox(basic, width=5, textvariable=of[2]).grid(column=3, row=0, sticky='NESW')
+  tk.Label(basic, text="Scale:").grid(column=0, row=1, sticky='E', padx=(10))
   sc = tk.StringVar()
-  Floatbox(window, width=17, textvariable=sc).grid(column=1, row=1, sticky='N', padx=(40,0), pady=(55,0))
+  Floatbox(basic, width=17, textvariable=sc).grid(column=1, row=1, columnspan=3, sticky='NESW')
   #noshadow
   ns = tk.BooleanVar()
-  tk.Checkbutton(window, text="No Shadow", variable=ns).grid(column=1, row=1, sticky='N', pady=(77,0))
-  #advanced
-  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=0, sticky='NEW')
-  advanced = tk.Frame(window)
-  advanced.columnconfigure(0, weight=1)
-  advanced.columnconfigure(1, weight=1)
-  advanced.grid(column=1, row=3, sticky='NESW')
-  tk.Label(advanced, text="Advanced").grid(column=0, row=0, columnspan=2, sticky='EW', pady=(0,5))
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW')
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=2, sticky='NEW', pady=(25,5))
-  #duration
-  tk.Label(advanced, text="Total Duration:").grid(column=0, row=1, sticky='W', padx=(5,0))
-  dur = tk.StringVar()
-  Number(advanced, textvariable=dur, width=5).grid(column=1, row=1, sticky='EW', padx=(0,30))
-  tk.Label(advanced, text="ticks").grid(column=1, row=1, sticky='E', padx=(0,25))
-  #easing
-  tk.Label(advanced, text="Easing Method:").grid(column=0, row=2, sticky='W', padx=(5,0), pady=(2,0))
-  ea = tk.StringVar()
-  earr = ["None","Linear","Cubic","Bezier"]
-  ttk.Combobox(advanced, values=earr, textvariable=ea, state='readonly', width=7).grid(column=1, row=2, pady=(2,0), sticky='W')
+  tk.Checkbutton(basic, text="No Shadow", variable=ns).grid(column=0, row=2, columnspan=4, padx=(20,0))
   #autorotate
   ar = tk.StringVar()
   rarr = ["Off","Yaw","Pitch","Both"]
-  tk.Label(advanced, text="Auto Rotate:").grid(column=0, row=3, sticky='W', padx=(5,0), pady=(2,0))
-  ttk.Combobox(advanced, values=rarr, textvariable=ar, state='readonly', width=7,).grid(column=1, row=3, pady=(2,0), sticky='W')
+  tk.Label(basic, text="Auto Rotate:").grid(column=0, row=3, columnspan=2, sticky='E', padx=(10))
+  ttk.Combobox(basic, values=rarr, textvariable=ar, state='readonly', width=7).grid(column=2, row=3, columnspan=2, sticky='W')
+  #advanced
+  advanced = tk.Frame(window)
+  advanced.columnconfigure(0, weight=1)
+  advanced.columnconfigure(1, weight=1)
+  advanced.columnconfigure(2, weight=1)
+  advanced.grid(column=2, row=2, sticky='EW')
+  tk.Label(advanced, text="Animation").grid(column=0, row=0, columnspan=3, sticky='EW', pady=(0,5))
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=3, sticky='NEW')
+  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=3, sticky='NEW', pady=(25,5))
+  #duration
+  tk.Label(advanced, text="Total Duration:").grid(column=0, row=1, sticky='W', padx=(5,0))
+  dur = tk.StringVar()
+  Number(advanced, textvariable=dur, width=5).grid(column=2, row=1, sticky='EW', padx=(0,30))
+  tk.Label(advanced, text="ticks").grid(column=2, row=1, sticky='E', padx=(0,15))
+  #easing
+  tk.Label(advanced, text="Position Easing:").grid(column=0, row=2, sticky='W', padx=(5,0), pady=(2,0))
+  ea = tk.StringVar()
+  earr = ["None","Linear","Cubic","Bezier"]
+  ttk.Combobox(advanced, values=earr, textvariable=ea, state='readonly', width=8).grid(column=2, row=2, pady=(2,0), sticky='W')
+  #interpolation
+  tk.Label(advanced, text="Texture Interpolation:").grid(column=0, row=3, sticky='W', padx=(5,5), pady=(2,0))
+  it = tk.StringVar()
+  iarr = ["None","Linear"]
+  ttk.Combobox(advanced, values=iarr, textvariable=it, state='readonly', width=8).grid(column=2, row=3, padx=(0,5), pady=(2,0), sticky='W')
   #autoplay
   ap = tk.BooleanVar()
-  tk.Checkbutton(advanced, text="Auto Play", variable=ap).grid(column=0, row=4, columnspan=2, sticky='N')
+  tk.Checkbutton(advanced, text="Auto Play", variable=ap).grid(column=0, row=4, columnspan=3, sticky='N')
   #color behavior
-  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=5, sticky='W', padx=(5,0))
-  cbarr = ['x', 'y', 'z', 't']
-  cbarr2 = ['x', 'y', 'z', 't', 'o']
+  cblabel = tk.Label(advanced, text="Color Behavior:").grid(column=0, row=5, columnspan=3)
+  cbarr = ['yaw', 'pitch', 'roll', 'time', 'scale', 'overlay']
   cb = [tk.StringVar() for i in range(3)]
-  ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(0,0))
-  ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(28,0))
-  ttk.Combobox(advanced, values=cbarr2, textvariable=cb[2], width=1, state='readonly').grid(column=1, row=5, sticky='W', padx=(56,0))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[0], width=7, state='readonly').grid(column=0, row=6, columnspan=3, padx=(0,125))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[1], width=7, state='readonly').grid(column=0, row=6, columnspan=3, padx=(0,0))
+  ttk.Combobox(advanced, values=cbarr, textvariable=cb[2], width=7, state='readonly').grid(column=0, row=6, columnspan=3, padx=(125,0))
+
   #output
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=6, columnspan=2, sticky='EW', pady=(7,0))
-  tk.Label(advanced, text="Output:").grid(column=0, row=7, columnspan=2)
+  outfooter = tk.Frame(window)
+  outfooter.columnconfigure(0, weight=1)
+  outfooter.columnconfigure(1, weight=1)
+  outfooter.columnconfigure(2, weight=1)
+  outfooter.grid(column=2, row=3, sticky='SEW', pady=10)
+  tk.Label(outfooter, text="Output").grid(column=0, row=0, columnspan=3, sticky='EW', pady=(0,10))
+  ttk.Separator(outfooter, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=3, sticky='NEW')
+  ttk.Separator(outfooter, orient=tk.HORIZONTAL).grid(column=0, row=0, columnspan=3, sticky='SEW', pady=(25,10))
   outjson = tk.StringVar()
   outpng = tk.StringVar()
-  tk.Entry(advanced, textvariable=outjson, width=10).grid(column=0, row=8, columnspan=2, sticky='NEW', padx=(5,10))
-  tk.Label(advanced, text=".json").grid(column=1, row=8, sticky='NE')
-  tk.Entry(advanced, textvariable=outpng, width=10).grid(column=0, row=9, columnspan=2, sticky='NEW', padx=5)
-  tk.Label(advanced, text=".png").grid(column=1, row=9, sticky='NE')
-  ttk.Separator(advanced, orient=tk.HORIZONTAL).grid(column=0, row=10, columnspan=2, sticky='NEW', pady=(5,0))
+  tk.Entry(outfooter, textvariable=outjson, width=10).grid(column=0, row=2, columnspan=3, padx=10, sticky='NEW')
+  tk.Label(outfooter, text=".json").grid(column=2, row=2, padx=10, sticky='NE')
+  tk.Entry(outfooter, textvariable=outpng, width=10).grid(column=0, row=3, columnspan=3, padx=10, sticky='NEW')
+  tk.Label(outfooter, text=".png").grid(column=2, row=3, padx=10, sticky='NE')
+
   def setval():
     settext(objlist, "\n".join(objs))
     settext(texlist, "\n".join(texs))
@@ -589,6 +614,7 @@ if not len(sys.argv) > 1:
     for i in range(3):
       cb[i].set(colorbehavior[i])
     ea.set(earr[easing])
+    it.set(earr[interpolation])
     ar.set(rarr[autorotate])
     ap.set(autoplay)
     outjson.set(output[0].replace(".json", ""))
@@ -664,7 +690,7 @@ if not len(sys.argv) > 1:
     noshadow = ns.get()
     autorotate = rarr.index(ar.get())
     autoplay = ap.get()
-    colorbehavior = cb[0].get() + cb[1].get() + cb[2].get()
+    colorbehavior = [cb[0].get(), cb[1].get(), cb[2].get()]
     output = [outjson.get(), outpng.get()]
     objmc(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
     context = strcontext(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
@@ -687,16 +713,16 @@ if not len(sys.argv) > 1:
     runtex = ""
 
   #start
-  tk.Button(window, text="Start", command=start).grid(column=1, row=4, sticky='E', padx=50, pady=5)
+  tk.Button(window, text="Start", command=start).grid(column=2, row=4)
   #history
   hlable = tk.Label(window, text="0/0")
   hlable.grid(column=0, row=4, sticky='W', padx=5, pady=5)
-  tk.Button(window, text="←", command=prev).grid(column=0, columnspan=2, row=4, sticky='W', padx=(60,0), pady=5)
-  tk.Button(window, text="→", command=next).grid(column=0, columnspan=2, row=4, sticky='W', padx=(80,0), pady=5)
-  tk.Button(window, text="Save History", command=savehistory).grid(column=0, columnspan=2, row=4, padx=(0,200), pady=5)
-  tk.Button(window, text="Load History", command=loadhistory).grid(column=0, columnspan=2, row=4, padx=(0,47), pady=5)
-  tk.Button(window, text="Run History", command=runhistory).grid(column=0, columnspan=2, row=4, padx=(102,0), pady=5)
-  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=1, row=1, sticky='NEW', pady=(25,0))
+  tk.Button(window, text="←", command=prev).grid(column=0, columnspan=3, row=4, sticky='W', padx=(60,0), pady=5)
+  tk.Button(window, text="→", command=next).grid(column=0, columnspan=3, row=4, sticky='W', padx=(80,0), pady=5)
+  tk.Button(window, text="Save History", command=savehistory).grid(column=0, columnspan=3, row=4, padx=(0,200), pady=5)
+  tk.Button(window, text="Load History", command=loadhistory).grid(column=0, columnspan=3, row=4, padx=(0,47), pady=5)
+  tk.Button(window, text="Run History", command=runhistory).grid(column=0, columnspan=3, row=4, padx=(102,0), pady=5)
+  ttk.Separator(window, orient=tk.HORIZONTAL).grid(column=0, row=4, columnspan=3, sticky='NEW')
 
   #hotkeys
   window.bind('<Return>', lambda e: start())

@@ -30,7 +30,7 @@ flat in int noshadow;
 out vec4 fragColor;
 
 void main() {
-    vec4 color = texture(Sampler0, texCoord);
+    vec4 color = mix(texture(Sampler0, texCoord), texture(Sampler0, texCoord2), transition);
 
     //custom lighting
     #define ENTITY
