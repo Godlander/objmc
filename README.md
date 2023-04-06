@@ -18,7 +18,7 @@ make sure your minecraft version is 1.19.4+ as the shader will not work with low
 
 `frames`: array of strings of digits defining which index of the obj to use as each frame.
 
-`texs`: array of one single name of the texture file. the minimum size is 8x8, but a larger texture is recommended if model has a lot of vertices or is animated.
+`texs`: array of names of the texture files. the minimum size is 8x8, but a wider texture is recommended if model has a lot of vertices or is animated.
 
 ### script output
 `output`: array of two string file names: the json model, and the texture.
@@ -30,7 +30,9 @@ make sure your minecraft version is 1.19.4+ as the shader will not work with low
 
 `noshadow`: disable shading the model based on face normals.
 
-`easing`: interpolation method shader uses inbetween frames. 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier.
+`easing`: interpolation method shader uses inbetween vertex animation frames. 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier.
+
+`interpolation`: interpolation method shader uses inbetween texture frames. 0: none, 1: fade.
 
 `flipuv`: if your model renders but doesn't look right, try toggling this. see [#flipped-uv](#flipped-uv).
 
@@ -70,8 +72,6 @@ https://user-images.githubusercontent.com/16228717/177398816-cf919f1d-8de1-4346-
 
 # heads
 arbitrary model display using player skin to encode model data
-
-only works in snapshot 23w06a+, the resourcepack must be equipped
 
 model geometry complexity is limited per skin, and textures must be 32x32
 
@@ -115,6 +115,8 @@ if you make a model with 6 faces, you can expect it to perform similarly to a no
 thus, performance optimization is largely on the user to optimize the face count of the input model.
 
 a zombie has a model with 6 elements each with 6 faces. a objmc entity model with 20k faces should expect similar performance to rendering 556 NoAI zombies on the screen. similarly, a objmc block model with 20k faces should expect similar performance to rendering 3333 blocks on screen, *without any culling*.
+
+block models are a few hundred times more performant than entity models.
 
 ### model not rendering
 most of the time this is due to an error in your resourcepack. make sure the shaders are in the correct place, double check the file paths for model and texture (by default model will point to the root textures folder, not textures/block or textures/items), try using latest version of objmc script and shader if you have an older version.
