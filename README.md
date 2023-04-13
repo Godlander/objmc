@@ -40,11 +40,11 @@ make sure your minecraft version is 1.19.4+ as the shader will not work with low
 
 `colorbehavior`: defines the behavior of each byte of the overlay color of the item r,g,b. x: pitch rotation, y: yaw rotation, z: roll rotation, t: animation time offset, o: overlay color hue.
 
-*example: `xto` defines 1 byte of red color as yaw rotation, the next byte of blue color as animation time offset , and the last byte of green being overlay color hue.*
+*example: `yaw time overlay` defines 1 byte of red color as yaw rotation, the next byte of blue color as animation time offset , and the last byte of green being overlay color hue.*
 
 `autorotate`: tells the shader to estimate rotation from Normals instead of defining it by color. due to byte inaccuracy this will be a little jittery. allows color to be used for other inputs like controlling animation.
 
-`autoplay`: make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'ttt'` will override this.
+`autoplay`: make the animation continuously play, color can still be used to define the starting frame. `colorbehavior = 'time time time'` will override this.
 
 `visibility`: 3 bit number, defines where a model is visible. 1: in gui, 2: in first person hand, 4: in world. (7 would mean visible everywhere.) models with limited visibility can be joined together allowing for different models to show up in different places.
 
@@ -128,7 +128,7 @@ this doesnt seem to happen through Blender tho.
 
 ### controlling animation
 
-any bits declared as `t` in `colorbehavior` will act as a time offset in ticks from 0 if `autoplay` is off, or from the current tick if `autoplay` is on.
+any bits declared as `time` in `colorbehavior` will act as a time offset in ticks from 0 if `autoplay` is off, or from the current tick if `autoplay` is on.
 
 to calculate the offset for a frame while using `autoplay`, you can use this formula:
 
@@ -136,7 +136,7 @@ to calculate the offset for a frame while using `autoplay`, you can use this for
 ((([/time query gametime] % 24000) - starting frame) % total duration)
 ```
 
-if `colorbehavior` is set to `ttt`, autoplay is automatically on. instead, numbers past 8388608 define the paused frame to display (8388608 + paused frame to show).
+if `colorbehavior` is set to `time time time`, autoplay is automatically on. instead, numbers past 8388608 define the paused frame to display (8388608 + paused frame to show).
 
 ### spawner models
 you use spawners as a block that uses the entity renderer but isn't an entity. they are considerably laggier than normal blocks, but still better than entities, and don't suffer unloading nearly as much.
