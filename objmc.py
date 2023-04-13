@@ -18,7 +18,7 @@ import tkinter.filedialog as tkfd
 
 #objs
 objs = [""]
-#texture animations not supported yet
+#textures
 texs = [""]
 
 #Output json & png
@@ -74,8 +74,6 @@ noshadow = False
 visibility = 7
 
 #No power of two textures
-# i guess saves a bit of space maybe
-# makes it not optifine compatible
 nopow = True
 
 #Joining multiple models
