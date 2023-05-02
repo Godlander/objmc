@@ -30,7 +30,7 @@ offset = (0.0,0.0,0.0)
 scale = 1.0
 
 #Duration of the animation in ticks
-duration = 20
+duration = 0
 
 #Animation Easing
 # 0: none, 1: linear, 2: in-out cubic, 3: 4-point bezier
@@ -56,7 +56,7 @@ autorotate = 1
 
 #Auto Play
 # always interpolate frames, colorbehavior of all 'time' overrides this.
-autoplay = False
+autoplay = True
 
 #Flip uv
 # if your model renders but textures are not right try toggling this
@@ -137,7 +137,6 @@ def getargs(args):
   noshadow = args.noshadow
   nopow = args.nopow
   join = args.join
-getargs(parser.parse_args())
 
 class col:
     head = '\033[95m'
@@ -305,18 +304,23 @@ def objmc(objs, texs, output, sc, off, duration, easing, interpolation, colorbeh
   if (output[1][-4:] != ".png"):
    output[1] += ".png"
 
+  ntextures = len(texs)
+  nframes = len(objs)
+
   #input error checking
-  if duration < 1 or duration > 256:
-    print(col.err+"duration must be between 1 and 256"+col.end)
+  if ntextures < 1 or nframes < 1:
+    print(col.err+"must have a obj and a texture"+col.end)
+    exit()
+  if duration == 0:
+    duration = nframes
+  if duration < 1 or duration > 65536:
+    print(col.err+"duration must be between 1 and 65536"+col.end)
     exit()
   tex = Image.open(texs[0])
   x,y = tex.size
   if x < 8:
     print(col.err+"minimum texture size is 8x8"+col.end)
     exit()
-
-  ntextures = len(texs)
-  nframes = len(objs)
 
   print("\n"+col.cyan+"objmc start "+runtex+col.end)
   #read obj
@@ -467,7 +471,6 @@ def openobjs():
 class Number(tk.Entry):
   def __init__(self, master=None, **kwargs):
     self.var = kwargs.pop('textvariable', None)
-    self.var.set(str(duration))
     tk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
     self.old_value = ''
     self.var.trace('w', self.check)
@@ -606,6 +609,7 @@ if not len(sys.argv) > 1:
   def setval():
     settext(objlist, "\n".join(objs))
     settext(texlist, "\n".join(texs))
+    dur.set(duration)
     fu.set(flipuv)
     for i in range(3):
       of[i].set(str(offset[i]))
@@ -764,6 +768,7 @@ elif join:
   out.write(json.dumps(js,separators=(',',':')))
 
 else:
+  getargs(parser.parse_args())
   objmc(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 #--------------------------------
 quit()
