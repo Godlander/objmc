@@ -234,7 +234,7 @@ execute store result entity @s ArmorItems[3].tag.CustomPotionColor int 1 run sco
 ```
 
 ### questions
-feel free to contact me on discord @Godlander#1020 or https://discord.gg/2s6th9SvZd
+feel free to contact me on [discord](https://discord.gg/2s6th9SvZd)
 
 # contributors:
 **vilder50** - Original concept of mesh models
