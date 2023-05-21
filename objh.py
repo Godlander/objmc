@@ -236,8 +236,12 @@ print("Saving skin...\033[K", end="\r")
 out.save(output)
 
 command = "summon area_effect_cloud ~ ~1 ~ {Passengers:["
-for i in range(nheads):
-  command += '{id:"item_display",Tags:["objh"],transformation:{translation:[0f,'+str(i*1000)+'f,0f],scale:[0f,0f,0f],left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f]},item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:"'+skin+'"}]}}}}},'
+for i in range(1,nheads+1):
+  y = i
+  y = int(y/2)*400
+  if (i%2 == 1):
+    y *= -1
+  command += '{id:"item_display",Tags:["objh"],transformation:{translation:[0f,'+str(y)+'f,0f],scale:[0f,0f,0f],left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f]},item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:"'+skin+'"}]}}}}},'
 command += "]}"
 print(col.green+command+col.end+'\n')
 
