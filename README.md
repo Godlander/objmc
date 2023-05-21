@@ -81,6 +81,8 @@ will output a skin image and a command missing a base64 url in the nbt
 
 upload the skin to your account, then run `python objh.py --skin username` to get the base64 url
 
+or rerun `python objh.py --obj model.obj --tex texture.png --out skin.png --scale 5 -skin username/base64` to automatically insert the url
+
 complete the command, then you can run it to summon the model. anyone with the resourcepack will be able to see the model.
 
 ## example
