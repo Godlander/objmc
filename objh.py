@@ -237,7 +237,7 @@ out.save(output)
 
 command = "summon area_effect_cloud ~ ~1 ~ {Passengers:["
 for i in range(nheads):
-  command += '{id:"item_display",Tags:["objmc_head"],transformation:[0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,'+str(i*1000)+'f,0f,1f],item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:"'+skin+'"}]}}}}},'
+  command += '{id:"item_display",Tags:["objh"],transformation:{translation:[0f,'+str(i*1000)+'f,0f],scale:[0f,0f,0f],left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f]},item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:"'+skin+'"}]}}}}},'
 command += "]}"
 print(col.green+command+col.end+'\n')
 

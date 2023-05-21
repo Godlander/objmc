@@ -25,7 +25,6 @@ if (textureSize(Sampler0, 0) == vec2(64) && (marker == ivec4(12,34,56,78) || mar
     int eid = int((Pos.y+500)/1000);
     Pos.y = mod(Pos.y+500,1000)-500;
     Pos = Pos * IViewRotMat;
-    eid = (gl_VertexID/48) % ((nfaces+11)/12);
     int vid = (eid * 48) + (gl_VertexID % 48);
     ivec4 face = ivec4(texelFetch(Sampler0, huv(vid), 0)*255);
     if (vid > nvertices) Pos = posoffset = vec3(0);
