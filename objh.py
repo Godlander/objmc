@@ -84,7 +84,7 @@ def exit():
   sys.exit()
 
 #--------------------------------
-if skin:
+if skin and len(skin) <= 32:
   url = 'https://api.mojang.com/users/profiles/minecraft/'+skin
   response = urllib.request.urlopen(url)
   content = json.loads(response.read().decode('utf8'))
@@ -98,15 +98,16 @@ if skin:
   url = 'https://sessionserver.mojang.com/session/minecraft/profile/'+uuid
   response = urllib.request.urlopen(url)
   content = json.loads(response.read().decode('utf8'))
-  value = content['properties'][0]['value']
+  skin = content['properties'][0]['value']
 
-  content = json.loads(base64.b64decode(value).decode())
-  value = {k: v for k, v in content.items() if k == 'textures'}
-  value = base64.b64encode(str(value).encode())
-  value = re.search(r'\'(.+)\'',str(value)).group(1)
+  content = json.loads(base64.b64decode(skin).decode())
+  skin = {k: v for k, v in content.items() if k == 'textures'}
+  skin = base64.b64encode(str(skin).encode())
+  skin = re.search(r'\'(.+)\'',str(skin)).group(1)
 
-  print(col.green+value+col.end)
-  exit()
+  if not obj or not tex:
+    print(col.green+skin+col.end)
+    exit()
 
 #--------------------------------
 count = [0,0]
@@ -234,11 +235,10 @@ for u in data["uvs"]:
 print("Saving skin...\033[K", end="\r")
 out.save(output)
 
-command = "execute "
-command += "positioned ~ ~2 ~"
+command = "summon area_effect_cloud ~ ~1 ~ {Passengers:["
 for i in range(nheads):
-  command += " summon item_display"
-command += ' as @e[type=item_display,distance=..0.1,nbt={item:{id:"minecraft:air"}}] run data merge entity @s {transformation:[0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,0f, 0f,0f,0f,1f],item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;1617307098,1728332524,-1389744951,-1149641594],Properties:{textures:[{Value:"INSERT_BASE64_HERE"}]}}}}}'
+  command += '{id:"item_display",Tags:["objmc_head"],transformation:[0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,0f,'+str(i*1000)+'f,0f,1f],item:{id:"player_head",Count:1b,tag:{SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:"'+skin+'"}]}}}}},'
+command += "]}"
 print(col.green+command+col.end+'\n')
 
 quit()

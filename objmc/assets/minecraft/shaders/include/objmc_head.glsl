@@ -21,14 +21,18 @@ if (textureSize(Sampler0, 0) == vec2(64) && (marker == ivec4(12,34,56,78) || mar
     isGUI = int(isgui(ProjMat));
     isHand = int(ishand(FogStart) && !bool(isGUI));
 
-    int eid = (gl_VertexID/48) % ((nfaces+11)/12);
+    Pos = IViewRotMat * Position;
+    int eid = int((Pos.y+500)/1000);
+    Pos.y = mod(Pos.y+500,1000)-500;
+    Pos = Pos * IViewRotMat;
+    eid = (gl_VertexID/48) % ((nfaces+11)/12);
     int vid = (eid * 48) + (gl_VertexID % 48);
-    ivec4 face = ivec4(texelFetch(Sampler0, hid(vid), 0)*255);
+    ivec4 face = ivec4(texelFetch(Sampler0, huv(vid), 0)*255);
     if (vid > nvertices) Pos = posoffset = vec3(0);
     int pid = ((face.r>>4)<<8)+face.g + nvertices;
     int uid = ((face.r%32)<<8)+face.b + nvertices+npos;
-    posoffset = texelFetch(Sampler0, hid(pid), 0).rgb;
-    texCoord = texelFetch(Sampler0, hid(uid), 0).rg;
+    posoffset = texelFetch(Sampler0, huv(pid), 0).rgb;
+    texCoord = texelFetch(Sampler0, huv(uid), 0).rg;
 
     posoffset = (posoffset - vec3(0.5)) * scale * IViewRotMat;
     //final pos and uv
