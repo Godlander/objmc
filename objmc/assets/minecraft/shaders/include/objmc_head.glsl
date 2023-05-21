@@ -22,9 +22,9 @@ if (textureSize(Sampler0, 0) == vec2(64) && (marker == ivec4(12,34,56,78) || mar
     isHand = int(ishand(FogStart) && !bool(isGUI));
 
     Pos = IViewRotMat * Position;
-    int eid = int(((Pos.y < 0)? Pos.y-200 : Pos.y+200)/400);
-    Pos.y -= eid*400;
-    eid = (eid < 0)? -eid*2-1 : eid*2;
+    ivec3 p = ivec3(Pos + 1250)/500;
+    int eid = p.x + (p.y*4) + (p.z*16);
+    Pos = mod(Pos + 1250, 500)-250;
     Pos = Pos * IViewRotMat;
     int vid = (eid * 48) + (gl_VertexID % 48);
     ivec4 face = ivec4(texelFetch(Sampler0, huv(vid), 0)*255);
