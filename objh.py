@@ -108,6 +108,8 @@ if skin and len(skin) <= 32:
   if not obj or not tex:
     print(col.green+skin+col.end)
     exit()
+else:
+  skin = 'REPLACE_URL'
 
 #--------------------------------
 count = [0,0]
