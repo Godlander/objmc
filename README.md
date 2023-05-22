@@ -257,6 +257,6 @@ feel free to contact me on [discord](https://discord.gg/2s6th9SvZd)
 
 **Daminator** - Showing me tkinter (this is so painful why)
 
-**thebbq** - Help with edge case hardware inconsistency debugging
+**thebbq** - Help with edge case debugging and stability
 
 **midorikuma** - Original concept of using player heads to encode arbitrary models
