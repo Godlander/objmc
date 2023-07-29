@@ -82,6 +82,11 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
                 case 3: tcolor = tcolor*256 + int(Color.r*255); break;
                 case 4: tscale.x = Color.r*255; tscale.y *= 256; break;
                 case 5: thue.x = Color.r*255; thue.y *= 256; break;
+                case 6: 
+                    if(Color.r != 0)
+                        overlayColor = vec4(1,0.7,0.7,1);
+                    break;
+
             }
             switch ((colorbehavior>>3)&7) { //second 3 bits, g
                 case 0: rotation.x = rotation.x*256 + Color.g*255; accuracy.r *= 256; break;
@@ -90,6 +95,10 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
                 case 3: tcolor = tcolor*256 + int(Color.g*255); break;
                 case 4: tscale.x = tscale.x*256 + Color.g*255; tscale.y *= 256; break;
                 case 5: thue.x = thue.x*256 + Color.g*255; thue.y *= 256; break;
+                case 6: 
+                    if(Color.g != 0)
+                        overlayColor = vec4(1,0.7,0.7,1);
+                    break;
             }
             switch (colorbehavior&7) { //third 3 bits, b
                 case 0: rotation.x = rotation.x*256 + Color.b*255; accuracy.r *= 256; break;
@@ -98,6 +107,10 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
                 case 3: tcolor = tcolor*256 + int(Color.b*255); break;
                 case 4: tscale.x = tscale.x*256 + Color.b*255; tscale.y *= 256; break;
                 case 5: thue.x = thue.x*256 + Color.b*255; thue.y *= 256; break;
+                case 6: 
+                    if(Color.b != 0)
+                        overlayColor = vec4(1,0.7,0.7,1);
+                    break;
             }
             rotation = rotation/accuracy * 2*PI;
             if (tscale.x > 0) scale = tscale.x/tscale.y;

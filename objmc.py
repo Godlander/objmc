@@ -126,7 +126,7 @@ parser.add_argument(
     "--colorbehavior",
     type=str,
     nargs=3,
-    help="Item color overlay behavior: 'pitch', 'yaw', 'roll', 'time', 'scale', 'overlay'.",
+    help="Item color overlay behavior: 'pitch', 'yaw', 'roll', 'time', 'scale', 'overlay', 'hurt'.",
     default=colorbehavior,
 )
 parser.add_argument(
@@ -351,7 +351,7 @@ def getposition(i):
     x = 8388608 + ((data["positions"][i][0]) * 65536) * scale + offset[0] * 65536
     y = 8388608 + ((data["positions"][i][1]) * 65536) * scale + offset[1] * 65536
     z = 8388608 + ((data["positions"][i][2]) * 65536) * scale + offset[2] * 65536
-    
+
     rgb = []
     rgb.append((int((x / 65536) % 256), int((x / 256) % 256), int(x % 256), 255))
     rgb.append((int((y / 65536) % 256), int((y / 256) % 256), int(y % 256), 255))
@@ -372,17 +372,26 @@ def getvert(i, compression_enabled):
     poi = data["vertices"][i][0]
     uvi = data["vertices"][i][1]
     rgb = []
-    
+
     if compression_enabled:
         if uvi >= 256:
             raise "UVI exceeds 256"
         rgb.append(
-            (int((poi / 65536) % 256), int((poi / 256) % 256), int(poi % 256), uvi % 256)
+            (
+                int((poi / 65536) % 256),
+                int((poi / 256) % 256),
+                int(poi % 256),
+                uvi % 256 + 1,
+            )
         )
     else:
-        rgb.append((int((poi/65536)%256), int((poi/256)%256), int(poi%256), 255))
-        rgb.append((int((uvi/65536)%256), int((uvi/256)%256), int(uvi%256), 255))
-        
+        rgb.append(
+            (int((poi / 65536) % 256), int((poi / 256) % 256), int(poi % 256), 255)
+        )
+        rgb.append(
+            (int((uvi / 65536) % 256), int((uvi / 256) % 256), int(uvi % 256), 255)
+        )
+
     return rgb
 
 
@@ -401,6 +410,7 @@ def strcontext(
     flipuv,
     noshadow,
     nopow,
+    compression,
 ):
     s = ""
     s += "--objs " + " ".join(objs)
@@ -456,6 +466,7 @@ def objmc(
     flipuv,
     noshadow,
     nopow,
+    compression,
 ):
     global offset
     global scale
@@ -516,9 +527,9 @@ def objmc(
     uvheight = math.ceil(nfaces / x)
     vpheight = math.ceil(len(data["positions"]) * 3 / x)
     vtheight = math.ceil(len(data["uvs"]) * 2 / x)
-    
-    compression_enabled = len(data["uvs"]) <= 255
-    
+
+    compression_enabled = len(data["uvs"]) <= 255 if compression == None else compression
+
     vheight = math.ceil(len(data["vertices"]) * (1 if compression_enabled else 2) / x)
     # make height power of 2
     ty = 1 + uvheight + texheight + vpheight + vtheight + vheight
@@ -532,7 +543,7 @@ def objmc(
         )
 
     # parse color behavior
-    cbarr = ["pitch", "yaw", "roll", "time", "scale", "overlay"]
+    cbarr = ["pitch", "yaw", "roll", "time", "scale", "overlay", "hurt"]
     ca = [cbarr.index(i) for i in colorbehavior]
     cb = (ca[0] << 6) + (ca[1] << 3) + (ca[2])
 
@@ -696,7 +707,7 @@ def objmc(
         for j in range(0, 3):
             p = i * 3 + j
             out.putpixel((p % x, y + math.floor(p / x)), a[j])
-            
+
     print("Writing uv data...\033[K", end="\r")
     y = 1 + uvheight + texheight + vpheight
     for i in range(0, len(data["uvs"])):
@@ -708,13 +719,13 @@ def objmc(
     y = 1 + uvheight + texheight + vpheight + vtheight
     for i in range(0, len(data["vertices"])):
         a = getvert(i, compression_enabled)
-        
+
         if compression_enabled:
             out.putpixel((i % x, y + math.floor(i / x)), a[0])
         else:
-            for j in range(0,2):
-                p = i*2+j
-                out.putpixel((p%x,y+math.floor(p/x)), a[j])            
+            for j in range(0, 2):
+                p = i * 2 + j
+                out.putpixel((p % x, y + math.floor(p / x)), a[j])
 
     print("Saving files...\033[K", end="\r")
     out.save(output[1].split("/")[-1])
@@ -920,7 +931,7 @@ if not len(sys.argv) > 1:
     cblabel = tk.Label(advanced, text="Color Behavior:").grid(
         column=0, row=5, columnspan=3
     )
-    cbarr = ["yaw", "pitch", "roll", "time", "scale", "overlay"]
+    cbarr = ["yaw", "pitch", "roll", "time", "scale", "overlay", "hurt"]
     cb = [tk.StringVar() for i in range(3)]
     ttk.Combobox(
         advanced, values=cbarr, textvariable=cb[0], width=7, state="readonly"
@@ -958,6 +969,18 @@ if not len(sys.argv) > 1:
     )
     tk.Label(outfooter, text=".png").grid(column=2, row=3, padx=10, sticky="NE")
 
+    tk.Label(outfooter, text="Compress").grid(
+        column=0, row=4, columnspan=1, sticky="NE", padx=(10)
+    )
+    compression = tk.StringVar()
+    ttk.Combobox(
+        outfooter,
+        values=["Auto", "On", "Off"],
+        textvariable=compression,
+        state="readonly",
+        width=7,
+    ).grid(column=2, row=4, columnspan=3, sticky="W")
+
     def setval():
         settext(objlist, "\n".join(objs))
         settext(texlist, "\n".join(texs))
@@ -973,6 +996,7 @@ if not len(sys.argv) > 1:
         it.set(earr[interpolation])
         ar.set(rarr[autorotate])
         ap.set(autoplay)
+        compression.set("Auto")
         outjson.set(output[0].replace(".json", ""))
         outpng.set(output[1].replace(".png", ""))
 
@@ -1071,6 +1095,11 @@ if not len(sys.argv) > 1:
             flipuv,
             noshadow,
             nopow,
+            None
+            if compression.get() == "Auto"
+            else True
+            if compression.get() == "On"
+            else False,
         )
         context = strcontext(
             objs,
@@ -1087,6 +1116,11 @@ if not len(sys.argv) > 1:
             flipuv,
             noshadow,
             nopow,
+            None
+            if compression.get() == "Auto"
+            else True
+            if compression.get() == "On"
+            else False,
         )
         try:
             i = history.index(context)
