@@ -26,14 +26,23 @@ vec2 getuv(ivec2 topleft, int w, int h, int index) {
         ((y.g*65280)+(y.b*255))/65535
     );
 }
-ivec2 getvert(ivec2 topleft, int w, int h, int index) {
-    int i = index*2;
-    ivec4 a = ivec4(texelFetch(Sampler0, topleft + ivec2((i  )%w,h+((i  )/w)), 0)*255);
-    ivec4 b = ivec4(texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0)*255);
-    return ivec2(
-        ((a.r*65536)+(a.g*256)+a.b),
-        ((b.r*65536)+(b.g*256)+b.b)
-    );
+ivec2 getvert(ivec2 topleft, int w, int h, int index, bool compressionEnabled) {
+
+    if(!compressionEnabled) {
+        int i = index*2;
+        ivec4 a = ivec4(texelFetch(Sampler0, topleft + ivec2((i  )%w,h+((i  )/w)), 0)*255);
+        ivec4 b = ivec4(texelFetch(Sampler0, topleft + ivec2((i+1)%w,h+((i+1)/w)), 0)*255);
+        return ivec2(
+            ((a.r*65536)+(a.g*256)+a.b),
+            ((b.r*65536)+(b.g*256)+b.b)
+        );
+    } else {
+        ivec4 a = ivec4(texelFetch(Sampler0, topleft + ivec2((index  )%w,h+((index  )/w)), 0)*255);
+        return ivec2(
+            ((a.r*65536)+(a.g*256)+a.b),
+            a.a
+        );
+    }
 }
 
 ivec2 huv(int id) {

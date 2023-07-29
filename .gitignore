@@ -1,0 +1,6 @@
+temp/
+.vscode/
+history.txt
+out.png
+potion.json
+*.pyc
