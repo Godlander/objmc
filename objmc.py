@@ -1,5 +1,6 @@
 import sys
 import os
+from typing import Optional
 
 os.system("mode con: cols=60 lines=30")
 os.system("title objmc output")
@@ -136,6 +137,12 @@ parser.add_argument(
     default=autorotate,
 )
 parser.add_argument(
+    "--compression",
+    type=Optional[bool],
+    help="Compression mode: true/false",
+    default=autorotate,
+)
+parser.add_argument(
     "--autoplay",
     action="store_true",
     dest="autoplay",
@@ -184,6 +191,8 @@ def getargs(args):
     global noshadow
     global nopow
     global join
+    global compression
+
     objs = args.objs
     texs = args.texs
     output = args.out
@@ -200,7 +209,8 @@ def getargs(args):
     noshadow = args.noshadow
     nopow = args.nopow
     join = args.join
-
+    compression = args.compression
+    
 
 class col:
     head = "\033[95m"
@@ -1232,6 +1242,7 @@ else:
         flipuv,
         noshadow,
         nopow,
+        compression
     )
 # --------------------------------
 quit()
