@@ -11,7 +11,7 @@ running the script without any arguments will open a gui with slightly more limi
 
 place the model and texture output generated with this tool in the correct location in the resourcepack along with the shaders folder, and should display properly.
 
-make sure your minecraft version is 1.19.4+ as the shader will not work with lower versions.
+make sure your minecraft version is 1.20.1+ as the shader may not work with lower versions.
 
 ### script inputs
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
