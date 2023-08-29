@@ -137,6 +137,7 @@ def getargs(args):
   noshadow = args.noshadow
   nopow = args.nopow
   join = args.join
+getargs(parser.parse_args())
 
 class col:
     head = '\033[95m'
@@ -768,7 +769,6 @@ elif join:
   out.write(json.dumps(js,separators=(',',':')))
 
 else:
-  getargs(parser.parse_args())
   objmc(objs, texs, output, scale, offset, duration, easing, interpolation, colorbehavior, autorotate, autoplay, flipuv, noshadow, nopow)
 #--------------------------------
 quit()
