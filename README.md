@@ -1,4 +1,4 @@
-i cannot guarantee modded compatibility. core shaders are a vanilla resourcepack feature, if a mod breaks a vanilla feature i cant do anything.
+i cannot guarantee modded compatibility. core shaders are a vanilla resourcepack feature, if a mod breaks this vanilla feature its likely a decision by the mod creator.
 
 # usage:
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
