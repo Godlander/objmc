@@ -37,7 +37,6 @@ void main() {
     texCoord = UV0;
     vertexColor = Color;
     lightColor = minecraft_sample_lightmap(Sampler2, UV2);
-    vec3 normal = (ProjMat * ModelViewMat * vec4(Normal, 0.0)).rgb;
 
     //objmc
     #define BLOCK
