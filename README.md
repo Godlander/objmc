@@ -140,11 +140,12 @@ to calculate the offset for a frame while using `autoplay`, you can use this for
 
 if `colorbehavior` is set to `time time time`, autoplay is automatically on. instead, numbers past 8388608 define the paused frame to display (8388608 + paused frame to show).
 
-### spawner models
+### spawner models (deprecated)
 you use spawners as a block that uses the entity renderer but isn't an entity. they are considerably laggier than normal blocks, but still better than entities, and don't suffer unloading nearly as much.
 ```mcfunction
 setblock ~ ~ ~ minecraft:spawner{MaxNearbyEntities:0,RequiredPlayerRange:0,SpawnData:{entity:{id:"minecraft:armor_stand",ShowArms:0b,Small:1b,Invisible:1b,Pose:{Head:[30f,0f,0f]},ArmorItems:[{},{},{},{id:"minecraft:potion",Count:1b,tag:{CustomModelData:1,CustomPotionColor:0}}]}}}
 ```
+display entities are just better, use those instead
 
 ### multiple textures
 there is no support for stitching multiple textures. you will have to use another program like blender to bake them onto one texture along with the neccesary uv changes on the model itself.
