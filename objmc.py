@@ -210,7 +210,9 @@ def getargs(args):
     nopow = args.nopow
     join = args.join
     compression = args.compression
-    
+
+getargs(parser.parse_args())
+
 
 class col:
     head = "\033[95m"
@@ -538,7 +540,9 @@ def objmc(
     vpheight = math.ceil(len(data["positions"]) * 3 / x)
     vtheight = math.ceil(len(data["uvs"]) * 2 / x)
 
-    compression_enabled = len(data["uvs"]) <= 255 if compression == None else compression
+    compression_enabled = (
+        len(data["uvs"]) <= 255 if compression == None else compression
+    )
 
     vheight = math.ceil(len(data["vertices"]) * (1 if compression_enabled else 2) / x)
     # make height power of 2
@@ -1105,11 +1109,11 @@ if not len(sys.argv) > 1:
             flipuv,
             noshadow,
             nopow,
-            None
-            if compression.get() == "Auto"
-            else True
-            if compression.get() == "On"
-            else False,
+            (
+                None
+                if compression.get() == "Auto"
+                else True if compression.get() == "On" else False
+            ),
         )
         context = strcontext(
             objs,
@@ -1126,11 +1130,11 @@ if not len(sys.argv) > 1:
             flipuv,
             noshadow,
             nopow,
-            None
-            if compression.get() == "Auto"
-            else True
-            if compression.get() == "On"
-            else False,
+            (
+                None
+                if compression.get() == "Auto"
+                else True if compression.get() == "On" else False
+            ),
         )
         try:
             i = history.index(context)
@@ -1226,7 +1230,6 @@ elif join:
     out.write(json.dumps(js, separators=(",", ":")))
 
 else:
-    getargs(parser.parse_args())
     objmc(
         objs,
         texs,
@@ -1242,7 +1245,7 @@ else:
         flipuv,
         noshadow,
         nopow,
-        compression
+        compression,
     )
 # --------------------------------
 quit()

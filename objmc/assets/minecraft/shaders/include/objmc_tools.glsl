@@ -78,8 +78,8 @@ bool isgui(mat4 ProjMat) {
     return ProjMat[2][3] == 0.0;
 }
 //first person hand item model detection from esben
-bool ishand(float FogStart) {
-    return FogStart*0.000001 > 1;
+bool ishand(float FogStart, mat4 ProjMat) {
+    return (FogStart > 3e38) && (ProjMat[2][3] != 0);
 }
 
 //hue to rgb

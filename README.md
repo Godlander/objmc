@@ -1,4 +1,4 @@
-i cannot guarantee modded compatibility. core shaders are a vanilla resourcepack feature, if a mod breaks a vanilla feature i cant do anything.
+i cannot guarantee modded compatibility. core shaders are a vanilla resourcepack feature, if a mod breaks this vanilla feature its likely a decision by the mod creator.
 
 # usage:
 make sure Python and Pillow is installed, and place the script in the same directory as the input obj and texture files.
@@ -11,7 +11,7 @@ running the script without any arguments will open a gui with slightly more limi
 
 place the model and texture output generated with this tool in the correct location in the resourcepack along with the shaders folder, and should display properly.
 
-make sure your minecraft version is 1.19.4+ as the shader will not work with lower versions.
+make sure your minecraft version is 1.20.1+ as the shader may not work with lower versions.
 
 ### script inputs
 `objs`: array of string names of obj files in the same folder to read. these must have same number of vertices if used in same animation.
@@ -140,11 +140,12 @@ to calculate the offset for a frame while using `autoplay`, you can use this for
 
 if `colorbehavior` is set to `time time time`, autoplay is automatically on. instead, numbers past 8388608 define the paused frame to display (8388608 + paused frame to show).
 
-### spawner models
+### spawner models (deprecated)
 you use spawners as a block that uses the entity renderer but isn't an entity. they are considerably laggier than normal blocks, but still better than entities, and don't suffer unloading nearly as much.
 ```mcfunction
 setblock ~ ~ ~ minecraft:spawner{MaxNearbyEntities:0,RequiredPlayerRange:0,SpawnData:{entity:{id:"minecraft:armor_stand",ShowArms:0b,Small:1b,Invisible:1b,Pose:{Head:[30f,0f,0f]},ArmorItems:[{},{},{},{id:"minecraft:potion",Count:1b,tag:{CustomModelData:1,CustomPotionColor:0}}]}}}
 ```
+display entities are just better, use those instead
 
 ### multiple textures
 there is no support for stitching multiple textures. you will have to use another program like blender to bake them onto one texture along with the neccesary uv changes on the model itself.
