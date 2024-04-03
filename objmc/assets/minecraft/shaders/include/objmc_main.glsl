@@ -180,11 +180,11 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
                 vec3 local = IViewRotMat * Normal;
                 float yaw = -atan(local.x, local.z);
                 float pitch = -atan(local.y, length(local.xz));
-                posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset * IViewRotMat;
+                posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset;
             }
             //pure color rotation
             else {
-                posoffset = rotate(rotation) * posoffset * IViewRotMat;
+                posoffset = rotate(rotation) * posoffset;
             }
         }
         if (isGUI == 1) {

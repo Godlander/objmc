@@ -34,7 +34,7 @@ if (textureSize(Sampler0, 0) == vec2(64) && (marker == ivec4(12,34,56,78) || mar
     posoffset = texelFetch(Sampler0, huv(pid), 0).rgb;
     texCoord = texelFetch(Sampler0, huv(uid), 0).rg;
 
-    posoffset = (posoffset - vec3(0.5)) * scale * IViewRotMat;
+    posoffset = (posoffset - vec3(0.5)) * scale;
     //final pos and uv
     Pos += posoffset;
     texCoord = clamp(vec2(texCoord.x, 1-texCoord.y)/2., 0.0001, 0.4999)
