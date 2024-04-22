@@ -174,6 +174,14 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
 //custom entity rotation
 #ifdef ENTITY
         posoffset *= scale;
+        if (isGUI == 1) {
+            posoffset *= 16;
+            posoffset.zy *= -1;
+            posoffset = rotate(rotation + vec3(0,1,0)) * posoffset;
+        }
+        if (isHand == 1) {
+            posoffset.zx *= -1;
+        }
         if (isHand + isGUI == 0) {
             if (any(greaterThan(autorotate,vec2(0)))) {
                 //normal estimated rotation calculation from The Der Discohund
@@ -186,10 +194,6 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
             else {
                 posoffset = rotate(rotation) * posoffset;
             }
-        }
-        if (isGUI == 1) {
-            posoffset *= 16.0;
-            posoffset.zy *= -1.0;
         }
     }
 #endif
