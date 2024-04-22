@@ -213,7 +213,6 @@ def getargs(args):
 
 getargs(parser.parse_args())
 
-
 class col:
     head = "\033[95m"
     blue = "\033[94m"
