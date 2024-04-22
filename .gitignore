@@ -1,0 +1,7 @@
+temp/
+.vscode/
+objmc_mod/
+history.txt
+out.png
+potion.json
+*.pyc
