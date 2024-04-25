@@ -50,5 +50,5 @@ void main() {
     #moj_import <objmc_main.glsl>
 
     gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);
-    vertexDistance = fog_distance(ModelViewMat, IViewRotMat * Pos, FogShape);
+    vertexDistance = fog_distance(IViewRotMat * Pos, FogShape);
 }
