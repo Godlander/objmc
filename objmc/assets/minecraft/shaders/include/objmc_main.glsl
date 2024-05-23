@@ -12,7 +12,7 @@ vec3 posoffset = vec3(0);
 float scale = 1;
 vec3 rotation = vec3(0);
 int headerheight = 0;
-bool compressionEnabled = false; 
+bool compression = false;
 ivec4 t[8];
 //read uv offset
 t[0] = ivec4(texelFetch(Sampler0, uv, 0) * 255);
@@ -20,9 +20,9 @@ ivec2 uvoffset = ivec2(t[0].r*256 + t[0].g, t[0].b*256 + t[0].a);
 //find and read topleft pixel
 ivec2 topleft = uv - uvoffset;
 //if topleft marker is correct
-ivec4 markerPixel = ivec4(texelFetch(Sampler0, topleft, 0)*255);
-if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
-    compressionEnabled = markerPixel.a == 79;
+ivec4 marker = ivec4(texelFetch(Sampler0, topleft, 0)*255);
+if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
+    compression = marker.a == 79;
     isCustom = 1;
     // header
     //| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2 \2| 2^16x2       | 2^1     + 2^2       + 2^3      \1 2^9        \16|
@@ -76,41 +76,46 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
             vec2 tscale = vec2(0, 255./256.);
             vec2 thue = vec2(0, 255./256.);
             switch ((colorbehavior>>6)&7) { //first 3 bits, r
+                //rotation
                 case 0: rotation.x += Color.r*255; accuracy.r *= 256; break;
                 case 1: rotation.y += Color.r*255; accuracy.g *= 256; break;
                 case 2: rotation.z += Color.r*255; accuracy.b *= 256; break;
+                //time
                 case 3: tcolor = tcolor*256 + int(Color.r*255); break;
+                //scale
                 case 4: tscale.x = Color.r*255; tscale.y *= 256; break;
+                //hue
                 case 5: thue.x = Color.r*255; thue.y *= 256; break;
-                case 6: 
-                    if(Color.r != 0)
-                        overlayColor = vec4(1,0.7,0.7,1);
-                    break;
-
+                //hurt tint
+                case 6: if (Color.r != 0) overlayColor = vec4(1,0.7,0.7,1); break;
             }
             switch ((colorbehavior>>3)&7) { //second 3 bits, g
+                //rotation
                 case 0: rotation.x = rotation.x*256 + Color.g*255; accuracy.r *= 256; break;
                 case 1: rotation.y = rotation.y*256 + Color.g*255; accuracy.g *= 256; break;
                 case 2: rotation.z = rotation.z*256 + Color.g*255; accuracy.b *= 256; break;
+                //time
                 case 3: tcolor = tcolor*256 + int(Color.g*255); break;
+                //scale
                 case 4: tscale.x = tscale.x*256 + Color.g*255; tscale.y *= 256; break;
+                //hue
                 case 5: thue.x = thue.x*256 + Color.g*255; thue.y *= 256; break;
-                case 6: 
-                    if(Color.g != 0)
-                        overlayColor = vec4(1,0.7,0.7,1);
-                    break;
+                //hurt tint
+                case 6: if (Color.g != 0) overlayColor = vec4(1,0.7,0.7,1); break;
             }
             switch (colorbehavior&7) { //third 3 bits, b
+                //rotation
                 case 0: rotation.x = rotation.x*256 + Color.b*255; accuracy.r *= 256; break;
                 case 1: rotation.y = rotation.y*256 + Color.b*255; accuracy.g *= 256; break;
                 case 2: rotation.z = rotation.z*256 + Color.b*255; accuracy.b *= 256; break;
+                //time
                 case 3: tcolor = tcolor*256 + int(Color.b*255); break;
+                //scale
                 case 4: tscale.x = tscale.x*256 + Color.b*255; tscale.y *= 256; break;
+                //hue
                 case 5: thue.x = thue.x*256 + Color.b*255; thue.y *= 256; break;
-                case 6: 
-                    if(Color.b != 0)
-                        overlayColor = vec4(1,0.7,0.7,1);
-                    break;
+                //hurt tint
+                case 6: if (Color.b != 0) overlayColor = vec4(1,0.7,0.7,1); break;
             }
             rotation = rotation/accuracy * 2*PI;
             if (tscale.x > 0) scale = tscale.x/tscale.y;
@@ -126,13 +131,13 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
         headerheight = 1 + int(ceil(nvertices*0.25/size.x));
         int height = headerheight + (size.y * ntextures);
         //read data
-        ivec2 index = getvert(topleft, size.x, height+vph+vth, id, compressionEnabled);
+        ivec2 index = getvert(topleft, size.x, height+vph+vth, id, compression);
         posoffset = getpos(topleft, size.x, height, index.x);
         if (nframes > 1) {
             int nids = (nframes * nvertices);
             //next frame
             id = (id+nvertices) % nids;
-            index = getvert(topleft, size.x, height+vph+vth, id, compressionEnabled);
+            index = getvert(topleft, size.x, height+vph+vth, id, compression);
             vec3 posoffset2 = getpos(topleft, size.x, height, index.x);
             //interpolate
             transition = fract(time * nframes / duration);
@@ -147,11 +152,11 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
                 case 3: //4-point bezier
                     //third point
                     id = (id+nvertices) % nids;
-                    index = getvert(topleft, size.x, height+vph+vth, id, compressionEnabled);
+                    index = getvert(topleft, size.x, height+vph+vth, id, compression);
                     vec3 posoffset3 = getpos(topleft, size.x, height, index.x);
                     //fourth point
                     id = (id+nvertices) % nids;
-                    index = getvert(topleft, size.x, height+vph+vth, id, compressionEnabled);
+                    index = getvert(topleft, size.x, height+vph+vth, id, compression);
                     vec3 posoffset4 = getpos(topleft, size.x, height, index.x);
                     //bezier
                     posoffset = bezier(posoffset, posoffset2, posoffset3, posoffset4, transition);
@@ -181,13 +186,13 @@ if (markerPixel == ivec4(12,34,56,78) || markerPixel == ivec4(12,34,56,79)) {
         }
         if (isHand == 1) {
             posoffset.zx *= -1;
+            posoffset = (vec4(posoffset,0) * ModelViewMat).xyz;
         }
         if (isHand + isGUI == 0) {
             if (any(greaterThan(autorotate,vec2(0)))) {
                 //normal estimated rotation calculation from The Der Discohund
-                vec3 local = IViewRotMat * Normal;
-                float yaw = -atan(local.x, local.z);
-                float pitch = -atan(local.y, length(local.xz));
+                float yaw = -atan(Normal.x, Normal.z);
+                float pitch = -atan(Normal.y, length(Normal.xz));
                 posoffset = rotate(vec3(vec2(pitch,yaw)*autorotate,0) + rotation) * posoffset;
             }
             //pure color rotation

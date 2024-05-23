@@ -21,11 +21,10 @@ if (textureSize(Sampler0, 0) == vec2(64) && (marker == ivec4(12,34,56,78) || mar
     isGUI = int(isgui(ProjMat));
     isHand = int(ishand(FogStart, ProjMat));
 
-    Pos = IViewRotMat * Position;
+    Pos = Position;
     ivec3 p = ivec3(Pos + 1250)/500;
     int eid = p.x + (p.y*4) + (p.z*16);
     Pos = mod(Pos + 1250, 500)-250;
-    Pos = Pos * IViewRotMat;
     int vid = (eid * 48) + (gl_VertexID % 48);
     ivec4 face = ivec4(texelFetch(Sampler0, huv(vid), 0)*255);
     if (vid > nvertices) Pos = posoffset = vec3(0);
