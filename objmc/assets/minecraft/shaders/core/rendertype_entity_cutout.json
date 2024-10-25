@@ -1,19 +1,11 @@
 {
-    "blend": {
-        "func": "add",
-        "srcrgb": "srcalpha",
-        "dstrgb": "1-srcalpha"
+    "vertex": "minecraft:core/render/entity_overlay",
+    "fragment": "minecraft:core/render/entity",
+    "defines": {
+        "values": {
+            "ALPHA_CUTOUT": "0.1"
+        }
     },
-    "vertex": "render/entity_overlay",
-    "fragment": "render/entity",
-    "attributes": [
-        "Position",
-        "Color",
-        "UV0",
-        "UV1",
-        "UV2",
-        "Normal"
-    ],
     "samplers": [
         { "name": "Sampler0" },
         { "name": "Sampler1" },

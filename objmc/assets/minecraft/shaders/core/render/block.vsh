@@ -14,7 +14,7 @@ uniform sampler2D Sampler2;
 
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
-uniform vec3 ChunkOffset;
+uniform vec3 ModelOffset;
 uniform int FogShape;
 uniform float GameTime;
 
@@ -33,7 +33,7 @@ flat out int noshadow;
 
 void main() {
     //default
-    Pos = Position + ChunkOffset;
+    Pos = Position + ModelOffset;
     texCoord = UV0;
     vertexColor = Color;
     lightColor = minecraft_sample_lightmap(Sampler2, UV2);
