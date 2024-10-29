@@ -1,6 +1,6 @@
 {
   "pack": {
-    "pack_format": 32,
+    "pack_format": 42,
     "description": "example objmc pack"
   }
 }

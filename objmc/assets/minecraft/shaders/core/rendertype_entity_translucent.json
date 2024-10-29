@@ -1,19 +1,11 @@
 {
-    "blend": {
-        "func": "add",
-        "srcrgb": "srcalpha",
-        "dstrgb": "1-srcalpha"
+    "vertex": "minecraft:core/render/head",
+    "fragment": "minecraft:core/render/head",
+    "defines": {
+        "values": {
+            "ALPHA_CUTOUT": "0.1"
+        }
     },
-    "vertex": "render/head",
-    "fragment": "render/head",
-    "attributes": [
-        "Position",
-        "Color",
-        "UV0",
-        "UV1",
-        "UV2",
-        "Normal"
-    ],
     "samplers": [
         { "name": "Sampler0" },
         { "name": "Sampler1" },
