@@ -18,10 +18,16 @@ uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
 uniform mat4 TextureMat;
 uniform int FogShape;
+uniform float GameTime;
+
+uniform vec3 Light0_Direction;
+uniform vec3 Light1_Direction;
 
 out float vertexDistance;
 out vec4 vertexColor;
 out vec4 lightColor;
+out vec4 overlayColor;
+out float transition;
 flat out int face;
 flat out int isCustom;
 flat out int isGUI;
@@ -61,19 +67,24 @@ vec4[] offset = vec4[](
     vec4(0), vec4(0), vec4(0), vec4(0), vec4(0), vec4(0),
     // body
     vec4(CHEST_BODY.xzy, 0), // top
-    vec4(CHEST_BODY.xzy, 2), // bottom
+    vec4(CHEST_BODY.xzy, 2), // bottom offset by 2
     vec4(CHEST_BODY.zyx, 0), // right
     vec4(CHEST_BODY.xyz, 0), // front
     vec4(CHEST_BODY.zyx, 0), // left
     vec4(CHEST_BODY.xyz, 0)  // back
 );
 
+#define PART_RIGHT_ARM 0
+#define PART_LEFT_ARM 1
+#define PART_CHEST 2
+
 #moj_import <objmc_tools.glsl>
 
 void main() {
     uv = UV0;
-    vertexColor = Color;
+    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
     lightColor = texelFetch(Sampler2, UV2 / 16, 0);
+    overlayColor = vec4(1);
 
     #moj_import <objmc_armor.glsl>
 
