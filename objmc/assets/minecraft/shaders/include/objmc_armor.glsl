@@ -66,8 +66,7 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
         else render = false;
     }
     //to origin
-    vec3 dir = directions[(corner + int(offset[face].w)) % 4];
-    posoffset = dir * offset[face].xyz;
+    posoffset = partsize(0, body, face % 6, corner);
     if (flip) posoffset.xy *= -1;
     Pos += rotate(Rot) * posoffset;
 
