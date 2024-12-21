@@ -11,7 +11,6 @@ vec3 rotation = vec3(0);
 int headerheight = 0;
 bool compression = false;
 
-uv0 = uv1 = uv2 = vec3(0);
 pos0 = pos1 = pos2 = vec4(0);
 ivec4 t[8];
 
@@ -25,9 +24,9 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
     compression = marker.a == 79;
     isCustom = 1;
     switch (corner) {
-        case 0: uv0 = vec3(UV0, 1); pos0 = vec4(Position, 1); break;
-        case 1: uv1 = vec3(UV0, 1); pos1 = vec4(Position, 1); break;
-        case 2: uv2 = vec3(UV0, 1); pos2 = vec4(Position, 1); break;
+        case 0: pos0 = vec4(Position, 1); break;
+        case 1: pos1 = vec4(Position, 1); break;
+        case 2: pos2 = vec4(Position, 1); break;
     }
 
     for (int i = 1; i < 8; i++) {
@@ -84,10 +83,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
             vec2 tscale = vec2(0, 255./256.);
             vec2 thue = vec2(0, 255./256.);
             switch ((colorbehavior>>6)&7) { //first 3 bits, r
-                //rotation
-                case 0: rotation.x += Color.r*255; accuracy.r *= 256; break;
-                case 1: rotation.y += Color.r*255; accuracy.g *= 256; break;
-                case 2: rotation.z += Color.r*255; accuracy.b *= 256; break;
                 //time
                 case 3: tcolor = tcolor*256 + int(Color.r*255); break;
                 //scale
@@ -98,10 +93,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
                 case 6: if (Color.r != 0) overlayColor = vec4(1,0.7,0.7,1); break;
             }
             switch ((colorbehavior>>3)&7) { //second 3 bits, g
-                //rotation
-                case 0: rotation.x = rotation.x*256 + Color.g*255; accuracy.r *= 256; break;
-                case 1: rotation.y = rotation.y*256 + Color.g*255; accuracy.g *= 256; break;
-                case 2: rotation.z = rotation.z*256 + Color.g*255; accuracy.b *= 256; break;
                 //time
                 case 3: tcolor = tcolor*256 + int(Color.g*255); break;
                 //scale
@@ -112,10 +103,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
                 case 6: if (Color.g != 0) overlayColor = vec4(1,0.7,0.7,1); break;
             }
             switch (colorbehavior&7) { //third 3 bits, b
-                //rotation
-                case 0: rotation.x = rotation.x*256 + Color.b*255; accuracy.r *= 256; break;
-                case 1: rotation.y = rotation.y*256 + Color.b*255; accuracy.g *= 256; break;
-                case 2: rotation.z = rotation.z*256 + Color.b*255; accuracy.b *= 256; break;
                 //time
                 case 3: tcolor = tcolor*256 + int(Color.b*255); break;
                 //scale
@@ -125,7 +112,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
                 //hurt tint
                 case 6: if (Color.b != 0) overlayColor = vec4(1,0.7,0.7,1); break;
             }
-            rotation = rotation/accuracy * 2 * PI;
             if (tscale.x > 0) scale = tscale.x/tscale.y;
             if (thue.x > 0) overlayColor = vec4(hrgb(thue.x/thue.y),1);
         }
