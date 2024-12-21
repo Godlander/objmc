@@ -42,7 +42,6 @@ out vec4 pos1;
 out vec4 pos2;
 
 #define PI 3.1415926535897932
-#define PI2 (PI*2)
 #define SQ2 0.70710678118
 
 #define PART_RIGHT_ARM 0

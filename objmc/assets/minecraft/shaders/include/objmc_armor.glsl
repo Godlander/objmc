@@ -125,7 +125,7 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
                 //hurt tint
                 case 6: if (Color.b != 0) overlayColor = vec4(1,0.7,0.7,1); break;
             }
-            rotation = rotation/accuracy * 2*PI;
+            rotation = rotation/accuracy * 2 * PI;
             if (tscale.x > 0) scale = tscale.x/tscale.y;
             if (thue.x > 0) overlayColor = vec4(hrgb(thue.x/thue.y),1);
         }
@@ -171,9 +171,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
                     break;
             }
         }
-
-        posoffset += vec3(0, -0.4, -0.4);
-        posoffset.z *= -1;
 
         uv = getuv(ivec2(0), size.x, height+vph, index.y);
         uv = (vec2(0, headerheight) + uv*size) / atlasSize
