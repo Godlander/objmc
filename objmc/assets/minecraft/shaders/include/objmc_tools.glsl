@@ -68,18 +68,20 @@ mat3 rotate(vec3 angles) {
     float cy = cos(-angles.y);
     float sz = sin(-angles.z);
     float cz = cos(-angles.z);
-    return mat3(cy*cz,            cy*sz,           -sy,
-                sx*sy*cz - cx*sz, sx*sy*sz + cx*cz, sx*cy,
-                cx*sy*cz + sx*sz, cx*sy*sz - sx*cz, cx*cy);
+    return mat3(
+        -sx*sy*sz+cy*cz, -cx*sz, -sx*cy*sz-sy*cz,
+        sx*sy*cz+cy*sz, cx*cz, -sy*sz+sx*cy*cz,
+        cx*sy, -sx, cx*cy
+    );
 }
 
 //gui item model detection from Onnowhere
 bool isgui(mat4 ProjMat) {
     return ProjMat[2][3] == 0.0;
 }
-//first person hand item model detection from esben
-bool ishand(float FogStart, mat4 ProjMat) {
-    return (FogStart > 3e38) && (ProjMat[2][3] != 0);
+//first person hand item model detection (Bálint nonsense)
+bool ishand(mat4 ProjMat) {
+    return abs(ProjMat[3][2] - (-0.10005)) < 0.00001;
 }
 
 //hue to rgb

@@ -1,7 +1,10 @@
 #version 150
 
-#moj_import <light.glsl>
-#moj_import <fog.glsl>
+#moj_import <minecraft:light.glsl>
+#moj_import <minecraft:fog.glsl>
+#moj_import <minecraft:dynamictransforms.glsl>
+#moj_import <minecraft:projection.glsl>
+#moj_import <minecraft:globals.glsl>
 
 in vec3 Position;
 in vec4 Color;
@@ -14,17 +17,10 @@ uniform sampler2D Sampler0;
 uniform sampler2D Sampler1;
 uniform sampler2D Sampler2;
 
-uniform float FogStart;
-uniform int FogShape;
-uniform mat4 ModelViewMat;
-uniform mat4 ProjMat;
-uniform float GameTime;
-
-uniform vec3 Light0_Direction;
-uniform vec3 Light1_Direction;
-
-out float vertexDistance;
+out float sphericalVertexDistance;
+out float cylindricalVertexDistance;
 out vec4 vertexColor;
+
 out vec4 lightColor;
 out vec4 overlayColor;
 out vec2 texCoord;
@@ -42,14 +38,28 @@ flat out int noshadow;
 void main() {
     Pos = Position;
     texCoord = UV0;
+#ifdef APPLY_TEXTURE_MATRIX
+    texCoord = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;
+#endif
     overlayColor = texelFetch(Sampler1, UV1, 0);
+    lightColor = vec4(1);
     vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
-    lightColor = minecraft_sample_lightmap(Sampler2, UV2);
+#ifdef NO_CARDINAL_LIGHTING
+    vertexColor = Color;
+#else
+    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
+#endif
+#ifndef EMISSIVE
+    lightColor = texelFetch(Sampler2, UV2 / 16, 0);
+#endif
 
     //objmc
     #define ENTITY
     #moj_import <objmc_main.glsl>
 
     gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);
-    vertexDistance = fog_distance(Pos, FogShape);
+
+    sphericalVertexDistance = fog_spherical_distance(Pos);
+    cylindricalVertexDistance = fog_cylindrical_distance(Pos);
+
 }

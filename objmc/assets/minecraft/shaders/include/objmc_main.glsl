@@ -61,7 +61,7 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
 #endif
 #ifdef ENTITY
     isGUI = int(isgui(ProjMat));
-    isHand = int(ishand(FogStart, ProjMat));
+    isHand = int(ishand(ProjMat));
     if (((isGUI + isHand == 0) && visibility.x) || (bool(isHand) && visibility.y) || (bool(isGUI) && visibility.z)) {
         //colorbehavior
         overlayColor = vec4(1);
@@ -180,7 +180,8 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
 #ifdef ENTITY
         posoffset *= scale;
         if (isGUI == 1) {
-            posoffset *= 16;
+            posoffset *= 24;
+            posoffset.y += 4;
             posoffset.zy *= -1;
             posoffset = rotate(rotation + vec3(0,1,0)) * posoffset;
         }
