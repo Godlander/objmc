@@ -3,7 +3,10 @@
 
 //default lighting
 if (isCustom == 0) {
-    color *= vertexColor * lightColor * ColorModulator;
+    color *= vertexColor * ColorModulator;
+#ifndef EMISSIVE
+    color *= lightColor;
+#endif
 #ifdef ENTITY
     color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
 #endif

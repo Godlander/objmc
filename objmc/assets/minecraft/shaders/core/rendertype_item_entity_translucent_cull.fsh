@@ -1,20 +1,15 @@
 #version 150
 
-#moj_import <light.glsl>
-#moj_import <fog.glsl>
+#moj_import <minecraft:fog.glsl>
+#moj_import <minecraft:light.glsl>
+#moj_import <minecraft:dynamictransforms.glsl>
 
 uniform sampler2D Sampler0;
 
-uniform vec4 ColorModulator;
-uniform float FogStart;
-uniform float FogEnd;
-uniform vec4 FogColor;
-
-uniform vec3 Light0_Direction;
-uniform vec3 Light1_Direction;
-
-in float vertexDistance;
+in float sphericalVertexDistance;
+in float cylindricalVertexDistance;
 in vec4 vertexColor;
+
 in vec4 lightColor;
 in vec4 overlayColor;
 in vec2 texCoord;
@@ -36,6 +31,8 @@ void main() {
     #define ENTITY
     #moj_import<objmc_light.glsl>
 
-    if (color.a < 0.01) discard;
-    fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
+    if (color.a < 0.1) {
+        discard;
+    }
+    fragColor = apply_fog(color, sphericalVertexDistance, cylindricalVertexDistance, FogEnvironmentalStart, FogEnvironmentalEnd, FogRenderDistanceStart, FogRenderDistanceEnd, FogColor);
 }

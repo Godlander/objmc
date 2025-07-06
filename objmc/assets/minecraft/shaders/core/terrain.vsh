@@ -1,7 +1,9 @@
 #version 150
 
-#moj_import <light.glsl>
-#moj_import <fog.glsl>
+#moj_import <minecraft:fog.glsl>
+#moj_import <minecraft:dynamictransforms.glsl>
+#moj_import <minecraft:projection.glsl>
+#moj_import <minecraft:globals.glsl>
 
 in vec3 Position;
 in vec4 Color;
@@ -12,14 +14,10 @@ in vec3 Normal;
 uniform sampler2D Sampler0;
 uniform sampler2D Sampler2;
 
-uniform mat4 ModelViewMat;
-uniform mat4 ProjMat;
-uniform vec3 ModelOffset;
-uniform int FogShape;
-uniform float GameTime;
-
-out float vertexDistance;
+out float sphericalVertexDistance;
+out float cylindricalVertexDistance;
 out vec4 vertexColor;
+
 out vec4 lightColor;
 out vec2 texCoord;
 out vec2 texCoord2;
@@ -31,17 +29,21 @@ flat out int noshadow;
 
 #moj_import <objmc_tools.glsl>
 
+vec4 minecraft_sample_lightmap(sampler2D lightMap, ivec2 uv) {
+    return texture(lightMap, clamp(uv / 256.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0)));
+}
+
 void main() {
-    //default
     Pos = Position + ModelOffset;
-    texCoord = UV0;
     vertexColor = Color;
     lightColor = minecraft_sample_lightmap(Sampler2, UV2);
-
+    texCoord = UV0;
+    
     //objmc
     #define BLOCK
     #moj_import <objmc_main.glsl>
 
     gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);
-    vertexDistance = fog_distance(Pos, FogShape);
+    sphericalVertexDistance = fog_spherical_distance(Pos);
+    cylindricalVertexDistance = fog_cylindrical_distance(Pos);
 }
