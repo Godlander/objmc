@@ -1,6 +1,6 @@
-temp/
 .vscode/
-objmc_mod/
+temp/
+models/
 history.txt
 out.png
 potion.json

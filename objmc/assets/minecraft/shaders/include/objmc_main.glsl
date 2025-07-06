@@ -27,6 +27,21 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
     // header
     //| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2 \2| 2^16x2       | 2^1     + 2^2       + 2^3      \1 2^9        \16|
     //| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp| data heights | noshadow, autorotate, visibility, colorbehavior |
+
+    // header
+    //| 2^32   | 2^16x2   | 2^32      | 2^32 | 2^32 | 2^16 + 2^16     | 2^12         + 2^2     + 2^2   + 2^2       + 2^1     + 2^3    \10 |
+    //| marker | tex size | nvertices | npos | nuvs | nobjs, duration | colorbehavior, autoplay, easing, autorotate, noshadow, visibility |
+
+    //colorbehavior
+    // 0: nothing
+    // 1, 2, 3: rotation xyz
+    // 4, 5, 6: position xyz
+    // 7: scale
+    // 8: time
+    // 9: texture variant
+    // 10: hue/tint
+    // 11: armor model
+
     for (int i = 1; i < 8; i++) {
         t[i] = getmeta(topleft, i);
     }
@@ -72,7 +87,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
         } else {
             //bits from colorbehavior
             vec3 accuracy = vec3(255./256.);
-            vec3 accuracy2 = vec3(255./256.);
             vec2 tscale = vec2(0, 255./256.);
             vec2 thue = vec2(0, 255./256.);
             switch ((colorbehavior>>6)&7) { //first 3 bits, r
