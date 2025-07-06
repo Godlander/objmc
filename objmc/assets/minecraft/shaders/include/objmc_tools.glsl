@@ -68,7 +68,11 @@ mat3 rotate(vec3 angles) {
     float cy = cos(-angles.y);
     float sz = sin(-angles.z);
     float cz = cos(-angles.z);
-    return mat3(cy,0,-sy,0,1,0,sy,0,cy)*mat3(1,0,0,0,cx,sx,0,-sx,cx)*mat3(cz,-sz,0,sz,cz,0,0,0,1);
+    return mat3(
+        -sx*sy*sz+cy*cz, -cx*sz, -sx*cy*sz-sy*cz,
+        sx*sy*cz+cy*sz, cx*cz, -sy*sz+sx*cy*cz,
+        cx*sy, -sx, cx*cy
+    );
 }
 
 //gui item model detection from Onnowhere
