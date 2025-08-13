@@ -13,7 +13,6 @@ in vec4 vertexColor;
 in vec4 lightColor;
 in vec4 overlayColor;
 in vec2 texCoord;
-in vec2 texCoord2;
 in vec3 Pos;
 in float transition;
 
@@ -25,16 +24,14 @@ flat in int noshadow;
 out vec4 fragColor;
 
 void main() {
-    vec4 color = mix(texture(Sampler0, texCoord), texture(Sampler0, texCoord2), transition);
+    vec4 color = texture(Sampler0, texCoord);
 
     //custom lighting
     #define ENTITY
     #moj_import<objmc_light.glsl>
 
 #ifdef ALPHA_CUTOUT
-    if (color.a < ALPHA_CUTOUT) {
-        discard;
-    }
+    if (color.a < ALPHA_CUTOUT) discard;
 #endif
 #ifndef NO_OVERLAY
     color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);

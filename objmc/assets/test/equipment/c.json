@@ -1,0 +1,12 @@
+{
+  "layers": {
+    "humanoid": [
+      { "texture": "test:cube" },
+      { "texture": "test:cube" },
+      { "texture": "test:cube" },
+      { "texture": "test:cube" },
+      { "texture": "test:cube" },
+      { "texture": "test:cube" }
+    ]
+  }
+}

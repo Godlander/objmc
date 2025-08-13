@@ -8,7 +8,9 @@ if (isCustom == 0) {
     color *= lightColor;
 #endif
 #ifdef ENTITY
+#ifndef NO_OVERLAY
     color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
+#endif
 #endif
 }
 //custom lighting

@@ -81,7 +81,7 @@ bool isgui(mat4 ProjMat) {
 }
 //first person hand item model detection (Bálint nonsense)
 bool ishand(mat4 ProjMat) {
-    return abs(ProjMat[3][2] - (-0.10005)) < 0.00001;
+    return abs(ProjMat[3][2] + 0.10005) < 0.00001;
 }
 
 //hue to rgb

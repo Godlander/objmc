@@ -1,7 +1,13 @@
 temp/
 .vscode/
-objmc_mod/
+models/
 history.txt
 out.png
 potion.json
 *.pyc
+/*.png
+/*.obj
+*.zip
+/*.json
+/*.txt
+.gitignore

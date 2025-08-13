@@ -3,7 +3,6 @@
 
 isCustom = 0;
 transition = 0;
-texCoord2 = texCoord;
 int corner = gl_VertexID % 4;
 ivec2 atlasSize = textureSize(Sampler0, 0);
 vec2 onepixel = 1./atlasSize;
@@ -21,12 +20,26 @@ ivec2 uvoffset = ivec2(t[0].r*256 + t[0].g, t[0].b*256 + t[0].a);
 ivec2 topleft = uv - uvoffset;
 //if topleft marker is correct
 ivec4 marker = ivec4(texelFetch(Sampler0, topleft, 0)*255);
-if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
+if (marker == ivec4(12,34,56,78)) {
     compression = marker.a == 79;
     isCustom = 1;
     // header
     //| 2^32   | 2^16x2   | 2^32      | 2^24 + 2^8   | 2^24    + \1 2^1  + 2^2   + 2^2 \2| 2^16x2       | 2^1     + 2^2       + 2^3      \1 2^9        \16|
     //| marker | tex size | nvertices | nobjs, ntexs | duration, autoplay, easing, interp| data heights | noshadow, autorotate, visibility, colorbehavior |
+
+    // header
+    //| 2^32   | 2^16x2   | 2^32      | 2^32 | 2^32 | 2^16 + 2^16     | 2^12         + 2^2     + 2^2   + 2^2       + 2^1     + 2^3    \10 |
+    //| marker | tex size | nvertices | npos | nuvs | nobjs, duration | colorbehavior, autoplay, easing, autorotate, noshadow, visibility |
+
+    //colorbehavior
+    // 0: nothing
+    // 1, 2, 3: rotation xyz
+    // 7: scale
+    // 8: time
+    // 9: texture variant
+    // 10: hue/tint
+    // 11: armor model
+
     for (int i = 1; i < 8; i++) {
         t[i] = getmeta(topleft, i);
     }
@@ -72,7 +85,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
         } else {
             //bits from colorbehavior
             vec3 accuracy = vec3(255./256.);
-            vec3 accuracy2 = vec3(255./256.);
             vec2 tscale = vec2(0, 255./256.);
             vec2 thue = vec2(0, 255./256.);
             switch ((colorbehavior>>6)&7) { //first 3 bits, r
@@ -165,17 +177,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
         }
         transition = 0;
         texCoord = getuv(topleft, size.x, height+vph, index.y);
-        texCoord2 = texCoord;
-        if (ntextures > 1) {
-            frame = int(time * ntextures / duration) % ntextures;
-            texCoord.y += frame;
-            switch (easing.y) { //interpolation
-                case 1:
-                    transition = fract(time * ntextures / duration);
-                    texCoord2.y += (frame + 1) % ntextures;
-                    break;
-            }
-        }
 //custom entity rotation
 #ifdef ENTITY
         posoffset *= scale;
@@ -209,9 +210,6 @@ if (marker == ivec4(12,34,56,78) || marker == ivec4(12,34,56,79)) {
     //final pos and uv
     Pos += posoffset;
     texCoord = (vec2(topleft.x,topleft.y+headerheight) + texCoord*size)/atlasSize
-                //make sure that faces with same uv beginning/ending renders
-                + vec2(onepixel.x*0.0001*corner,onepixel.y*0.0001*((corner+1)%4));
-    texCoord2 = (vec2(topleft.x,topleft.y+headerheight) + texCoord2*size)/atlasSize
                 //make sure that faces with same uv beginning/ending renders
                 + vec2(onepixel.x*0.0001*corner,onepixel.y*0.0001*((corner+1)%4));
 }

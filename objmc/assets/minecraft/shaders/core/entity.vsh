@@ -24,7 +24,6 @@ out vec4 vertexColor;
 out vec4 lightColor;
 out vec4 overlayColor;
 out vec2 texCoord;
-out vec2 texCoord2;
 out vec3 Pos;
 out float transition;
 
@@ -38,12 +37,9 @@ flat out int noshadow;
 void main() {
     Pos = Position;
     texCoord = UV0;
-#ifdef APPLY_TEXTURE_MATRIX
-    texCoord = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;
-#endif
-    overlayColor = texelFetch(Sampler1, UV1, 0);
     lightColor = vec4(1);
-    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);
+    overlayColor = texelFetch(Sampler1, UV1, 0);
+    vertexColor = vec4(1);
 #ifdef NO_CARDINAL_LIGHTING
     vertexColor = Color;
 #else
@@ -51,6 +47,9 @@ void main() {
 #endif
 #ifndef EMISSIVE
     lightColor = texelFetch(Sampler2, UV2 / 16, 0);
+#endif
+#ifdef APPLY_TEXTURE_MATRIX
+    texCoord = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;
 #endif
 
     //objmc
