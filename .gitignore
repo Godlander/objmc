@@ -1,13 +1,10 @@
 temp/
 .vscode/
-models/
+models/*
 history.txt
 out.png
 potion.json
-*.pyc
 /*.png
 /*.obj
-*.zip
-/*.json
 /*.txt
-.gitignore
+*.zip
