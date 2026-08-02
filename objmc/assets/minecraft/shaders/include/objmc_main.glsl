@@ -196,11 +196,18 @@ if (marker == ivec4(12,34,56,78)) {
                 vec3 vPos0 = subgroupQuadBroadcast(Pos, 0);
                 vec3 vPos1 = subgroupQuadBroadcast(Pos, 1);
                 vec3 vPos2 = subgroupQuadBroadcast(Pos, 3);
-                float scale = distance(vPos0, vPos1);
+                float entityScale = distance(vPos0, vPos1);
                 vPos1 = normalize(vPos0 - vPos1);
                 vPos2 = normalize(vPos0 - vPos2);
-                mat3 fullRotation = mat3(vPos2, vPos1, cross(vPos2, vPos1));
-                posoffset = scale * fullRotation * posoffset;
+                vec3 facing = cross(vPos2, vPos1);
+                float yaw = -atan(facing.x, facing.z);
+                float pitch = -atan(facing.y, length(facing.xz));
+                vec3 trackedRotation = vec3(
+                    pitch * autorotate.x,
+                    yaw * autorotate.y,
+                    0
+                );
+                posoffset = entityScale * rotate(trackedRotation + rotation) * posoffset;
             }
             //pure color rotation
             else {
