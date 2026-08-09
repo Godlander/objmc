@@ -1,5 +1,6 @@
 import re
 import unittest
+from math import atan2, cos, pi, sin
 from pathlib import Path
 
 
@@ -100,6 +101,41 @@ class AutorotateShaderTests(unittest.TestCase):
             self.autorotate_body,
             r"entityScale\s*\*\s*rotate\(",
         )
+
+    def test_off_and_autorotate_apply_the_same_entity_scale(self):
+        self.assertRegex(
+            self.shader,
+            r"float\s+entityScale\s*=\s*distance\(vPos0,\s*vPos1\);"
+            r"[\s\S]*?if\s*\(any\(greaterThan\(autorotate,vec2\(0\)\)\)\)"
+            r"[\s\S]*?posoffset\s*=\s*entityScale\s*\*\s*"
+            r"rotate\(trackedRotation\s*\+\s*rotation\)\s*\*\s*posoffset;"
+            r"[\s\S]*?else\s*\{\s*posoffset\s*=\s*entityScale\s*\*\s*"
+            r"rotate\(rotation\)\s*\*\s*posoffset;",
+        )
+
+    def test_vertical_facing_recovers_yaw_from_the_quad_axis(self):
+        self.assertRegex(
+            self.autorotate_body,
+            r"float\s+yaw\s*=\s*horizontalLength\s*>\s*0\.000001\s*"
+            r"\?\s*-atan\(facing\.x,\s*facing\.z\)\s*"
+            r":\s*atan\(vPos2\.z,\s*vPos2\.x\)",
+        )
+
+        def extract_yaw(pitch, yaw):
+            facing = (
+                -cos(pitch) * sin(yaw),
+                -sin(pitch),
+                cos(pitch) * cos(yaw),
+            )
+            right = (cos(yaw), 0, sin(yaw))
+            horizontal_length = (facing[0] ** 2 + facing[2] ** 2) ** 0.5
+            if horizontal_length > 0.000001:
+                return -atan2(facing[0], facing[2])
+            return atan2(right[2], right[0])
+
+        for pitch in (-pi / 2, pi / 2):
+            for yaw in (-2.4, -0.75, 0.0, 1.2, 2.8):
+                self.assertAlmostEqual(extract_yaw(pitch, yaw), yaw)
 
 
 if __name__ == "__main__":

@@ -191,17 +191,22 @@ if (marker == ivec4(12,34,56,78)) {
             posoffset = (vec4(posoffset,0) * ModelViewMat).xyz;
         }
         if (isHand + isGUI == 0) {
+            vec3 vPos0 = subgroupQuadBroadcast(Pos, 0);
+            vec3 vPos1 = subgroupQuadBroadcast(Pos, 1);
+            float entityScale = distance(vPos0, vPos1);
             if (any(greaterThan(autorotate,vec2(0)))) {
                 //normal estimated rotation calculation from The Der Discohund
-                vec3 vPos0 = subgroupQuadBroadcast(Pos, 0);
-                vec3 vPos1 = subgroupQuadBroadcast(Pos, 1);
                 vec3 vPos2 = subgroupQuadBroadcast(Pos, 3);
-                float entityScale = distance(vPos0, vPos1);
                 vPos1 = normalize(vPos0 - vPos1);
                 vPos2 = normalize(vPos0 - vPos2);
                 vec3 facing = cross(vPos2, vPos1);
-                float yaw = -atan(facing.x, facing.z);
-                float pitch = -atan(facing.y, length(facing.xz));
+                float horizontalLength = length(facing.xz);
+                // At vertical pitch the facing vector has no horizontal
+                // projection. Recover yaw from the quad's horizontal axis.
+                float yaw = horizontalLength > 0.000001
+                    ? -atan(facing.x, facing.z)
+                    : atan(vPos2.z, vPos2.x);
+                float pitch = -atan(facing.y, horizontalLength);
                 vec3 trackedRotation = vec3(
                     pitch * autorotate.x,
                     yaw * autorotate.y,
@@ -211,7 +216,7 @@ if (marker == ivec4(12,34,56,78)) {
             }
             //pure color rotation
             else {
-                posoffset = rotate(rotation) * posoffset;
+                posoffset = entityScale * rotate(rotation) * posoffset;
             }
         }
     }
